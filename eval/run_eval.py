@@ -38,6 +38,8 @@ def extract_entities(text: str) -> list[str]:
 
 
 # 报警症状：出现任一项，指南要求优先内镜而不是先铺检查清单
+# 患者不会说商品名：提到「止痛药」「NSAIDs」就是在说布洛芬这一类的风险
+DRUG_WORDS = {"布洛芬": ("布洛芬", "止痛药", "NSAIDs", "非甾体")}
 ALARM_WORDS = ("体重下降", "消瘦", "贫血", "呕血", "黑便", "吞咽困难", "进行性吞咽困难", "大出血")
 # 明确索要检查清单的措辞：此时全列检查项属于知情需求，不算冗余
 EXAM_LIST_WORDS = ("哪些检查", "什么检查", "检查项目", "查什么", "怎么查", "还需要查", "要做什么")
@@ -164,12 +166,18 @@ def answer(conn, question: str, max_hops: int = 2):
                 # 报警症状优先内镜：其余检查此时平铺会稀释「先做哪一项」这个决策结论
                 if alarm and to_id != "EX-GASTRO":
                     continue
-                # 病史已明确、且不是在索要检查清单：内镜视为已完成，只补病因学检查
-                if confirmed_disease and not wants_exam_list and to_id == "EX-GASTRO":
+                # 病史已明确、且不是在索要检查清单：内镜视为已完成，只补病因学检查。
+                # 但报警症状（呕血/黑便/消瘦/吞咽困难）优先内镜，这一条要先于「已做过」生效，
+                # 否则「消化性溃疡 + 黑便」会得出零检查项——那是把最该做的内镜丢了。
+                if confirmed_disease and not wants_exam_list and to_id == "EX-GASTRO" and not alarm:
                     continue
                 exams.append(to_label)
             elif rel == "contraindicated_for" and on_focus:
-                conflicts.append(st.get("head_label") if to_id != a else st.get("tail_label"))
+                # 只有在问题里真的提到这个药时才算「本次冲突」；否则任何消化性溃疡问题都会
+                # 挂上「布洛芬」——把一条用药提醒冒充成患者正在吃的药。
+                drug = st.get("head_label") if to_id != a else st.get("tail_label")
+                if drug and any(s in question for s in DRUG_WORDS.get(drug, (drug,))):
+                    conflicts.append(drug)
             if st.get("provenance"):
                 ev.append(store._ref_str(st["provenance"]))
 
