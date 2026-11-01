@@ -17,9 +17,11 @@
 | 数据资产台账 | **61 张 Asset Card**（文本 21 / 表格 20 / 图文 20） | `data/asset-cards/`，`data/samples/` 三类各 20 份 |
 | 本体 v0.9 | **37 三元组 + 43 锚点**（seed 手写 17 + 跨文档长 20） | `python mcp-server/seed.py --reset` → `python tools/ingest_all.py` |
 | 3 个 Skill 包 | **可导入** | `skills/s1-asset-audit`、`s2-ontology-evolve`、`s3-evidence-decision` |
+| 主智能体配置 v0 | **配置就绪，未实测** | `agent/prompt.md` + `agent/config.json`；接线见 `agent/README.md`，样例 `agent/sessions/` |
 | 离线评测 | **20 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
 | Walking Skeleton | **一条命令通电** | `python skeleton.py` |
 | 本体版本差分 | **可回放**（新增/删除/修改 + 编号漂移对账） | `python -m pytest tests/test_ontology_diff.py -q`（18 条） |
+| 智能体配置自洽 | **6 条测试**（白名单 = 服务端 10 工具、样例符合三行契约） | `python -m pytest tests/test_agent_config.py -q` |
 | PDF 解析 | **页码锚点**（`p{页}.s{节}`） | `python -m pytest tests/test_pdf_parse.py -q`（4 条，缺 PyMuPDF 自动跳过） |
 | 决策链可视化 | **静态页可开**（断链标红，无后端） | 浏览器打开 `web/trace.html`，拖入 `tests/fixtures/trace_v1_broken.json` |
 | 测试总量 | **43 passed**（缺 PyMuPDF 时 1 skipped） | `python -m pytest tests -q` |
