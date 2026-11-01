@@ -10,6 +10,7 @@
 | 改本体 / 加三元组 | [ontology-schema.md](ontology-schema.md) |
 | 改决策链结构 | [trace-schema.md](trace-schema.md) |
 | 知道这周干什么、几号交 | [冲刺计划-1130.md](冲刺计划-1130.md)（总排期 + 闸门 + 风险） |
+| 一项算不算做完 | [冲刺计划-1130.md §10](冲刺计划-1130.md)：16 项结构 + 7 项指标，`python tools/acceptance.py --with-eval` |
 | 知道自己那几项怎么算过 | [任务卡-三人版.md](任务卡-三人版.md) |
 | 提交前自查 | [rules.md](rules.md) |
 | 评审怎么讲 | [judge-guide.md](judge-guide.md) |

@@ -23,6 +23,7 @@
 | MCP 远程接入 | 待接（W1） | 三条路径见 §7；接入记录见 `docs/env.md` §2.3 |
 
 一条命令自检全部：`python tools/selfcheck.py`。
+验收标准（16 项结构 + 7 项指标，带阈值）：`python tools/acceptance.py --with-eval`，口径见 [冲刺计划 §10](docs/冲刺计划-1130.md)。
 
 ---
 
@@ -89,6 +90,9 @@ python eval/run_eval.py                   # 期望：六项指标 100%
 
 # 4) 一条命令看全链路
 python skeleton.py                        # 期望：OK 5 steps | 科室=消化内科 | 溯源完整率=0.75
+
+# 5) 验收：16 项结构不变量 + 7 项指标阈值（FAIL 非零退出）
+python tools/acceptance.py --with-eval
 ```
 
 **Windows 两个必踩的坑**（别浪费半天）：
