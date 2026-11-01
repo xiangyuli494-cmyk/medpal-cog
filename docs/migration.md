@@ -94,6 +94,29 @@ git push origin main
 # 3) 关掉赛题3相关 PR，把新 PR 引导到新仓（gh 或网页操作）
 ```
 
+## 5.5 第二批搬迁：旧仓未合并分支（2026-11-01）
+
+切分只取了旧 `main`。旧仓还有 4 组成果躺在**未合并分支**上，已按文件搬进本仓（不是 merge，不带旧目录结构）：
+
+```bash
+cd /e/deepseek-data/medpal-cog
+git fetch /e/deepseek-data/medpal 'refs/remotes/origin/*:refs/remotes/legacy/*'
+# 逐个取文件后改包前缀（agent.ontology → ontology、agent.parse → parse）
+```
+
+| 来源分支 | 搬入 | 适配 |
+| --- | --- | --- |
+| `feat/agent-T4-ontology-diff` | `ontology/diff.py`（382 行）、`tests/test_ontology_diff.py`（18 测试） | `from agent.ontology.diff` → `from ontology.diff` |
+| `feat/agent-T5-pdf-parse` | `parse/pdf.py`（98 行）、`parse/__init__.py`、`tests/test_pdf_parse.py`（4 测试） | 同上，包前缀；`fitz` 仍是 lazy import |
+| `feat/t3-visual` | `web/trace.html`（288 行，静态页） | 无 |
+| `docs/t1-t3-input-contract` | `docs/T3-可视化输入契约.md`、`docs/handoff/W1-T3-决策链可视化.md`、`tests/fixtures/trace_v1_broken.json`、`trace_walking_skeleton_example.json` | 文档里 `agent/` 前缀去掉 |
+
+有两组**没有**搬：`docs/t1-ontology-schema` 的 schema 内容本仓 `docs/ontology-schema.md` 已是超集；`T6-w1-env-doc` 的 `docs/agent/env.md`（320 行）是 `docs/env.md`（340 行）的子集。`feat/t5-model-channel` 的 `tools/probe_llm.py` 与本仓完全一致（都 125 行）。
+
+搬完验证：`python -m pytest tests -q` → **40 passed**（原 17 + 新 22；未装 PyMuPDF 时 PDF 用例 1 条 skipped），`python tools/acceptance.py` 全 PASS。
+
+旧仓剩余分支（`legacy/*` 本地引用）作历史留档，不再合并；需要哪份就按上表的方式取文件。
+
 ## 6 改名注意
 
 新仓暂定名 `medpal-cog`。若最终改成别的名字，只需替换三处：`README.md` 的 `git clone` 行、`docs/adr/ADR-001-仓库拆分与历史迁移.md` 标题下的仓名、本文件的表格；其余相对链接不受影响。

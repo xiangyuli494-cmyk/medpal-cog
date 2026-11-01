@@ -11,11 +11,13 @@
 | 改决策链结构 | [trace-schema.md](trace-schema.md) |
 | 知道这周干什么、几号交 | [冲刺计划-1130.md](冲刺计划-1130.md)（总排期 + 闸门 + 风险） |
 | 一项算不算做完 | [冲刺计划-1130.md §10](冲刺计划-1130.md)：16 项结构 + 7 项指标，`python tools/acceptance.py --with-eval` |
+| 开分支、请人 approve、合并卡住了 | [git-flow.md](git-flow.md)（保护规则 + 谁审谁 + 常见卡点） |
 | 知道自己那几项怎么算过 | [任务卡-三人版.md](任务卡-三人版.md) |
 | 提交前自查 | [rules.md](rules.md) |
 | 评审怎么讲 | [judge-guide.md](judge-guide.md) |
 | 交接给下一个人 | [handoff/TEMPLATE.md](handoff/TEMPLATE.md) |
-| 这个仓怎么来的 | [adr/ADR-001-仓库拆分与历史迁移.md](adr/ADR-001-仓库拆分与历史迁移.md)、[migration.md](migration.md) |
+| 这个仓怎么来的 | [adr/ADR-001-仓库拆分与历史迁移.md](adr/ADR-001-仓库拆分与历史迁移.md)、[migration.md](migration.md)（含第二批：旧仓未合并分支怎么搬的） |
+| 为什么这么排、为什么不回旧仓 | [adr/ADR-002-对齐旧仓与分支保护.md](adr/ADR-002-对齐旧仓与分支保护.md) |
 
 ## 目录约定
 

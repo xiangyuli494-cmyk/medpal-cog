@@ -1,6 +1,9 @@
 # 贡献指南
 
-六个人、四周、一个交付仓。规则越少越好，但下面每一条都是踩过的坑。
+三个人、四周、一个交付仓。规则越少越好，但下面每一条都是踩过的坑。
+
+> 排期见 [docs/冲刺计划-1130.md](docs/冲刺计划-1130.md)，分工见 [docs/任务卡-三人版.md](docs/任务卡-三人版.md)。
+> 分支怎么开、PR 怎么批：[docs/git-flow.md](docs/git-flow.md)。
 
 ## 1 五分钟上手
 
@@ -9,7 +12,7 @@ git clone <本仓地址>
 python -m pip install -r requirements.txt -r requirements-dev.txt
 
 python mcp-server/seed.py --reset     # 建种子库（可重复执行，--reset 清空重来）
-python -m pytest tests -q             # 期望 17 passed, 1 skipped
+python -m pytest tests -q             # 期望 40 passed（未装 PyMuPDF 时 1 skipped）
 python tools/selfcheck.py             # 一键自检，绿了再开工
 ```
 
@@ -24,13 +27,15 @@ set NO_PROXY=127.0.0.1,localhost
 
 | 类型 | 命名 | 例 |
 | --- | --- | --- |
-| 功能 | `feat/agent-T{编号}-{简述}` | `feat/agent-T2-eval-metrics` |
-| 修复 | `fix/agent-T{编号}-{简述}` | `fix/agent-T1-kg-2hop` |
-| 文档 | `docs/agent-{简述}` | `docs/agent-judge-guide` |
-| 工程 | `chore/agent-{简述}` | `chore/agent-ci-cache` |
+| 功能 | `feat/{模块}-{简述}` | `feat/kg-2hop`、`feat/onto-commit` |
+| 修复 | `fix/{模块}-{简述}` | `fix/ingest-asset-id` |
+| 文档 | `docs/{简述}` | `docs/git-flow` |
+| 工程 | `chore/{简述}` | `chore/ci-cache` |
 
-- **不直接 push `main`**，一律 PR。
-- 三人制下的合并：任何人可 approve，**T0（队长）唯一 merge 权**，避免互相等人。
+- **不直接 push `main`**：已开保护，直推会被 GitHub 拒绝（`protected branch hook declined`）。
+- 流程：开分支 → push → 开 PR → **至少 1 个 approve** → CI 三绿 → **T1（队长）点合并**。
+- **T1 自己开的 PR 必须由 T2 或 T3 approve**（GitHub 不计给自己批的票）。
+- 批完又推了新提交，旧批准自动失效（dismiss stale reviews），需要重新批。
 - 提交信息：`type(scope): 中文动宾`，一行说清改了什么。
   - scope 取值：`mcp` / `kg` / `onto` / `eval` / `skill` / `ui` / `ci` / `docs` / `data`
   - 例：`feat(mcp): 新增 std_align 的 fuzzy 匹配`
@@ -41,9 +46,11 @@ set NO_PROXY=127.0.0.1,localhost
 1. **lint**：`ruff check .` 全过（规则只有 E/F/I，line-length 100）。
 2. **test**：`python -m pytest tests -q` 全过；新增工具必须有测试。
 3. **pipeline**：`python skeleton.py` 通、`python eval/run_eval.py` 六项不低于上一版、`python tools/check_evaluator.py` exit 0。
-4. **交接单**：在 `docs/handoff/` 下补 `W{周}-T{编号}-{模块}.md`（模板见 `docs/handoff/TEMPLATE.md`），写清改了哪个契约、谁要跟着改、怎么验。
+4. **验收**：`python tools/acceptance.py --stage {当前周}` 无 FAIL（阈值见 [冲刺计划 §10](docs/冲刺计划-1130.md)）。
+5. **一张 approve**：由 T1/T2/T3 中非作者的人批（T1 的 PR 由 T2 或 T3 批）。
+6. **交接单**：在 `docs/handoff/` 下补 `W{周}-T{编号}-{模块}.md`（模板见 `docs/handoff/TEMPLATE.md`），写清改了哪个契约、谁要跟着改、怎么验。
 
-任何一项红了就别合，也别用 `--no-verify` 绕。
+任何一项红了就别合，也别用 `--no-verify` 绕。CI 是 `lint` / `test` / `pipeline` 三个 job，分支保护按这三个名字卡。
 
 ## 4 代码规范
 
@@ -66,5 +73,6 @@ set NO_PROXY=127.0.0.1,localhost
 
 ## 7 发版
 
-- `v0.1-internal`：W1 末，十工具 + 三 Skill 可跑（当前）。
-- `v1.0-submit`：11-22 交付，打 tag 并附 `docs/judge-guide.md`。
+- `v0.1-internal`：W1 末（11-08），十工具 + 三 Skill 可跑（当前基线）。
+- 每周闸门后 T1 打轻量 tag `w1`/`w2`/`w3`，便于回溯。
+- `v1.0`：**11-30** 交付，`git tag -a v1.0 -m "11-30 交付"` + `git push origin v1.0`，附 `docs/judge-guide.md`。

@@ -1,11 +1,15 @@
-# CODEOWNERS —— 三人制（2026-11-01 起）
-# 生效条件：账号必须是本仓 Collaborator，否则该行被忽略（回落到下面的默认 owner）
-# T1_HANDLE / T2_HANDLE 是占位符，换成真实 GitHub 用户名后提交；未替换前由默认 owner 兜底。
+# CODEOWNERS —— 三人制（T1 队长 / T2 / T3），2026-11-01 起
+#
+# 生效条件：被 @ 的账号必须是本仓 Collaborator；不是的话该行被忽略，回落到下面的默认 owner。
+# @T2_HANDLE / @T3_HANDLE 是占位符：把两人加进 Collaborator 后，用真实用户名替换本文件里全部占位符再提交。
+# 替换命令：sed -i 's/@T2_HANDLE/@真实用户名/g; s/@T3_HANDLE/@真实用户名/g' CODEOWNERS
+#
+# 注意：GitHub 不允许 PR 作者批准自己的 PR，所以 T1 的 PR 必须由 T2 或 T3 批（见 docs/git-flow.md §5）。
 
-# 默认兜底：T0 队长
+# 默认兜底：T1 队长
 *                                   @xiangyuli494-cmyk
 
-# T0：外部环境、部署、CI、骨架、文档
+# T1：环境、部署、CI、骨架、文档、外部接入
 /.github/                           @xiangyuli494-cmyk
 /deploy/                            @xiangyuli494-cmyk
 /skeleton.py                        @xiangyuli494-cmyk
@@ -14,14 +18,17 @@
 /requirements-dev.txt               @xiangyuli494-cmyk
 /docs/                              @xiangyuli494-cmyk
 
-# T1：本体与推理
-/mcp-server/                        @T1_HANDLE @xiangyuli494-cmyk
-/docs/mcp-contract.md               @T1_HANDLE @xiangyuli494-cmyk
-/docs/ontology-schema.md            @T1_HANDLE
-/docs/trace-schema.md               @T1_HANDLE
+# T2：本体、推理、MCP 工具实现
+/mcp-server/                        @T2_HANDLE @xiangyuli494-cmyk
+/ontology/                          @T2_HANDLE
+/docs/mcp-contract.md               @T2_HANDLE @xiangyuli494-cmyk
+/docs/ontology-schema.md            @T2_HANDLE
+/docs/trace-schema.md               @T2_HANDLE
 
-# T2：数据、评测、Skill 包
-/skills/                            @T2_HANDLE
-/eval/                              @T2_HANDLE
-/data/                              @T2_HANDLE
-/tools/                             @T2_HANDLE @xiangyuli494-cmyk
+# T3：数据、评测、Skill 包、解析、可视化、工具脚本
+/skills/                            @T3_HANDLE
+/eval/                              @T3_HANDLE
+/data/                              @T3_HANDLE
+/parse/                             @T3_HANDLE
+/web/                               @T3_HANDLE
+/tools/                             @T3_HANDLE @xiangyuli494-cmyk
