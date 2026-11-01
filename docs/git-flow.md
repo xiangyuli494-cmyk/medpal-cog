@@ -56,7 +56,24 @@ git push -u origin feat/kg-2hop
 | Require status checks | `lint` / `test` / `pipeline` | 三个 job 名来自 `.github/workflows/ci.yml` |
 | Require conversation resolution | 开 | 评论没 resolve 合不了 |
 | Allow force pushes / deletions | 关 | 历史只增 |
-| Do not allow bypassing（`enforce_admins`） | **关** | 留应急阀门：T1 作为 owner 仍可强合，**但用之前必须在群里说一句** |
+| Do not allow bypassing（`enforce_admins`） | **暂关**，T2/T3 加进来当天改**开** | 关着的时候 owner 直推 `main` 会成功（见 §4.1），等于规则对唯一 admin 不生效 |
+
+### 4.1 实测：不设 `enforce_admins` 时到底拦住谁（2026-11-01）
+
+在 PR #1 合并后做了对照实验：本地在 `main` 上打一个空提交再 `git push origin main`。
+
+```text
+remote: - Changes must be made through a pull request.
+remote: - 3 of 3 required status checks are expected.
+To https://github.com/.../medpal-cog.git
+   eee60ac..15dd56a  main -> main          ← 推送成功
+```
+
+结论：**admin 直推是被放行的**，那两行只是警告。所以：
+
+- 「不许直推」在 `enforce_admins=false` 下靠自觉，CI/approve 对 owner 完全不管用；
+- 但**强推**是硬拦的（`allow_force_pushes=false` 对 admin 也生效），撤回那条空提交只能临时打开强推、推完立刻恢复；
+- 想真正机械强制：等 T2/T3 账号进 Collaborator（能批 PR）当天执行 `ENFORCE_ADMINS=1 bash tools/gh-protect.sh`。在那之前保持 `false`，否则 T1 的 PR 没人能批、`main` 会冻住。
 
 重新装一遍或换机器时执行（幂等）：
 

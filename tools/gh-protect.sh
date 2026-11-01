@@ -9,6 +9,11 @@ set -euo pipefail
 
 REPO=${REPO:-xiangyuli494-cmyk/medpal-cog}
 BRANCH=${BRANCH:-main}
+# ENFORCE_ADMINS=1 → 连 admin/owner 也必须走 PR + approve（没人能直推、没人能绕过）。
+# 现在只有 T1 一个 collaborator，开了就没人能批 T1 的 PR；等 T2/T3 账号加进来当天再开：
+#   ENFORCE_ADMINS=1 bash tools/gh-protect.sh
+ENFORCE_ADMINS=${ENFORCE_ADMINS:-0}
+if [ "${ENFORCE_ADMINS}" = "1" ]; then ENFORCE_JSON=true; else ENFORCE_JSON=false; fi
 
 # 必需检查项的名字 = ci.yml 里各 job 的 name（不是 job id）。
 # 名字对不上时，PR 会一直卡在 "Expected — Waiting for status to be reported"。
@@ -34,8 +39,8 @@ else
   TOKEN=$GITHUB_TOKEN
 fi
 
-json=$(printf '{"required_status_checks":{"strict":false,"contexts":[%s]},"enforce_admins":false,"required_pull_request_reviews":{"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":1,"require_last_push_approval":false},"restrictions":null,"required_conversation_resolution":true,"allow_force_pushes":false,"allow_deletions":false,"required_linear_history":false}' \
-  "$(echo "$CHECKS" | sed 's/[^,]*/"&"/g')")
+json=$(printf '{"required_status_checks":{"strict":false,"contexts":[%s]},"enforce_admins":%s,"required_pull_request_reviews":{"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":1,"require_last_push_approval":false},"restrictions":null,"required_conversation_resolution":true,"allow_force_pushes":false,"allow_deletions":false,"required_linear_history":false}' \
+  "$(echo "$CHECKS" | sed 's/[^,]*/"&"/g')" "$ENFORCE_JSON")
 
 if [ "${DRY_RUN:-0}" = "1" ]; then
   echo "$json"
