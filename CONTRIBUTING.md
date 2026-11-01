@@ -12,7 +12,7 @@ git clone <本仓地址>
 python -m pip install -r requirements.txt -r requirements-dev.txt
 
 python mcp-server/seed.py --reset     # 建种子库（可重复执行，--reset 清空重来）
-python -m pytest tests -q             # 期望 40 passed（未装 PyMuPDF 时 1 skipped）
+python -m pytest tests -q             # 期望 43 passed（未装 PyMuPDF 时 1 skipped）
 python tools/selfcheck.py             # 一键自检，绿了再开工
 ```
 

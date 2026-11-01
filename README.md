@@ -15,14 +15,16 @@
 | --- | --- | --- |
 | MCP Server，10 个工具 | **可跑** | `python mcp-server/server.py`（stdio）／`MCP_TRANSPORT=streamable-http python mcp-server/server.py`（Nexent 远程链接） |
 | 数据资产台账 | **61 张 Asset Card**（文本 21 / 表格 20 / 图文 20） | `data/asset-cards/`，`data/samples/` 三类各 20 份 |
-| 本体 v0.9 种子 | **17 三元组 + 15 锚点** | `python mcp-server/seed.py --reset` |
+| 本体 v0.9 | **37 三元组 + 43 锚点**（seed 手写 17 + 跨文档长 20） | `python mcp-server/seed.py --reset` → `python tools/ingest_all.py` |
 | 3 个 Skill 包 | **可导入** | `skills/s1-asset-audit`、`s2-ontology-evolve`、`s3-evidence-decision` |
-| 离线评测 | **14 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
+| 主智能体配置 v0 | **配置就绪，未实测** | `agent/prompt.md` + `agent/config.json`；接线见 `agent/README.md`，样例 `agent/sessions/` |
+| 离线评测 | **20 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
 | Walking Skeleton | **一条命令通电** | `python skeleton.py` |
 | 本体版本差分 | **可回放**（新增/删除/修改 + 编号漂移对账） | `python -m pytest tests/test_ontology_diff.py -q`（18 条） |
+| 智能体配置自洽 | **6 条测试**（白名单 = 服务端 10 工具、样例符合三行契约） | `python -m pytest tests/test_agent_config.py -q` |
 | PDF 解析 | **页码锚点**（`p{页}.s{节}`） | `python -m pytest tests/test_pdf_parse.py -q`（4 条，缺 PyMuPDF 自动跳过） |
 | 决策链可视化 | **静态页可开**（断链标红，无后端） | 浏览器打开 `web/trace.html`，拖入 `tests/fixtures/trace_v1_broken.json` |
-| 测试总量 | **40 passed**（缺 PyMuPDF 时 1 skipped） | `python -m pytest tests -q` |
+| 测试总量 | **43 passed**（缺 PyMuPDF 时 1 skipped） | `python -m pytest tests -q` |
 | Nexent 平台本体 | **已拉起 v2.7.0**（13 容器，控制台 :3000） | `docs/env.md` §2.5 四条判定命令 |
 | MCP 远程接入 | 待接（W1） | 三条路径见 §7；接入记录见 `docs/env.md` §2.3 |
 
@@ -83,11 +85,12 @@
 ```bash
 python -m pip install -r requirements.txt
 
-# 1) 建种子库：17 三元组 + 1 份资产 + 15 个锚点
+# 1) 建种子库（17 三元组 + 15 锚点），再把 61 份样例入台账并长出跨文档本体（37 三元组 + 43 锚点）
 python mcp-server/seed.py --reset
+python tools/ingest_all.py
 
 # 2) 冒烟 + 三套测试
-python -m pytest tests -q                 # 期望：40 passed（未装 PyMuPDF 时 1 skipped）
+python -m pytest tests -q                 # 期望：43 passed（未装 PyMuPDF 时 1 skipped）
 
 # 3) 离线评测，出报告到 eval/reports/
 python eval/run_eval.py                   # 期望：六项指标 100%
@@ -125,7 +128,7 @@ python tools/acceptance.py --with-eval
 
 ---
 
-## 6 评测：14 条离线分不等于答辩分
+## 6 评测：20 条离线分不等于答辩分
 
 `eval/run_eval.py` 跑的是**规则化链路**，题目是我们自己出的，只用于回归与上限参照：
 

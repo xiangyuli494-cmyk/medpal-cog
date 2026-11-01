@@ -131,10 +131,17 @@ def canonical_asset_id(card) -> str:
 
 
 def stable_asset_id(card) -> str:
-    """内容哈希生成资产号：同一份文件重复 ingest 得到同一个号，卡与台账不抖。"""
+    """内容哈希生成资产号：同一份文件重复 ingest 得到同一个号，卡与台账不抖。
+
+    哈希前把 CRLF 折成 LF：仓库里 `.gitattributes` 声明 `* text=auto eol=lf`，
+    Windows 检出后磁盘上是 CRLF，直接哈希原始字节会让同一份文件在 Windows 和 Linux
+    上得到两个资产号——台账每换一台机器就整批改名。
+    """
     src = str((card.get("source") or {}).get("path") or "")
     p = Path(src)
-    raw = p.read_bytes() if p.is_file() else (str(card.get("title", "")) + "|" + src).encode()
+    raw = p.read_bytes().replace(b"\r\n", b"\n") if p.is_file() else (
+        str(card.get("title", "")) + "|" + src
+    ).encode()
     return "AST-" + datetime.now(CST).strftime("%Y") + "-" + hashlib.sha1(raw).hexdigest()[:6]
 
 

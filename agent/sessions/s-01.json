@@ -1,0 +1,69 @@
+{
+  "id": "S-01",
+  "title": "常态：上腹隐痛夜间加重 → 消化内科 + 两项检查",
+  "source": "由 eval/run_eval.py 的规则引擎在 seed 库上回放生成 —— 只用于约定工具调用形状与三行输出格式，不是 Nexent 实跑记录",
+  "question": "反复上腹隐痛3个月，夜间加重，进食后缓解，近两周服用布洛芬",
+  "tool_calls": [
+    {
+      "tool": "kb_search",
+      "args": {
+        "query": "反复上腹隐痛3个月，夜间加重，进食后缓解"
+      },
+      "ok": true,
+      "yields": "文档段落候选"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "term": "消化内科"
+      },
+      "ok": true,
+      "yields": "消化内科"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seeds": [],
+        "max_hops": 2
+      },
+      "ok": true,
+      "yields": "疾病→检查 / 疾病→科室 / 禁忌路径"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "反复上腹隐痛3个月，夜间加重，进食后缓解，近两周服用布洛芬"
+      },
+      "ok": true,
+      "yields": "TR-20261101-F2E6"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s2.p1.c2",
+    "AST-2026-000137#s2.p1.c3",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2"
+  ],
+  "conflict_line": "冲突：布洛芬（NSAIDs）与消化性溃疡存在禁忌关系",
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：幽门螺杆菌呼气试验、胃镜",
+    "完整率：1.00"
+  ],
+  "engine": {
+    "dept": "消化内科",
+    "exams": [
+      "幽门螺杆菌呼气试验",
+      "胃镜"
+    ],
+    "conflicts": [
+      "布洛芬"
+    ],
+    "trace_id": "TR-20261101-F2E6",
+    "trace_completeness": 1.0,
+    "elapsed_ms": 20,
+    "out_of_scope": false
+  }
+}

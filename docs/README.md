@@ -18,6 +18,7 @@
 | 交接给下一个人 | [handoff/TEMPLATE.md](handoff/TEMPLATE.md) |
 | 这个仓怎么来的 | [adr/ADR-001-仓库拆分与历史迁移.md](adr/ADR-001-仓库拆分与历史迁移.md)、[migration.md](migration.md)（含第二批：旧仓未合并分支怎么搬的） |
 | 为什么这么排、为什么不回旧仓 | [adr/ADR-002-对齐旧仓与分支保护.md](adr/ADR-002-对齐旧仓与分支保护.md) |
+| 主智能体怎么接进 Nexent | [../agent/README.md](../agent/README.md)（提示词、工具白名单、3 份会话样例、故障表） |
 
 ## 目录约定
 
@@ -29,6 +30,6 @@
 
 ## 写文档的三条硬规矩
 
-1. **数字必须能被命令复现**。写「17 三元组」，旁边就得有 `python mcp-server/seed.py --reset`。
+1. **数字必须能被命令复现**。写「37 三元组」，旁边就得有 `python mcp-server/seed.py --reset && python tools/ingest_all.py`。
 2. **不写没跑通的东西**。计划中的能力写在「待办」，不要混进「已完成」。
 3. **改了实现当天改文档**。文档过期比没文档更贵。

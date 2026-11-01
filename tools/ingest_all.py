@@ -106,6 +106,18 @@ json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
     for name, m in mapping.items():
         per_mod[m] = per_mod.get(m, 0) + 1
     print("  按模态:", per_mod)
+
+    # 台账入库完再把本体长出来：单文档长不出跨文档取证，另四份样例的
+    # 疾病/科室/检查按文档写明的关系进三元组（mcp-server/ontology_grow.py）
+    import ontology_grow  # noqa: PLC0415
+
+    con = sqlite3.connect(str(DB))
+    con.row_factory = sqlite3.Row
+    grown = ontology_grow.grow(con)
+    con.commit()
+    con.close()
+    print("  跨文档本体:", grown["docs"], "份文档 /", grown["triples"], "条新三元组",
+          grown["skipped"] or "")
     odd = [(n, m) for n, m in mapping.items() if (n.endswith((".csv", ".xlsx")) and m != "table")]
     if odd:
         print("  ⚠ 表格类但模态不是 table:", odd)

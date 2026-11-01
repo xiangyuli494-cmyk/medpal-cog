@@ -87,6 +87,9 @@ REQUIRED = [
     "ontology/diff.py",
     "parse/pdf.py",
     "web/trace.html",
+    "agent/prompt.md",
+    "agent/config.json",
+    "agent/README.md",
 ]
 
 MANUAL = [
@@ -175,7 +178,17 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", default="baseline", choices=list(STAGE_MIN))
     ap.add_argument("--with-eval", action="store_true", help="跑评测并套指标阈值")
+    ap.add_argument("--no-seed", action="store_true", help="不重建种子库，直接读现有库")
     args = ap.parse_args(argv)
+
+    # 判定必须建立在「按当前代码重建的库」上：读一份过期的本地库，
+    # 会把「代码没问题、库没重建」报成结构不变量失败。
+    if not args.no_seed:
+        for step in (["mcp-server/seed.py", "--reset"], ["tools/ingest_all.py"]):
+            sd = run([PY, *step])
+            if sd.returncode != 0:
+                print(f"[FAIL] 建库失败：{step[0]} → {tail(sd)}")
+                return 2
 
     t = tier(args.stage)
     need = STAGE_MIN[args.stage]
@@ -201,12 +214,26 @@ def main(argv: list[str]) -> int:
     missing_tools = [n for n in TOOL_CONTRACT if n not in registered]
     extra_tools = [n for n in registered if n not in TOOL_CONTRACT]
     ct = run([PY, "tools/check_evaluator.py"])
-    tool_ok = not missing_tools and not extra_tools
+    # 智能体配置里的白名单也得和契约同源，否则平台侧会挂到已改名的工具上
+    try:
+        cfg = json.loads((ROOT / "agent" / "config.json").read_text(encoding="utf-8"))
+        cfg_tools = set(cfg["tools"]["mcp"])
+    except Exception:
+        cfg_tools = set()
+    whitelist_ok = cfg_tools == set(TOOL_CONTRACT)
+    tool_ok = not missing_tools and not extra_tools and whitelist_ok
     add(
         "A-03",
-        "10 工具契约（名字 + 评估器四道闸）",
+        "10 工具契约（服务端 + 智能体白名单 + 评估器四道闸）",
         tool_ok and ct.returncode == 0,
-        ("名字齐" if tool_ok else f"缺 {missing_tools} 多 {extra_tools}")
+        (
+            "名字齐且白名单一致"
+            if tool_ok
+            else (
+                f"缺 {missing_tools} 多 {extra_tools} "
+                f"白名单差 {sorted(cfg_tools ^ set(TOOL_CONTRACT))}"
+            )
+        )
         + "；评估器 "
         + ("过" if ct.returncode == 0 else tail(ct)),
     )
@@ -278,7 +305,7 @@ def main(argv: list[str]) -> int:
     missing = [f for f in REQUIRED if not (ROOT / f).exists()]
     add(
         "A-13",
-        "必备文档/入口齐（18 项）",
+        "必备文档/入口齐（21 项）",
         not missing,
         "全在" if not missing else "缺 " + ", ".join(missing[:3]),
     )

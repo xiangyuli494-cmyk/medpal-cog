@@ -178,13 +178,13 @@ ingest_asset(path: str, modality: str = "", title: str = "",
 // 响应
 {
   "ok": true,
-  "asset_id": "AST-2026-0a8a28",
+  "asset_id": "AST-2026-000137",
   "modality": "text",
   "anchors": [
-    {"anchor_id": "AST-2026-0a8a28#s1.h", "kind": "section",
+    {"anchor_id": "AST-2026-000137#s1.h", "kind": "section",
      "text": "消化性溃疡临床路径（2023 版）摘要"},
-    {"anchor_id": "AST-2026-0a8a28#s2.h", "kind": "section", "text": "诊断依据"},
-    {"anchor_id": "AST-2026-0a8a28#s2.p1.c1", "kind": "sentence",
+    {"anchor_id": "AST-2026-000137#s2.h", "kind": "section", "text": "诊断依据"},
+    {"anchor_id": "AST-2026-000137#s2.p1.c1", "kind": "sentence",
      "text": "患者以上腹部痛为主要表现，疼痛多位于上腹中部偏右"}
   ],
   "entity_hint": ["消化性溃疡", "上腹隐痛", "胃镜", "幽门螺杆菌", "布洛芬"],
