@@ -1,7 +1,7 @@
 # MedPal-Cog · 可进化医疗决策智能体
 
 > **赛题3**｜基于华为 ModelEngine Nexent 打造可进化决策智能体
-> 六人 · 2026-11-22 交付 · **本仓是赛题3 的唯一交付仓**
+> 三人（T0/T1/T2）· **2026-11-30 交付** · 本仓是赛题3 的唯一交付仓
 
 只切一条链路：**门诊主诉 → 跨文档取证 → 科室与检查建议**。把赛题四条要求各做成一件能跑、能验、能溯源的东西：
 
@@ -19,7 +19,8 @@
 | 3 个 Skill 包 | **可导入** | `skills/s1-asset-audit`、`s2-ontology-evolve`、`s3-evidence-decision` |
 | 离线评测 | **14 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
 | Walking Skeleton | **一条命令通电** | `python skeleton.py` |
-| Nexent 平台本体 | 待 W2 接入 | 三条接入路径见 §7 |
+| Nexent 平台本体 | **已拉起 v2.7.0**（13 容器，控制台 :3000） | `docs/env.md` §2.5 四条判定命令 |
+| MCP 远程接入 | 待接（W1） | 三条路径见 §7；接入记录见 `docs/env.md` §2.3 |
 
 一条命令自检全部：`python tools/selfcheck.py`。
 
