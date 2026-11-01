@@ -24,14 +24,29 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "mcp-server"))
 PY = sys.executable
 
-# 周闸门阈值；final 与 w2 同档
+# 周闸门阈值，逐项对齐 docs/冲刺计划-1130.md §3 / §10.4 / §10.6：
+#   W1 三元组 ≥35、评测 ≥20；W2 ≥50 / ≥24 且版本 ≥2；W3 ≥50 / ≥30；final 与 W3 同档
 STAGE_MIN = {
     "baseline": {"triples": 17, "dataset": 14, "versions": 1, "assets": 1},
-    "w1": {"triples": 50, "dataset": 24, "versions": 1, "assets": 61},
-    "w2": {"triples": 60, "dataset": 30, "versions": 2, "assets": 61},
-    "w3": {"triples": 60, "dataset": 30, "versions": 2, "assets": 61},
-    "final": {"triples": 60, "dataset": 30, "versions": 2, "assets": 61},
+    "w1": {"triples": 35, "dataset": 20, "versions": 1, "assets": 61},
+    "w2": {"triples": 50, "dataset": 24, "versions": 2, "assets": 61},
+    "w3": {"triples": 50, "dataset": 30, "versions": 2, "assets": 61},
+    "final": {"triples": 50, "dataset": 30, "versions": 2, "assets": 61},
 }
+
+# 10 个 MCP 工具名契约（与 docs/赛题3-方案-v1.2.md §6.2、mcp-server/server.py 一致）
+TOOL_CONTRACT = [
+    "ingest_asset",
+    "get_asset_card",
+    "kg_query",
+    "onto_propose",
+    "onto_commit",
+    "std_align",
+    "trace_write",
+    "skill_export",
+    "kb_search",
+    "health",
+]
 
 # 指标下限：(baseline, 周闸门, 交付)
 METRICS = {
@@ -180,8 +195,21 @@ def main(argv: list[str]) -> int:
     sk = run([PY, "skeleton.py"])
     add("A-02", "骨架五步跑通", sk.returncode == 0, "OK" if sk.returncode == 0 else tail(sk))
 
+    # A-03 判两件事：工具名与契约一致（10 个，不多不少）+ 评估器四道闸能过
+    srv = (ROOT / "mcp-server/server.py").read_text(encoding="utf-8")
+    registered = re.findall(r"@mcp\.tool\(\)\s*\ndef\s+(\w+)\s*\(", srv)
+    missing_tools = [n for n in TOOL_CONTRACT if n not in registered]
+    extra_tools = [n for n in registered if n not in TOOL_CONTRACT]
     ct = run([PY, "tools/check_evaluator.py"])
-    add("A-03", "10 工具契约校验", ct.returncode == 0, "通过" if ct.returncode == 0 else tail(ct))
+    tool_ok = not missing_tools and not extra_tools
+    add(
+        "A-03",
+        "10 工具契约（名字 + 评估器四道闸）",
+        tool_ok and ct.returncode == 0,
+        ("名字齐" if tool_ok else f"缺 {missing_tools} 多 {extra_tools}")
+        + "；评估器 "
+        + ("过" if ct.returncode == 0 else tail(ct)),
+    )
 
     try:
         st = db_stats()
@@ -194,7 +222,7 @@ def main(argv: list[str]) -> int:
 
     add("A-04", "种子库可查", db_ok, f"{st['assets']} 卡" if db_ok else db_err)
     cards = len(list((ROOT / "data/asset-cards").glob("*.json")))
-    add("A-05", "资产卡 61 张", cards == 61, f"{cards} 张")
+    add("A-05", "资产卡 ≥61 张", cards >= 61, f"{cards} 张")
     add(
         "A-06",
         f"Asset Card 入库 ≥{need['assets']}",
@@ -225,10 +253,11 @@ def main(argv: list[str]) -> int:
         for d in sorted((ROOT / "data/samples").iterdir())
         if d.is_dir()
     }
-    ok = samples.get("text") == 20 and samples.get("table") == 20 and samples.get("image") == 20
+    # 三类各 ≥20；以后加 pdf/ 等新模态目录不算违规（只增不减）
+    ok = all(samples.get(k, 0) >= 20 for k in ("text", "table", "image"))
     add(
         "A-10",
-        "三类样本各 20",
+        "三类样本各 ≥20",
         ok,
         "/".join(str(samples.get(k, 0)) for k in ("text", "table", "image")),
     )

@@ -1,6 +1,6 @@
 # 协作流程：分支 → PR → approve → 合并
 
-> 2026-11-01 起强制。`main` 已开保护：**不能直推，必须 PR，且至少 1 个 approve + CI 三绿**。
+> 2026-11-01 起强制。`main` 已开保护：**必须 PR，且至少 1 个 approve + CI 三绿**；非管理员直推会被拒，admin 阀门现状见 §4.1。
 > 排期与任务见 [冲刺计划-1130.md](冲刺计划-1130.md) §9；任务卡见 [任务卡-三人版.md](任务卡-三人版.md)。
 
 ## 1 为什么这么做
@@ -50,7 +50,7 @@ git push -u origin feat/kg-2hop
 
 | 规则 | 值 | 说明 |
 | --- | --- | --- |
-| Require a pull request before merging | 开 | 直推 `main` 会被拒 |
+| Require a pull request before merging | 开 | 非管理员直推 `main` 会被拒；T1 是 admin，见 §4.1 |
 | Required approvals | **1** | 三个人足够轮转 |
 | Dismiss stale approvals | 开 | 批完又推新提交 → 批准失效，重新批 |
 | Require status checks | `lint` / `test` / `pipeline` | 三个 job 名来自 `.github/workflows/ci.yml` |

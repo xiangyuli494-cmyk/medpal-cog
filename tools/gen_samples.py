@@ -60,14 +60,17 @@ def gen_text() -> int:
             "## 治疗原则",
             "按临床路径执行，用药与随访见下方 anchors 指向的小节。",
         ]
-        (S / "text" / f"pathway_{i:02d}.md").write_text("\n".join(body), encoding="utf-8")
+        (S / "text" / f"pathway_{i:02d}.md").write_text(
+            "\n".join(body), encoding="utf-8", newline="\n"
+        )
         anchors = [
             {"anchor_id": f"{aid}#s2", "kind": "section", "text": "检查项目"},
             {"anchor_id": f"{aid}#s3", "kind": "section", "text": "治疗原则"},
         ]
         card = _card(aid, f"{name}临床路径摘要（合成 {i}）", "text", anchors, {"sections": 3})
         (CARDS / f"{aid}.json").write_text(
-            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8"
+            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
+            newline="\n",
         )
         made += 1
     return made
@@ -98,7 +101,7 @@ def gen_table() -> int:
     ]
     card = _card(aid, "检验参考区间（合成）", "table", anchors, {"tables": 1, "rows": len(rows)})
     (CARDS / f"{aid}.json").write_text(
-        json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
     )
     made += 1
 
@@ -110,11 +113,14 @@ def gen_table() -> int:
         lines.append(
             f"{pid},74,男,乏力与腹部不适,{name},{dept},{checks[0]},2026-10-{(i % 28) + 1:02d}"
         )
-        (S / "table" / f"menzhen_{i:02d}.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        (S / "table" / f"menzhen_{i:02d}.csv").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
+        )
         anchors = [{"anchor_id": f"{aid}#t1.r2", "kind": "table_row", "text": f"{name} 门诊记录"}]
         card = _card(aid, f"门诊记录（合成 {i}）", "table", anchors, {"tables": 1, "rows": 1})
         (CARDS / f"{aid}.json").write_text(
-            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8"
+            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
+            newline="\n",
         )
         made += 1
     return made
@@ -157,7 +163,8 @@ def gen_image() -> int:
             aid, f"合成门诊病历（{i}）", "image_report", anchors, {"figures": 1, "regions": 2}
         )
         (CARDS / f"{aid}.json").write_text(
-            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8"
+json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
+            newline="\n",
         )
         made += 1
     return made

@@ -32,7 +32,7 @@ set NO_PROXY=127.0.0.1,localhost
 | 文档 | `docs/{简述}` | `docs/git-flow` |
 | 工程 | `chore/{简述}` | `chore/ci-cache` |
 
-- **不直接 push `main`**：已开保护，直推会被 GitHub 拒绝（`protected branch hook declined`）。
+- **不直接 push `main`**：保护已开，非管理员的直推会被拒（`protected branch hook declined`）；T1 是 admin，`enforce_admins=false` 期间技术上仍能推，**纪律上不许**（见 [git-flow §4.1](docs/git-flow.md)）。
 - 流程：开分支 → push → 开 PR → **至少 1 个 approve** → CI 三绿 → **T1（队长）点合并**。
 - **T1 自己开的 PR 必须由 T2 或 T3 approve**（GitHub 不计给自己批的票）。
 - 批完又推了新提交，旧批准自动失效（dismiss stale reviews），需要重新批。
@@ -41,14 +41,15 @@ set NO_PROXY=127.0.0.1,localhost
   - 例：`feat(mcp): 新增 std_align 的 fuzzy 匹配`
 - 一次 PR 只做一件事；顺手改的格式化单独一个 PR。
 
-## 3 合并门槛（CI 三绿 + 一张交接单）
+## 3 合并门槛（CI 三绿 + acceptance + 一张 approve）
 
 1. **lint**：`ruff check .` 全过（规则只有 E/F/I，line-length 100）。
 2. **test**：`python -m pytest tests -q` 全过；新增工具必须有测试。
 3. **pipeline**：`python skeleton.py` 通、`python eval/run_eval.py` 六项不低于上一版、`python tools/check_evaluator.py` exit 0。
 4. **验收**：`python tools/acceptance.py --stage {当前周}` 无 FAIL（阈值见 [冲刺计划 §10](docs/冲刺计划-1130.md)）。
 5. **一张 approve**：由 T1/T2/T3 中非作者的人批（T1 的 PR 由 T2 或 T3 批）。
-6. **交接单**：在 `docs/handoff/` 下补 `W{周}-T{编号}-{模块}.md`（模板见 `docs/handoff/TEMPLATE.md`），写清改了哪个契约、谁要跟着改、怎么验。
+
+以上五条是硬门槛。**交接单不进门槛**：`docs/handoff/W{周}-{代号}-{模块}.md`（模板见 `docs/handoff/TEMPLATE.md`）写清改了哪个契约、谁要跟着改、怎么验，周日闸门核对证据位时才要求有。
 
 任何一项红了就别合，也别用 `--no-verify` 绕。分支保护卡的是 `ci.yml` 里三个 job 的 **name**：`lint (ruff)` / `test (pytest)` / `pipeline (skeleton + eval)`（改名要同步跑 `tools/gh-protect.sh`）。
 
