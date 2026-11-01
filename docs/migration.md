@@ -15,7 +15,7 @@
 
 - **代码与文档**：`agent/` 下全部内容，展平到新仓根。
 - **提交历史**：`git subtree split` 抽出的 10 个提交，作者、时间、提交信息原样保留。
-- **数据资产**：61 张 Asset Card、三类模态样本各 20 份、`eval/dataset/v0.jsonl` 14 条。
+- **数据资产**：61 张 Asset Card、三类模态样本各 20 份、`eval/dataset/v0.jsonl` 20 条（迁入时 14 条，W1 补齐报警/俗称/病程 6 条）。
 - **没搬**：陪诊线的 `backend/`、`demo/`、`docs/plan`、`docs/specs`、冻结说明 `FROZEN.md`——它们留在旧仓。
 
 ## 3 怎么搬的（可复现）
