@@ -65,8 +65,13 @@ REQUIRED = [
     "docs/trace-schema.md",
     "docs/judge-guide.md",
     "docs/backlog.md",
+    "docs/git-flow.md",
+    "docs/T3-可视化输入契约.md",
     "mcp-server/server.py",
     "skeleton.py",
+    "ontology/diff.py",
+    "parse/pdf.py",
+    "web/trace.html",
 ]
 
 MANUAL = [
@@ -244,7 +249,7 @@ def main(argv: list[str]) -> int:
     missing = [f for f in REQUIRED if not (ROOT / f).exists()]
     add(
         "A-13",
-        "必备文档/入口齐",
+        "必备文档/入口齐（18 项）",
         not missing,
         "全在" if not missing else "缺 " + ", ".join(missing[:3]),
     )

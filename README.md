@@ -1,7 +1,7 @@
 # MedPal-Cog · 可进化医疗决策智能体
 
 > **赛题3**｜基于华为 ModelEngine Nexent 打造可进化决策智能体
-> 三人（T0/T1/T2）· **2026-11-30 交付** · 本仓是赛题3 的唯一交付仓
+> 三人（T1 队长 / T2 / T3）· **2026-11-30 交付** · 本仓是赛题3 的唯一交付仓
 
 只切一条链路：**门诊主诉 → 跨文档取证 → 科室与检查建议**。把赛题四条要求各做成一件能跑、能验、能溯源的东西：
 
@@ -19,6 +19,10 @@
 | 3 个 Skill 包 | **可导入** | `skills/s1-asset-audit`、`s2-ontology-evolve`、`s3-evidence-decision` |
 | 离线评测 | **14 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
 | Walking Skeleton | **一条命令通电** | `python skeleton.py` |
+| 本体版本差分 | **可回放**（新增/删除/修改 + 编号漂移对账） | `python -m pytest tests/test_ontology_diff.py -q`（18 条） |
+| PDF 解析 | **页码锚点**（`p{页}.s{节}`） | `python -m pytest tests/test_pdf_parse.py -q`（4 条，缺 PyMuPDF 自动跳过） |
+| 决策链可视化 | **静态页可开**（断链标红，无后端） | 浏览器打开 `web/trace.html`，拖入 `tests/fixtures/trace_v1_broken.json` |
+| 测试总量 | **40 passed**（缺 PyMuPDF 时 1 skipped） | `python -m pytest tests -q` |
 | Nexent 平台本体 | **已拉起 v2.7.0**（13 容器，控制台 :3000） | `docs/env.md` §2.5 四条判定命令 |
 | MCP 远程接入 | 待接（W1） | 三条路径见 §7；接入记录见 `docs/env.md` §2.3 |
 
@@ -83,7 +87,7 @@ python -m pip install -r requirements.txt
 python mcp-server/seed.py --reset
 
 # 2) 冒烟 + 三套测试
-python -m pytest tests -q                 # 期望：17 passed, 1 skipped
+python -m pytest tests -q                 # 期望：40 passed（未装 PyMuPDF 时 1 skipped）
 
 # 3) 离线评测，出报告到 eval/reports/
 python eval/run_eval.py                   # 期望：六项指标 100%
@@ -198,10 +202,12 @@ python tools/acceptance.py --with-eval
 
 ## 11 协作
 
-- 分支：`feat/agent-T{编号}-{简述}`、`fix/agent-T{编号}-{简述}`、`docs/agent-{简述}`；不直接 push `main`。
+- **`main` 已开保护**：不能直推；必须 PR + **≥1 approve** + CI 三绿（`lint (ruff)` / `test (pytest)` / `pipeline (skeleton + eval)`）。
+- 分支：`feat/{模块}-{简述}`、`fix/{模块}-{简述}`、`docs/{简述}`、`chore/{简述}`。
 - 提交：`type(scope): 中文动宾`，scope 见 [docs/rules.md](docs/rules.md)。
-- 合并门槛：CI 三绿（lint / pytest / skeleton+eval）+ 一份交接单（`docs/handoff/W{周}-T{编号}-{模块}.md`）。
-- 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+- 合并门槛：CI 三绿 + `tools/acceptance.py` 无 FAIL + 一张 approve + 一份交接单。
+- **T1（队长）唯一 merge 权**；T1 自己的 PR 由 T2 或 T3 approve。
+- 完整动线与卡点排查：[docs/git-flow.md](docs/git-flow.md)；见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 12 团队与许可
 
@@ -209,11 +215,13 @@ python tools/acceptance.py --with-eval
 
 | 代号 | 账号 | 角色 |
 | --- | --- | --- |
-| **T0** | xiangyuli494-cmyk（队长） | 环境与 Nexent 集成、契约终审、合并权、答辩材料 |
-| **T1** | `T1_HANDLE` | 本体与推理：本体 v1.0/v1.1、`kg_query` 多跳、`onto_propose`/`onto_commit`、`std_align` |
-| **T2** | `T2_HANDLE` | 数据、评测与部署：Asset Card、解析器、30 条评测、3 个 Skill 包、镜像与 CI |
+| **T1**（队长） | xiangyuli494-cmyk | 环境与 Nexent 集成、主智能体、跨文档演示、答辩材料、唯一 merge 权 |
+| **T2** | `T2_HANDLE` | 本体与推理：本体 v0.9→v1.1、`kg_query` 多跳、`onto_propose`/`onto_commit`、`std_align` |
+| **T3** | `T3_HANDLE` | 数据、评测与交付：Asset Card、PDF 解析接入、30 条评测、3 个 Skill 包、镜像与视频 |
+
+`T2_HANDLE`/`T3_HANDLE` 是占位符：加进 Collaborator 后替换 `CODEOWNERS` 与上表。
 
 排期见 [docs/冲刺计划-1130.md](docs/冲刺计划-1130.md)，每人每周任务见 [docs/任务卡-三人版.md](docs/任务卡-三人版.md)。
-多人分工的历史版本（T1–T6）见 [docs/W1-角色任务卡.md](docs/W1-角色任务卡.md)，已停用。
+旧六人分工（T1–T6）已停用，历史版本见 [docs/W1-角色任务卡.md](docs/W1-角色任务卡.md)。
 
 代码与文档采用 [Apache License 2.0](LICENSE)。第三方数据来源、版本与许可见 [docs/赛题3-方案-v1.2.md](docs/赛题3-方案-v1.2.md) §4.3。

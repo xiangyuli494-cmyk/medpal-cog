@@ -20,4 +20,12 @@
 - [ ] `ruff check .` 通过
 - [ ] `python -m pytest tests -q` 通过
 - [ ] `python tools/selfcheck.py` 通过
+- [ ] `python tools/acceptance.py --stage {当前周}` 无 FAIL
+- [ ] 改动 ≤400 行，一次只做一件事
 - [ ] 无真实患者数据、无密钥入库
+
+## 评审
+
+- [ ] 已 @ 一人 approve（T1 的 PR 由 T2 或 T3 批；GitHub 不算自己批自己）
+- [ ] CI 三绿：`lint` / `test` / `pipeline`
+- [ ] 合并方式 = Squash and merge，合并后删分支
