@@ -172,4 +172,9 @@ def grow(conn, docs: list[str] | None = None, version: str = "v0.9") -> dict:
             {"scheme": "ICD-10", "code": head["id"]},
         )
         stats["docs"] += 1
+    if stats["docs"]:
+        # 快照跟着长：否则 mcp-server/data/ontology_v0.9.jsonl 还是 seed 的 17 条，
+        # 库里有 37 条、文件里只有 17 条，评审一眼就看出对不上。
+        store.snapshot(conn, version, f"grow: {stats['docs']} 份样例文档跨文档生长")
+        conn.commit()
     return stats
