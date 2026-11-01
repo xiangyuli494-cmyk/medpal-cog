@@ -4,14 +4,18 @@
   - 快（10 题 < 2s）、免费、进 CI
   - 与 Nexent 平台内评测跑同一份 dataset/v0.jsonl，两套分数对不上就说明智能体层有额外损耗
 
-用法：python eval/run_eval.py [--dataset eval/dataset/v0.jsonl] [--out eval/reports] [--reset-db]
+用法：python eval/run_eval.py [--dataset eval/dataset/v0.jsonl] [--out eval/reports] [--db tmp/eval-scratch.db]
+
+每次运行都在自己的临时库上现建种子库（tmp/eval-scratch.db），不读也不写 mcp-server/data/medpal.db：
+否则跑一次评测就往交付库里塞 20 条 trace，库内条数漂移，重复跑也不可比。
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -19,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "mcp-server"))
 
+import seed  # noqa: E402
 import store  # noqa: E402
 from parsers import ENTITY_HINTS, SYNONYMS  # noqa: E402
 
@@ -260,15 +265,18 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default=str(ROOT / "eval" / "dataset" / "v0.jsonl"))
     ap.add_argument("--out", default=str(ROOT / "eval" / "reports"))
-    ap.add_argument("--reset-db", action="store_true", help="先重建种子库再评测")
+    ap.add_argument(
+        "--db",
+        default=str(ROOT / "tmp" / "eval-scratch.db"),
+        help="评测用库（默认临时库，跑完可删；不碰交付用的 mcp-server/data/medpal.db）",
+    )
     args = ap.parse_args()
 
-    if args.reset_db:
-        subprocess.run(
-            [sys.executable, str(ROOT / "mcp-server" / "seed.py"), "--reset"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-        )
+    store.DB_PATH = Path(args.db)
+    store.DATA_DIR = Path(args.db).parent  # 快照别写进跟踪的 mcp-server/data/
+    store.REPORT_DIR = Path(args.db).parent / "reports"
+    with contextlib.redirect_stdout(io.StringIO()):  # 种子库的打印是给人工看的
+        seed.main(reset=True)
 
     rows = [
         json.loads(line)
