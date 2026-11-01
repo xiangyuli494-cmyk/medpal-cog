@@ -24,12 +24,13 @@ set NO_PROXY=127.0.0.1,localhost
 
 | 类型 | 命名 | 例 |
 | --- | --- | --- |
-| 功能 | `feat/agent-T{编号}-{简述}` | `feat/agent-T5-eval-metrics` |
-| 修复 | `fix/agent-T{编号}-{简述}` | `fix/agent-T2-kg-2hop` |
+| 功能 | `feat/agent-T{编号}-{简述}` | `feat/agent-T2-eval-metrics` |
+| 修复 | `fix/agent-T{编号}-{简述}` | `fix/agent-T1-kg-2hop` |
 | 文档 | `docs/agent-{简述}` | `docs/agent-judge-guide` |
 | 工程 | `chore/agent-{简述}` | `chore/agent-ci-cache` |
 
 - **不直接 push `main`**，一律 PR。
+- 三人制下的合并：任何人可 approve，**T0（队长）唯一 merge 权**，避免互相等人。
 - 提交信息：`type(scope): 中文动宾`，一行说清改了什么。
   - scope 取值：`mcp` / `kg` / `onto` / `eval` / `skill` / `ui` / `ci` / `docs` / `data`
   - 例：`feat(mcp): 新增 std_align 的 fuzzy 匹配`

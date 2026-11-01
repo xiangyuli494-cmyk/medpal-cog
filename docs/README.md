@@ -8,7 +8,8 @@
 | 调工具 / 加工具 | [mcp-contract.md](mcp-contract.md) |
 | 改本体 / 加三元组 | [ontology-schema.md](ontology-schema.md) |
 | 改决策链结构 | [trace-schema.md](trace-schema.md) |
-| 知道自己这周干什么 | [W1-角色任务卡.md](W1-角色任务卡.md) |
+| 知道这周干什么、几号交 | [冲刺计划-1130.md](冲刺计划-1130.md)（总排期 + 闸门 + 风险） |
+| 知道自己那几项怎么算过 | [任务卡-三人版.md](任务卡-三人版.md) |
 | 提交前自查 | [rules.md](rules.md) |
 | 评审怎么讲 | [judge-guide.md](judge-guide.md) |
 | 交接给下一个人 | [handoff/TEMPLATE.md](handoff/TEMPLATE.md) |
@@ -20,6 +21,7 @@
 - 决策记录：`docs/adr/`，一个决策一个文件，编号递增，**只增不改**（改了写新 ADR 并标注取代关系）。
 - 交接单：`docs/handoff/`，命名 `W{周}-T{编号}-{模块}.md`。
 - 一次性分析、草稿：不进仓，放 `tmp/`（已 gitignore）。
+- 排期与任务卡：`docs/冲刺计划-1130.md`（权威）、`docs/任务卡-三人版.md`；旧六人任务卡保留但标停用。
 
 ## 写文档的三条硬规矩
 

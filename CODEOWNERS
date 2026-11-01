@@ -1,22 +1,27 @@
-# CODEOWNERS —— 谁改谁审
-# 生效条件：账号必须是仓库 Collaborator / Team 成员，否则该条规则被忽略
+# CODEOWNERS —— 三人制（2026-11-01 起）
+# 生效条件：账号必须是本仓 Collaborator，否则该行被忽略（回落到下面的默认 owner）
+# T1_HANDLE / T2_HANDLE 是占位符，换成真实 GitHub 用户名后提交；未替换前由默认 owner 兜底。
 
-# 默认：T1 兜底
+# 默认兜底：T0 队长
 *                                   @xiangyuli494-cmyk
 
-# 赛题3 主线
-/mcp-server/                        @xiangyuli494-cmyk
-/skills/                            @suyouZJF
-/eval/                              @suyouZJF
-/tools/                             @Dewqian
-/data/samples/                      @suyouZJF
-/data/asset-cards/                  @suyouZJF
-/docs/                              @xiangyuli494-cmyk
+# T0：外部环境、部署、CI、骨架、文档
+/.github/                           @xiangyuli494-cmyk
 /deploy/                            @xiangyuli494-cmyk
 /skeleton.py                        @xiangyuli494-cmyk
+/pyproject.toml                     @xiangyuli494-cmyk
+/requirements.txt                   @xiangyuli494-cmyk
+/requirements-dev.txt               @xiangyuli494-cmyk
+/docs/                              @xiangyuli494-cmyk
 
-# 门禁与工程
-/.github/                           @Dewqian
-/pyproject.toml                     @Dewqian
-/requirements.txt                   @Dewqian
-/requirements-dev.txt               @Dewqian
+# T1：本体与推理
+/mcp-server/                        @T1_HANDLE @xiangyuli494-cmyk
+/docs/mcp-contract.md               @T1_HANDLE @xiangyuli494-cmyk
+/docs/ontology-schema.md            @T1_HANDLE
+/docs/trace-schema.md               @T1_HANDLE
+
+# T2：数据、评测、Skill 包
+/skills/                            @T2_HANDLE
+/eval/                              @T2_HANDLE
+/data/                              @T2_HANDLE
+/tools/                             @T2_HANDLE @xiangyuli494-cmyk

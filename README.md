@@ -200,13 +200,15 @@ python skeleton.py                        # 期望：OK 5 steps | 科室=消化�
 
 ## 12 团队与许可
 
+三人制（2026-11-01 起，截止 11-30）：
+
 | 代号 | 账号 | 角色 |
 | --- | --- | --- |
-| T1 | xiangyuli494-cmyk | 架构与契约 |
-| T2 | zincumyu | 知识工程与推理 |
-| T3 | xy-Z5 | 前端与可视化 |
-| T4 | Dewqian | 本体与标准对齐 |
-| T5 | suyouZJF | 数据、检索与评测 |
-| T6 | — | 环境、CI 与质量 |
+| **T0** | xiangyuli494-cmyk（队长） | 环境与 Nexent 集成、契约终审、合并权、答辩材料 |
+| **T1** | `T1_HANDLE` | 本体与推理：本体 v1.0/v1.1、`kg_query` 多跳、`onto_propose`/`onto_commit`、`std_align` |
+| **T2** | `T2_HANDLE` | 数据、评测与部署：Asset Card、解析器、30 条评测、3 个 Skill 包、镜像与 CI |
+
+排期见 [docs/冲刺计划-1130.md](docs/冲刺计划-1130.md)，每人每周任务见 [docs/任务卡-三人版.md](docs/任务卡-三人版.md)。
+多人分工的历史版本（T1–T6）见 [docs/W1-角色任务卡.md](docs/W1-角色任务卡.md)，已停用。
 
 代码与文档采用 [Apache License 2.0](LICENSE)。第三方数据来源、版本与许可见 [docs/赛题3-方案-v1.2.md](docs/赛题3-方案-v1.2.md) §4.3。
