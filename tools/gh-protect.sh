@@ -9,7 +9,18 @@ set -euo pipefail
 
 REPO=${REPO:-xiangyuli494-cmyk/medpal-cog}
 BRANCH=${BRANCH:-main}
-CHECKS=${CHECKS:-lint,test,pipeline}
+
+# 必需检查项的名字 = ci.yml 里各 job 的 name（不是 job id）。
+# 名字对不上时，PR 会一直卡在 "Expected — Waiting for status to be reported"。
+if [ -z "${CHECKS:-}" ]; then
+  CI=.github/workflows/ci.yml
+  if [ -f "$CI" ]; then
+    CHECKS=$(sed -n 's/^    name: //p' "$CI" | paste -sd, -)
+  else
+    CHECKS="lint (ruff),test (pytest),pipeline (skeleton + eval)"
+  fi
+fi
+echo "必需检查：$CHECKS"
 
 api() { curl -s -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
 

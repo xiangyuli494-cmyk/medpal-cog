@@ -202,7 +202,7 @@ python tools/acceptance.py --with-eval
 
 ## 11 协作
 
-- **`main` 已开保护**：不能直推；必须 PR + **≥1 approve** + CI 三绿（`lint` / `test` / `pipeline`）。
+- **`main` 已开保护**：不能直推；必须 PR + **≥1 approve** + CI 三绿（`lint (ruff)` / `test (pytest)` / `pipeline (skeleton + eval)`）。
 - 分支：`feat/{模块}-{简述}`、`fix/{模块}-{简述}`、`docs/{简述}`、`chore/{简述}`。
 - 提交：`type(scope): 中文动宾`，scope 见 [docs/rules.md](docs/rules.md)。
 - 合并门槛：CI 三绿 + `tools/acceptance.py` 无 FAIL + 一张 approve + 一份交接单。

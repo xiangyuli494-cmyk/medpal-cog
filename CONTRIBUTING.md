@@ -50,7 +50,7 @@ set NO_PROXY=127.0.0.1,localhost
 5. **一张 approve**：由 T1/T2/T3 中非作者的人批（T1 的 PR 由 T2 或 T3 批）。
 6. **交接单**：在 `docs/handoff/` 下补 `W{周}-T{编号}-{模块}.md`（模板见 `docs/handoff/TEMPLATE.md`），写清改了哪个契约、谁要跟着改、怎么验。
 
-任何一项红了就别合，也别用 `--no-verify` 绕。CI 是 `lint` / `test` / `pipeline` 三个 job，分支保护按这三个名字卡。
+任何一项红了就别合，也别用 `--no-verify` 绕。分支保护卡的是 `ci.yml` 里三个 job 的 **name**：`lint (ruff)` / `test (pytest)` / `pipeline (skeleton + eval)`（改名要同步跑 `tools/gh-protect.sh`）。
 
 ## 4 代码规范
 
