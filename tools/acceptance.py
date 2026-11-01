@@ -175,7 +175,17 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", default="baseline", choices=list(STAGE_MIN))
     ap.add_argument("--with-eval", action="store_true", help="跑评测并套指标阈值")
+    ap.add_argument("--no-seed", action="store_true", help="不重建种子库，直接读现有库")
     args = ap.parse_args(argv)
+
+    # 判定必须建立在「按当前代码重建的库」上：读一份过期的本地库，
+    # 会把「代码没问题、库没重建」报成结构不变量失败。
+    if not args.no_seed:
+        for step in (["mcp-server/seed.py", "--reset"], ["tools/ingest_all.py"]):
+            sd = run([PY, *step])
+            if sd.returncode != 0:
+                print(f"[FAIL] 建库失败：{step[0]} → {tail(sd)}")
+                return 2
 
     t = tier(args.stage)
     need = STAGE_MIN[args.stage]
