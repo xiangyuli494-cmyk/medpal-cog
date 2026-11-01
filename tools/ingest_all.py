@@ -28,8 +28,27 @@ def business_title(path: Path) -> str:
     return f"{label} {num}".strip() if num else label
 
 
+def _strip_ts(card: dict) -> dict:
+    """去掉时间戳后再比较：内容没变就不该刷新 captured_at/created_at。"""
+    c = json.loads(json.dumps(card))
+    c.pop("created_at", None)
+    if isinstance(c.get("version"), dict):
+        c["version"].pop("captured_at", None)
+    return c
+
+
 def main() -> int:
     samples = sorted(p for p in SAMPLES.rglob("*") if p.is_file())
+
+    # 先记住旧卡的 {asset_id: card}：重跑时内容没变就沿用旧时间戳，否则每跑一次台账就脏一次
+    old_cards = {}
+    for f in CARDS.glob("*.json"):
+        try:
+            c = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if c.get("asset_id"):
+            old_cards[c["asset_id"]] = c
     # 幂等：清空台账再入库，避免重复 ingest 翻倍
     con = sqlite3.connect(str(DB))
     con.execute("delete from asset")
@@ -66,8 +85,16 @@ def main() -> int:
             "ingested_by": r["ingested_by"],
             "created_at": r["created_at"],
         }
+        prev = old_cards.get(card["asset_id"])
+        if prev and _strip_ts(prev) == _strip_ts(card):
+            card["created_at"] = prev.get("created_at", card["created_at"])
+            if isinstance(card.get("version"), dict) and isinstance(prev.get("version"), dict):
+                card["version"]["captured_at"] = prev["version"].get(
+                    "captured_at", card["version"].get("captured_at")
+                )
         (CARDS / f"{card['asset_id']}.json").write_text(
-            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8"
+json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
+            newline="\n",
         )
 
     print(f"样本 {len(samples)} 份 | 入库 {len(rows)} 行 | 导出 {len(rows)} 张卡")
