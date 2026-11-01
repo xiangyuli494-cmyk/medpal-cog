@@ -1,9 +1,9 @@
-﻿import json
+import json
 import sqlite3
 import sys
 from pathlib import Path
 
-ROOT = Path("agent")
+ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "data" / "samples"
 CARDS = ROOT / "data" / "asset-cards"
 DB = ROOT / "mcp-server" / "data" / "medpal.db"
@@ -19,9 +19,12 @@ def business_title(path: Path) -> str:
                 return line[2:].strip()[:60]
     stem = path.stem
     num = "".join(ch for ch in stem if ch.isdigit())
-    label = {"bingli": "合成门诊病历", "menzhen": "门诊记录",
-             "pathway": "临床路径摘要", "reference": "检验参考区间"}.get(
-        stem.split("_")[0], stem)
+    label = {
+        "bingli": "合成门诊病历",
+        "menzhen": "门诊记录",
+        "pathway": "临床路径摘要",
+        "reference": "检验参考区间",
+    }.get(stem.split("_")[0], stem)
     return f"{label} {num}".strip() if num else label
 
 
@@ -35,8 +38,9 @@ def main() -> int:
 
     mapping = {}
     for path in samples:
-        res = server.ingest_asset(path=str(path), source_type="synthetic",
-                                  ingested_by="T5", title=business_title(path))
+        res = server.ingest_asset(
+            path=str(path), source_type="synthetic", ingested_by="T5", title=business_title(path)
+        )
         if res.get("asset_id"):
             mapping[path.name] = res.get("modality") or "?"
 
@@ -49,7 +53,9 @@ def main() -> int:
         old.unlink()
     for r in rows:
         card = {
-            "asset_id": r["asset_id"], "title": r["title"], "modality": r["modality"],
+            "asset_id": r["asset_id"],
+            "title": r["title"],
+            "modality": r["modality"],
             "source": json.loads(r["source_json"] or "{}"),
             "version": json.loads(r["version_json"] or "{}"),
             "sensitivity": r["sensitivity"],
@@ -57,10 +63,12 @@ def main() -> int:
             "anchors": json.loads(r["anchors_json"] or "[]"),
             "entities": json.loads(r["entities_json"] or "[]"),
             "kb": {"base": "med-text", "doc_id": "", "status": r["kb_status"] or "ready"},
-            "ingested_by": r["ingested_by"], "created_at": r["created_at"],
+            "ingested_by": r["ingested_by"],
+            "created_at": r["created_at"],
         }
         (CARDS / f"{card['asset_id']}.json").write_text(
-            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")
+            json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
     print(f"样本 {len(samples)} 份 | 入库 {len(rows)} 行 | 导出 {len(rows)} 张卡")
     per_dir = {}

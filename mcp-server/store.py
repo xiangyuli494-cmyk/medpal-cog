@@ -118,9 +118,31 @@ def _row2card(row):
 # ---------- 资产 ----------
 
 
+# 种子样例的资产号是「评测与 fixture 的对外契约」：v0.jsonl 的 gold_evidence、
+# tests/fixtures/trace_v1_example.json 都按 AST-2026-000137 写死。批量 ingest 必须
+# 复用它，否则三元组的 provenance 指向不存在的资产，溯源完整率会掉到 0.2。
+CANONICAL_IDS = {"pathway_k27": "AST-2026-000137"}
+
+
+def canonical_asset_id(card) -> str:
+    """按源文件名返回固定资产号；没有约定就返回空串（走随机号）。"""
+    src = str((card.get("source") or {}).get("path") or "")
+    return CANONICAL_IDS.get(Path(src).stem, "")
+
+
+def stable_asset_id(card) -> str:
+    """内容哈希生成资产号：同一份文件重复 ingest 得到同一个号，卡与台账不抖。"""
+    src = str((card.get("source") or {}).get("path") or "")
+    p = Path(src)
+    raw = p.read_bytes() if p.is_file() else (str(card.get("title", "")) + "|" + src).encode()
+    return "AST-" + datetime.now(CST).strftime("%Y") + "-" + hashlib.sha1(raw).hexdigest()[:6]
+
+
 def upsert_asset(conn, card):
-    aid = card.get("asset_id") or (
-        "AST-" + datetime.now(CST).strftime("%Y") + "-" + uuid.uuid4().hex[:6]
+    aid = (
+        card.get("asset_id")
+        or canonical_asset_id(card)
+        or stable_asset_id(card)
     )
     conn.execute(
         "INSERT OR REPLACE INTO asset "
