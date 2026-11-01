@@ -28,7 +28,7 @@
 | 号 | 形态 | 指什么 | 谁改 | 现在是多少 |
 | --- | --- | --- | --- | --- |
 | **schema 版本** | `v0` / `v1` | 实体与关系的**结构**：6 类实体、8 类关系、字段集 | 只能 T1 裁决后改，走 §11 | `v0`（本文冻结） |
-| **本体快照版本** | `v0.9` / `v1.0` / `v1.1` | **数据**：某一次快照里有哪些三元组 | `onto_commit` 自动 +1 | `v0.9`（17 条，待审） |
+| **本体快照版本** | `v0.9` / `v1.0` / `v1.1` | **数据**：某一次快照里有哪些三元组 | `onto_commit` 自动 +1 | `v0.9`（37 条，待审） |
 | **资产 / 文档版本** | `2023 版` / `2023` | 原始文档自身的版本，存在 `asset.version_json.value` | `ingest_asset` 写入 | `2023` |
 
 **正确说法**：
@@ -81,12 +81,12 @@
 | 2 | `diagnosed_by` | `Symptom` | `Disease` | 1 | 某症状指向某确诊病 |
 | 3 | `treated_by` | `Disease` | `Drug` | **0** | 某病用某药治 |
 | 4 | `contraindicated_for` | `Drug` | `Disease` | 1 | 某药禁用于某病 |
-| 5 | `requires_exam` | `Disease` | `Exam` | 5 | 某病要做某检查 |
-| 6 | `belongs_to_dept` | `Disease` / `Symptom` | `Department` | 4 | 归口到某科室 |
+| 5 | `requires_exam` | `Disease` | `Exam` | 17 | 某病要做某检查 |
+| 6 | `belongs_to_dept` | `Disease` / `Symptom` | `Department` | 8 | 归口到某科室 |
 | 7 | `subclass_of` | `Disease` | `Disease` | **0** | 上下位（子类 → 父类） |
-| 8 | `aligned_to_standard` | `Disease` | 标准节点 | 3 | 本体节点 ↔ 标准编码 |
+| 8 | `aligned_to_standard` | `Disease` | 标准节点 | 7 | 本体节点 ↔ 标准编码 |
 
-合计 17 条，与 `v0.9` 快照 `triple_count` 一致。
+合计 37 条，与 `v0.9` 快照 `triple_count` 一致。拆分：`python mcp-server/seed.py --reset` 写 17 条（手写、锚在 `AST-2026-000137`），`python tools/ingest_all.py` 末尾由 `mcp-server/ontology_grow.py` 从 `data/samples/text/pathway_01..04.md` 再长 20 条。只跑 seed 不加 ingest 时就是 17 条，两种口径都对，看的是有没有跑完整流水线。
 
 ### 3.1 类型约束是硬规则
 
@@ -99,7 +99,7 @@
 
 ### 3.2 `treated_by` 和 `subclass_of` 现在是空的
 
-`v0.9` 里这两类一条都没有：种子库只有一份临床路径摘要（`AST-2026-000137`），里面没有给药方案和病种层级。这不是缺陷——W2 起 T4 做 `onto_propose` 扩库时会自然长出来。但**汇报时不能说"8 类关系已全部落地"**，只能说"8 类已定义、6 类有实例"。
+`v0.9` 里这两类一条都没有：入库的 5 份文档（`AST-2026-000137` 加 `pathway_01..04` 四份）里没有给药方案，也没有病种层级。这不是缺陷——W2 起 T4 做 `onto_propose` 扩库时会自然长出来。但**汇报时不能说"8 类关系已全部落地"**，只能说"8 类已定义、6 类有实例"。
 
 ### 3.3 `aligned_to_standard` 与 `standard` 字段是冗余的
 
@@ -112,7 +112,7 @@
 {"head": {"id": "K27"}, "rel": "requires_exam", ..., "standard": {"scheme": "ICD-10", "code": "K27"}}
 ```
 
-`v0.9` 里两种都有（3 条边 + 17 条都带 `standard_json`）。**暂时都保留**，因为两种查询路径都有人用：`kg_query` 走边能多跳，`std_align` 读字段能直接拿编码。代价是差分时同一条知识会变两次。裁决留到 §9 第 6 条。
+`v0.9` 里两种都有（7 条边 + 37 条都带 `standard_json`）。**暂时都保留**，因为两种查询路径都有人用：`kg_query` 走边能多跳，`std_align` 读字段能直接拿编码。代价是差分时同一条知识会变两次。裁决留到 §9 第 6 条。
 
 ---
 
@@ -316,7 +316,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 
 ---
 
-## 附录 A 种子 v0.9 全量 17 条
+## 附录 A 种子 v0.9 全量 17 条（`seed.py --reset` 口径；跑完 `tools/ingest_all.py` 后库内 37 条）
 
 供 T2 / T4 对照，避免各自猜 ID。
 
@@ -352,7 +352,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 # 表结构
 grep -n "CREATE TABLE" -A 17 mcp-server/store.py
 
-# 17 条的分布（实体类型 / 关系 / 置信度）
+# 库内分布（跑完流水线是 37 条：seed 17 + 跨文档 20）
 cd mcp-server && python -B -c "
 import sqlite3, collections
 c = sqlite3.connect('data/medpal.db')

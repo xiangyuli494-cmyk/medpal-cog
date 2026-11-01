@@ -67,8 +67,8 @@ python tools/selfcheck.py        # 全绿即通过
 
 手工四项：
 
-1. `python mcp-server/seed.py --reset` → 输出 17 三元组 / 15 锚点；
-2. `python -m pytest tests -q` → 17 passed, 1 skipped；
+1. `python mcp-server/seed.py --reset` → 输出 17 三元组 / 15 锚点；再 `python tools/ingest_all.py` → 61 张卡 + 37 三元组 / 43 锚点；
+2. `python -m pytest tests -q` → 43 passed（未装 PyMuPDF 时 1 skipped）；
 3. `python eval/run_eval.py` → 六项 100%；
 4. `python skeleton.py` → `OK 5 steps | 科室=消化内科 | 溯源完整率=0.75`。
 
@@ -113,7 +113,7 @@ git fetch /e/deepseek-data/medpal 'refs/remotes/origin/*:refs/remotes/legacy/*'
 
 有两组**没有**搬：`docs/t1-ontology-schema` 的 schema 内容本仓 `docs/ontology-schema.md` 已是超集；`T6-w1-env-doc` 的 `docs/agent/env.md`（320 行）是 `docs/env.md`（340 行）的子集。`feat/t5-model-channel` 的 `tools/probe_llm.py` 与本仓完全一致（都 125 行）。
 
-搬完验证：`python -m pytest tests -q` → **40 passed**（原 17 + 新 22；未装 PyMuPDF 时 PDF 用例 1 条 skipped），`python tools/acceptance.py` 全 PASS。
+搬完验证：`python -m pytest tests -q` → **43 passed**（未装 PyMuPDF 时 PDF 用例 1 条 skipped），`python tools/acceptance.py` 全 PASS。
 
 旧仓剩余分支（`legacy/*` 本地引用）作历史留档，不再合并；需要哪份就按上表的方式取文件。
 
