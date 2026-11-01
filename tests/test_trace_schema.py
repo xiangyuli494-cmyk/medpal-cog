@@ -31,7 +31,7 @@ SAMPLE_DB = AGENT / "mcp-server" / "data" / "medpal.db"
 
 @pytest.fixture()
 def db(tmp_path):
-    """永远在副本上跑，绝不碰 agent/mcp-server/data/medpal.db。"""
+    """永远在副本上跑，绝不碰 mcp-server/data/medpal.db。"""
     if not SAMPLE_DB.exists():
         pytest.skip("缺 seed 库，先跑 python mcp-server/seed.py")
     dst = tmp_path / "t.db"
@@ -136,9 +136,9 @@ def test_completeness_formula_matches_store():
 
 def test_skeleton_dialect_is_rejected_then_migrates():
     """骨架期方言必须被拒（否则两套 schema 混用），且能一键迁到 v1。"""
-    p = AGENT.parent / "tmp" / "trace.json"
+    p = AGENT / "tmp" / "trace.json"
     if not p.exists():
-        pytest.skip("缺 tmp/trace.json，先跑 python -m agent.skeleton")
+        pytest.skip("缺 tmp/trace.json，先跑 python skeleton.py")
     raw = json.loads(p.read_text(encoding="utf-8"))
     assert raw["schema"] == "walking-skeleton/1"
     assert V.validate(raw), "旧方言不该通过 v1 校验"

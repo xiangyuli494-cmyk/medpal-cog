@@ -2,8 +2,8 @@
 
 > 交付物 1.2 · T1 xiangyuli494-cmyk · 2026-10-25 · 状态：**冻结候选**
 > 适用对象：T2 的 trace 生产、T3 的静态可视化、T4 的模板导出、T6 的溯源完整率检查
-> 唯一事实来源：`agent/mcp-server/store.py`（`write_trace` / `get_trace` / `_ref_str` / `_evidence_exists`）、`agent/mcp-server/server.py`（`trace_write` / `skill_export`）、`agent/skeleton.py`
-> 本文与代码冲突时以代码为准，并**改文档**；本文与 `agent/tools/trace.schema.json` 冲突时以 Schema 文件为准（它是可执行的）。
+> 唯一事实来源：`mcp-server/store.py`（`write_trace` / `get_trace` / `_ref_str` / `_evidence_exists`）、`mcp-server/server.py`（`trace_write` / `skill_export`）、`skeleton.py`
+> 本文与代码冲突时以代码为准，并**改文档**；本文与 `tools/trace.schema.json` 冲突时以 Schema 文件为准（它是可执行的）。
 
 ---
 
@@ -15,11 +15,11 @@
 
 | 来源 | 形状 | 问题 |
 | --- | --- | --- |
-| `agent/skeleton.py` 落盘的 `tmp/trace.json` | `schema: "walking-skeleton/1"`，step 用 `step/op/detail/evidence/ref` | 字段名自成一派，`ref` 存的是层标签不是引用 |
+| `skeleton.py` 落盘的 `tmp/trace.json` | `schema: "walking-skeleton/1"`，step 用 `step/op/detail/evidence/ref` | 字段名自成一派，`ref` 存的是层标签不是引用 |
 | 方案 `docs/赛题3-方案-v1.2.md:452-476` 8.1 节示例 | step 用 `i/op/in/out/evidence`，但第 3 步用 `query` 而不是 `in` | 示例本身内部不一致 |
 | `store.write_trace` 实际落库形态 | step 用 `i/op/in/out/evidence`，其余字段**原样透传不校验** | 没有约束，垃圾数据也能写进去 |
 
-三套并存的结果已经发生了：`agent/mcp-server/data/medpal.db` 里 31 条 trace，其中 17 条是探测脚本写进去的畸形数据（缺 `i`、`evidence` 传字符串、`i` 乱序、`op` 是随便编的），全部 `ok: true`，全部生成了"看起来正常"的报告。T3 的 `trace.html` 一旦上线，第一屏就会渲染出 `| None | kg_query |  |  | — |` 这样的行。
+三套并存的结果已经发生了：`mcp-server/data/medpal.db` 里 31 条 trace，其中 17 条是探测脚本写进去的畸形数据（缺 `i`、`evidence` 传字符串、`i` 乱序、`op` 是随便编的），全部 `ok: true`，全部生成了"看起来正常"的报告。T3 的 `trace.html` 一旦上线，第一屏就会渲染出 `| None | kg_query |  |  | — |` 这样的行。
 
 所以 v1 的职责只有一句话：**冻结一套唯一口径，并配一台机器替所有人执行它。**
 
@@ -27,7 +27,7 @@
 
 ## 1. 顶层结构
 
-真实样例（`agent/tests/fixtures/trace_v1_example.json`，由 `tools/build_trace_fixture.py` 真跑生成，非手抄）：
+真实样例（`tests/fixtures/trace_v1_example.json`，由 `tools/build_trace_fixture.py` 真跑生成，非手抄）：
 
 ```json
 {
@@ -183,7 +183,7 @@ store.write_trace(conn, "...", [{"i": 1, "op": "kg_query", "evidence": "T-d2e6d7
 
 ## 5. `sources`：来源资产必须派生，不能手填
 
-R4 要求"跨文档"。当下 `agent/mcp-server/data/medpal.db` 里只有 **1 份资产** `AST-2026-000137`，14 条 trace 全是单文档——**"跨文档"目前演示不出来**，这是 T5 要供数据的地方，先记在这。
+R4 要求"跨文档"。当下 `mcp-server/data/medpal.db` 里只有 **1 份资产** `AST-2026-000137`，14 条 trace 全是单文档——**"跨文档"目前演示不出来**，这是 T5 要供数据的地方，先记在这。
 
 派生规则（`tools/validate_trace.py:derive_sources`）：
 
@@ -362,11 +362,11 @@ python -m pytest tests/test_trace_schema.py -q      # 18 passed
 
 | 文件 | 作用 |
 | --- | --- |
-| `agent/tools/trace.schema.json` | 机器可读 schema（JSON Schema 2020-12），唯一权威 |
-| `agent/tools/validate_trace.py` | 校验 + 迁移 + 从库批量校验，`--quiet` 供 CI |
-| `agent/tools/build_trace_fixture.py` | 走真实写入路径重建 fixture，保证样例可复现 |
-| `agent/tests/test_trace_schema.py` | 18 条测试，卡住 8 类已知坏输入 + ref/op 一致性 + sources 派生 |
-| `agent/tests/fixtures/trace_v1_example.json` | 真跑生成的合规样例 |
+| `tools/trace.schema.json` | 机器可读 schema（JSON Schema 2020-12），唯一权威 |
+| `tools/validate_trace.py` | 校验 + 迁移 + 从库批量校验，`--quiet` 供 CI |
+| `tools/build_trace_fixture.py` | 走真实写入路径重建 fixture，保证样例可复现 |
+| `tests/test_trace_schema.py` | 18 条测试，卡住 8 类已知坏输入 + ref/op 一致性 + sources 派生 |
+| `tests/fixtures/trace_v1_example.json` | 真跑生成的合规样例 |
 
 ---
 

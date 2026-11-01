@@ -1,4 +1,4 @@
-"""trace.json 校验与迁移工具 —— `agent/docs/trace-schema.md` 的执行体。
+"""trace.json 校验与迁移工具 —— `docs/trace-schema.md` 的执行体。
 
 为什么要有这个脚本：schema 文档写在 Markdown 里，人手看不等于机器能验。
 T3 的静态页、T6 的 CI 门禁、T2 的 trace 产出，三方都要一个「这份 trace 合不合 v1」的

@@ -1,6 +1,6 @@
-# agent/ 线工程规则（赛题3）
+#  线工程规则（赛题3）
 
-> 版本 v1.0 · 2026-10-22 · 适用范围：`agent/`、`fixtures/golden_trace.json`、`tools/diff_json.py`、`.github/workflows/skeleton.yml`
+> 版本 v1.0 · 2026-10-22 · 适用范围：``、`fixtures/golden_trace.json`、`tools/diff_json.py`、`.github/workflows/skeleton.yml`
 > 陪诊线（`backend/`、`frontend/`、`docs/plan/`）已冻结，规则另见 `docs/plan/12-*`、`13-*`。
 
 ---
@@ -55,7 +55,7 @@ PR 描述模板：
 
 1. **一次只加粗一根骨头。** 一个 PR 只改一层，跨层拆 PR。
 2. **先红再绿。** 动骨架前先写一个会失败的测试或评测条目，PR 里贴红灯截图。
-3. **骨架命令坏了，全组停手。** `python -B -m agent.skeleton` 不绿期间，只允许修它。
+3. **骨架命令坏了，全组停手。** `python -B skeleton.py` 不绿期间，只允许修它。
 
 > 为什么加 `-B`：改一个数字但文件长度不变时，`__pycache__` 会让门禁**假绿**。已实测过 0.80→0.81 未触发变红。
 
@@ -63,7 +63,7 @@ PR 描述模板：
 
 一个任务算做完，同时满足：
 
-- [ ] 代码在 `agent/` 下，没有新增第三方依赖（除已在 `requirements.txt`）
+- [ ] 代码在 `` 下，没有新增第三方依赖（除已在 `requirements.txt`）
 - [ ] 有单元测试，且 `pytest` 本地全绿
 - [ ] 骨架命令仍绿
 - [ ] 交接单已提交
@@ -73,6 +73,6 @@ PR 描述模板：
 ## 7. 不许做
 
 - 直接向 `main` 推送（含强推）
-- 修改别人的模块文件（`agent/ontology/`、`agent/parsers/` 等按人划分，见 `CODEOWNERS`）
+- 修改别人的模块文件（`ontology/`、`parsers/` 等按人划分，见 `CODEOWNERS`）
 - 在 PR 里顺手重构无关代码
 - 用 AI 生成后直接提交且不说明（交接单「人工修改点」必填）

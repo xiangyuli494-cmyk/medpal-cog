@@ -181,7 +181,11 @@ def add_triple(conn, t, version="v0.9"):
         )
         conn.commit()
         return None
-    tid = t.get("triple_id") or ("T-" + uuid.uuid4().hex[:8])
+    # 确定性 id：同样的 (head, rel, tail) 永远得到同样的 triple_id，
+    # 否则每次 seed 都会重写快照，diff 里全是噪声。
+    tid = t.get("triple_id") or ("T-" + hashlib.sha1(
+        f"{t['head']['id']}|{t['rel']}|{t['tail']['id']}".encode("utf-8")
+    ).hexdigest()[:8])
     prov = t.get("provenance", {})
     conn.execute(
         "INSERT INTO triple "

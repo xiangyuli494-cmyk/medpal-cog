@@ -9,8 +9,8 @@
 「我们写的评估器能通过官方校验」。它不是官方实现，差异见文末 KNOWN_GAPS。
 
 用法：
-    python agent/tools/check_evaluator.py            # 跑全部检查
-    python agent/tools/check_evaluator.py -v         # 附带每条用例的 reason
+    python tools/check_evaluator.py            # 跑全部检查
+    python tools/check_evaluator.py -v         # 附带每条用例的 reason
 """
 
 from __future__ import annotations
@@ -22,8 +22,8 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-EVALUATOR = ROOT / "agent" / "eval" / "nexent_code_evaluator.py"
+ROOT = Path(__file__).resolve().parents[1]
+EVALUATOR = ROOT / "eval" / "nexent_code_evaluator.py"
 EVALUATOR_FILENAME = "<evaluator>"
 
 # ---------------------------------------------------------------------------

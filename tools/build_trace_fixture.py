@@ -2,7 +2,7 @@
 
 为什么需要这个脚本：fixture 如果不是可复现的，半年后没人知道那份 JSON 是手抄的还是真跑出来的。
 这个脚本走真实写入路径 —— 拷一份 seed 库到临时目录，调 store.write_trace 真写一条，
-再用 tools/validate_trace.py 的同一套逻辑读回来落盘。全程不碰 agent/mcp-server/data/medpal.db。
+再用 tools/validate_trace.py 的同一套逻辑读回来落盘。全程不碰 mcp-server/data/medpal.db。
 
     python tools/build_trace_fixture.py
 

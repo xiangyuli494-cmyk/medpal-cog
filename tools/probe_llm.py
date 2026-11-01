@@ -1,11 +1,11 @@
 """模型通道自检：ASR / TTS / OCR / LLM 各打通一次。
 
-对应赛题3 W1 任务 5.3（`agent/tools/probe_llm.py`，截止 10-27）。
+对应赛题3 W1 任务 5.3（`tools/probe_llm.py`，截止 10-27）。
 它是 5.4 混合检索、5.7 OCR 落地与 T2 抽取调 LLM 的共同前置。
 
 用法：
     export DASHSCOPE_API_KEY=sk-xxx        # 或从仓库根 .env.local 读
-    python -m agent.tools.probe_llm        # 或 python agent/tools/probe_llm.py
+    python tools/probe_llm.py
 
 输出四行 OK（或 FAIL），每行带耗时与估算成本，可直接贴进交接单。
 """

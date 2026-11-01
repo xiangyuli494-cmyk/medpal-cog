@@ -1,7 +1,7 @@
 """批量生成 R1 合成样本与 Asset Card（赛题3 W1 里程碑用）。
 
 全部为 synthetic 数据，不含任何真实患者信息；每份样本配一张卡片。
-用法： python agent/tools/gen_samples.py
+用法： python tools/gen_samples.py
 """
 
 from __future__ import annotations

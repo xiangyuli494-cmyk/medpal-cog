@@ -1,0 +1,35 @@
+# 与 Nexent 联调用的最小编排
+# 用法：docker compose -f deploy/docker-compose.yml up --build -d
+services:
+  medpal-mcp:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: medpal-cog/mcp:0.1.0
+    container_name: medpal-mcp
+    ports:
+      - "8090:8090"
+    environment:
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8090"
+      MEDPAL_DB: /app/mcp-server/data/medpal.db
+    volumes:
+      - medpal-data:/app/mcp-server/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); sys.exit(0 if s.connect_ex(('127.0.0.1',8090))==0 else 1)"]
+      interval: 15s
+      timeout: 3s
+      start_period: 20s
+      retries: 5
+    # 若 Nexent 与本服务在同一 docker 网络，取消下面两段注释（网络名以 nexent/docker-compose.yml 为准）
+    # networks:
+    #   - nexent_default
+
+volumes:
+  medpal-data:
+
+# networks:
+#   nexent_default:
+#     external: true

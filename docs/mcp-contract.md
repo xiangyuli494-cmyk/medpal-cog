@@ -2,7 +2,7 @@
 
 > 交付物 1.1 · T1 xiangyuli494-cmyk · 2026-10-25 · 状态：**冻结候选**
 > 适用对象：T2/T4 的实现、T6 的 client 与 CI 门禁、Nexent 挂载配置
-> 唯一事实来源：`agent/mcp-server/server.py`、`agent/mcp-server/store.py`。本文与代码冲突时以代码为准，并**改文档**。
+> 唯一事实来源：`mcp-server/server.py`、`mcp-server/store.py`。本文与代码冲突时以代码为准，并**改文档**。
 
 ---
 
@@ -58,7 +58,7 @@ MCP_TRANSPORT=streamable-http python server.py
 | `MCP_TRANSPORT` | `stdio` | `stdio` \| `streamable-http` |
 | `MCP_HOST` | `0.0.0.0` | HTTP 监听地址 |
 | `MCP_PORT` | `8090` | HTTP 监听端口 |
-| `MEDPAL_DB` | `agent/mcp-server/data/medpal.db` | SQLite 库路径；测试时指向副本，别动主库 |
+| `MEDPAL_DB` | `mcp-server/data/medpal.db` | SQLite 库路径；测试时指向副本，别动主库 |
 | `KB_ENDPOINT` | 空 | 非空时 `kb_search` 才真正转发；空则返回 `kb_not_configured` |
 
 ### 0.4 运行依赖
@@ -121,7 +121,7 @@ MCP_TRANSPORT=streamable-http python server.py
 
 `source_type` 三值锁死「这条知识该由谁背书」：`icd10` / `pathway` / `drug_label`。
 
-> **v1 落地现状（写清楚，别让下游猜）**：`onto_propose` 的规则抽取器（`server.py:153-173`）目前只识别 3 类句式 → `requires_exam` / `contraindicated_for` / `may_cause`。其中前两类在词表内，`may_cause` **不在** 8 类里——2026-10-29 已裁定把它加为第 9 类，随 schema v1 在 W3 与 `v1.0` 快照一起落地（见 `agent/docs/ontology-schema.md` §9 第 3 条），在此之前它只能作为 `pending` 候选、不入库。种子库 `v0.9` 实际含 6 类关系，缺 `treated_by` / `subclass_of`。这是**已知缺口**，不是契约缺失：schema 允许 8 类，抽取器覆盖 2 类有效关系，其余走 LLM few-shot（T4 负责）。
+> **v1 落地现状（写清楚，别让下游猜）**：`onto_propose` 的规则抽取器（`server.py:153-173`）目前只识别 3 类句式 → `requires_exam` / `contraindicated_for` / `may_cause`。其中前两类在词表内，`may_cause` **不在** 8 类里——2026-10-29 已裁定把它加为第 9 类，随 schema v1 在 W3 与 `v1.0` 快照一起落地（见 `docs/ontology-schema.md` §9 第 3 条），在此之前它只能作为 `pending` 候选、不入库。种子库 `v0.9` 实际含 6 类关系，缺 `treated_by` / `subclass_of`。这是**已知缺口**，不是契约缺失：schema 允许 8 类，抽取器覆盖 2 类有效关系，其余走 LLM few-shot（T4 负责）。
 
 ### 1.5 幂等与副作用
 
@@ -133,7 +133,7 @@ MCP_TRANSPORT=streamable-http python server.py
 | `trace_write` | 是（trace 表 + `reports/*.md`） | 每次新 `trace_id` |
 | `kg_query` / `get_asset_card` / `std_align` / `skill_export` / `kb_search` / `health` | 否 | 纯读 |
 
-⚠️ `store.snapshot()` 的落盘目录写死 `DATA_DIR`（`store.py:376`），**不跟随 `MEDPAL_DB`**。测试用副本库时仍会往 `agent/mcp-server/data/` 写 `ontology_v*.jsonl`，跑完需清理。
+⚠️ `store.snapshot()` 的落盘目录写死 `DATA_DIR`（`store.py:376`），**不跟随 `MEDPAL_DB`**。测试用副本库时仍会往 `mcp-server/data/` 写 `ontology_v*.jsonl`，跑完需清理。
 
 ---
 
@@ -169,11 +169,11 @@ ingest_asset(path: str, modality: str = "", title: str = "",
 | `entity_hint` | list[str] | 正则猜出的实体，仅供 `onto_propose` 参考 |
 | `blocks` | int | 解析出的块数 |
 
-**真实请求 / 响应**（`agent/data/samples/pathway_k27.md`，anchors 截前 3 条）
+**真实请求 / 响应**（`data/samples/pathway_k27.md`，anchors 截前 3 条）
 
 ```json
 // 请求
-{"path": "agent/data/samples/pathway_k27.md", "source_type": "public_standard", "ingested_by": "T1"}
+{"path": "data/samples/pathway_k27.md", "source_type": "public_standard", "ingested_by": "T1"}
 
 // 响应
 {
@@ -195,7 +195,7 @@ ingest_asset(path: str, modality: str = "", title: str = "",
 **错误**
 
 ```json
-{"ok": false, "reason": "file_not_found", "hint": "检查路径是否存在：agent/data/samples/nope.md"}
+{"ok": false, "reason": "file_not_found", "hint": "检查路径是否存在：data/samples/nope.md"}
 {"ok": false, "reason": "no_parser", "hint": "该扩展名暂无解析器，请在 parsers.REGISTRY 注册", "suffix": ".xyz"}
 {"ok": false, "reason": "parser_unavailable", "hint": "<解析器自报原因，如 pymupdf_not_installed>", "path": "..."}
 ```
@@ -230,7 +230,7 @@ get_asset_card(asset_id: str = "", modality: str = "",
   "title": "消化性溃疡临床路径（2023 版）摘要",
   "modality": "text",
   "source": {"type": "public_standard", "publisher": "国家卫生健康委",
-             "path": "agent/data/samples/pathway_k27.md"},
+             "path": "data/samples/pathway_k27.md"},
   "version": {"value": "2023", "captured_at": "2026-10-25T17:03:51+08:00", "supersedes": null},
   "sensitivity": "public",
   "structure": {"blocks": 9, "anchors": 15, "kinds": ["heading", "paragraph"]},
@@ -431,7 +431,7 @@ onto_propose(asset_ids: list[str], scope: str = "") -> dict
 | reason | 触发行 | 含义 |
 | --- | --- | --- |
 | `asset_not_found` | `server.py:216` | 资产号不存在 |
-| `too_short` | `server.py:221` | 锚点文本 < 12 字（方案原写 30 字，2026-10-29 裁定**以 12 为准**，见 `agent/docs/ontology-schema.md` §7） |
+| `too_short` | `server.py:221` | 锚点文本 < 12 字（方案原写 30 字，2026-10-29 裁定**以 12 为准**，见 `docs/ontology-schema.md` §7） |
 | `no_pattern_match` | `server.py:246` | 锚点没有任何句式命中 |
 | `entity_unresolved` | `server.py:260` | 头或尾落不到已有节点 |
 | `duplicate` | `server.py:279` | `(head, rel, tail)` 已有 active 记录（`contraindicated_for` 反向也算重复） |
@@ -516,7 +516,7 @@ onto_commit(diff_id: str, approve_all: bool = True,
   "version": "v1.0",
   "triple_count": 17,
   "manifest_hash": "49c493fd8f91b0d3",
-  "snapshot_path": "agent/mcp-server/data/ontology_v1.0.jsonl",
+  "snapshot_path": "mcp-server/data/ontology_v1.0.jsonl",
   "created_at": "2026-10-25T17:23:47+08:00"
 }
 ```
@@ -653,7 +653,7 @@ trace_write(question: str, steps: list[dict], agent_version: str = "v1.0",
 
 // 响应
 {"ok": true, "trace_id": "TR-20261025-1ABA", "version": "v0.9",
- "report_path": "agent/mcp-server/reports/TR-20261025-1ABA.md",
+ "report_path": "mcp-server/reports/TR-20261025-1ABA.md",
  "evidence_count": 3, "trace_completeness": 1.0, "unresolved": []}
 ```
 
@@ -749,7 +749,7 @@ tags: [auto-exported, medical]
 - 给出药品剂量
 ```
 
-> frontmatter 字段（`name` / `description` / `allowed-tools` / `tags`）与 Nexent 技能规范一致，但**导出的是草稿**，直接丢弃会丢掉「何时用」和「禁止」两节的语义。进 `agent/skills/` 前需人工改写。
+> frontmatter 字段（`name` / `description` / `allowed-tools` / `tags`）与 Nexent 技能规范一致，但**导出的是草稿**，直接丢弃会丢掉「何时用」和「禁止」两节的语义。进 `skills/` 前需人工改写。
 
 **错误**
 
@@ -790,7 +790,7 @@ health() -> dict
 
 ```json
 {"ok": true, "server_version": "0.1.0", "triples": 17, "assets": 1,
- "ontology_version": "v0.9", "db": "agent/mcp-server/data/medpal.db"}
+ "ontology_version": "v0.9", "db": "mcp-server/data/medpal.db"}
 ```
 
 `db` 是**服务端**的库路径，用于确认挂载时连的是哪个库——Nexent 挂不上时第一个该看的字段。
@@ -842,7 +842,7 @@ health() -> dict
 | 改出参字段名、改错误码文案、改 `reason` 取值 | **破坏性**，必须同步改 §3 + T6 的断言 | T1 裁决 + 全员确认 |
 | 改实体类型 / 关系类型集合 | `schema` 升主号（`v0`→`v1`）；旧数据需迁移脚本 | T1 裁决 |
 | 只加三元组数据 | 本体快照升次号（`v1.0`→`v1.1`） | T4 自主 |
-| 改 `trace.json` 结构 | 走 `agent/docs/trace-schema.md`（交付物 1.2） | T1 |
+| 改 `trace.json` 结构 | 走 `docs/trace-schema.md`（交付物 1.2） | T1 |
 
 ### 4.3 冻结与解冻
 
@@ -918,5 +918,5 @@ python tests/test_http_client.py
 跑法（用库副本，不动主库）：
 
 ```bash
-cd agent/mcp-server && PYTHONIOENCODING=utf-8 python ../../tmp/probe_contract3.py
+cd mcp-server && PYTHONIOENCODING=utf-8 python ../../tmp/probe_contract3.py
 ```

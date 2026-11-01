@@ -2,7 +2,7 @@
 
 一条命令跑完全链路，每层只做最细一件事：
 
-    python -m agent.skeleton --in agent/data/samples/pathway_k27.md --out tmp/trace.json
+    python skeleton.py --in data/samples/pathway_k27.md --out tmp/trace.json
 
     解析(.md 按空行切段) -> 资产入库(SQLite 单文件) -> 本体(硬编码实体与关系)
       -> 两跳遍历 -> 决策链 trace.json(step / evidence / ref)
@@ -295,9 +295,9 @@ def run(in_path: Path, out_path: Path, db_path: Path) -> dict:
 
 
 def main(argv=None) -> int:
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parent
     ap = argparse.ArgumentParser(description="Walking Skeleton：一条命令跑完赛题3 最小主线")
-    ap.add_argument("--in", dest="inp", default=str(root / "agent/data/samples/pathway_k27.md"))
+    ap.add_argument("--in", dest="inp", default=str(root / "data/samples/pathway_k27.md"))
     ap.add_argument("--out", dest="out", default=str(root / "tmp/trace.json"))
     ap.add_argument("--db", dest="db", default=str(root / "tmp/skeleton.db"))
     a = ap.parse_args(argv)

@@ -7,9 +7,9 @@
 | 责任人 | T1 · xiangyuli494-cmyk |
 | 状态 | **已冻结**。改结构要走 §11 流程，改数据不算改结构 |
 | 权威性 | 实体类型、关系类型、三元组字段、命名规范、校验规则，以本文件为唯一口径。方案 §5.1 是设计意图的出处，两者冲突时以本文件为准并在 §9 登记 |
-| 代码依据 | `agent/mcp-server/store.py`（表结构与读路径）、`agent/mcp-server/server.py`（写路径与抽取） |
+| 代码依据 | `mcp-server/store.py`（表结构与读路径）、`mcp-server/server.py`（写路径与抽取） |
 
-> 这份文件的前身是 `agent/docs/赛题3-方案-v1.2.md` §5.1。§5.1 讲的是「为什么这么设计」，本文讲的是「照这个写，写成什么样算对」。T2 建图、T4 对齐、T5 建库都按本文的字段名写，不按 §5.1 的叙述性文字猜。
+> 这份文件的前身是 `docs/赛题3-方案-v1.2.md` §5.1。§5.1 讲的是「为什么这么设计」，本文讲的是「照这个写，写成什么样算对」。T2 建图、T4 对齐、T5 建库都按本文的字段名写，不按 §5.1 的叙述性文字猜。
 
 ---
 
@@ -17,7 +17,7 @@
 
 **管**：三元组长什么样、6 类实体各自的命名规则、8 类关系各自允许的头尾类型、哪些字段必填、什么算重复、什么算冲突、版本号怎么加。
 
-**不管**：怎么抽（T2 的 `agent/ontology/extract.py`）、怎么对齐 ICD-10（T4 的 `agent/ontology/align.py`）、怎么建向量库（T5）、怎么可视化（T3）。本文只规定它们交接的那一层数据形状。
+**不管**：怎么抽（T2 的 `ontology/extract.py`）、怎么对齐 ICD-10（T4 的 `ontology/align.py`）、怎么建向量库（T5）、怎么可视化（T3）。本文只规定它们交接的那一层数据形状。
 
 ---
 
@@ -39,7 +39,7 @@
 
 **错误说法**：「schema 从 v0 升到 v1.0」「本体从 v0 升到 v1」——把结构号和数据号混在一起。
 
-代码事实：`_bump()` 是**次版本 +1**（`agent/mcp-server/server.py:341`）。`v0.9` 调一次 bump 得到 `v0.10`，不会跳到 `v1.0`。要发 `v1.0` 必须显式传 `version="v1.0"` 给 `onto_commit`。这一点 §5.1 的链路图没写清楚，容易让人以为会自动进位。
+代码事实：`_bump()` 是**次版本 +1**（`mcp-server/server.py:341`）。`v0.9` 调一次 bump 得到 `v0.10`，不会跳到 `v1.0`。要发 `v1.0` 必须显式传 `version="v1.0"` 给 `onto_commit`。这一点 §5.1 的链路图没写清楚，容易让人以为会自动进位。
 
 ---
 
@@ -56,7 +56,7 @@
 
 **`Finding` 目前是空类，这是有意的，不是漏写。**
 
-`agent/` 下全仓 grep `Finding` 只命中两份文档（本文件与方案 §5.1），代码和库里一次都没有。原因是：检验结果要落到具体数值区间（"血红蛋白 < 110 g/L"），而现在的 `TableParser` 只把表格行切成分句，切不出「指标名 + 阈值 + 单位」三元结构。所以 `Finding` 定义保留、`v0.9` 不用、也不许临时拿 `Exam` 顶替——`Exam` 是"做什么检查"，`Finding` 是"检查出来的数"，两者混淆会让 `requires_exam` 的语义崩掉。
+`` 下全仓 grep `Finding` 只命中两份文档（本文件与方案 §5.1），代码和库里一次都没有。原因是：检验结果要落到具体数值区间（"血红蛋白 < 110 g/L"），而现在的 `TableParser` 只把表格行切成分句，切不出「指标名 + 阈值 + 单位」三元结构。所以 `Finding` 定义保留、`v0.9` 不用、也不许临时拿 `Exam` 顶替——`Exam` 是"做什么检查"，`Finding` 是"检查出来的数"，两者混淆会让 `requires_exam` 的语义崩掉。
 
 启用 `Finding` 的前置条件：T5 的表格解析能输出「指标 - 阈值 - 单位」，否则不进本体。这一条写在这里，是为了防止 W2–W3 有人为了凑实体类型数硬塞。
 
@@ -93,7 +93,7 @@
 头尾类型写错不是"数据质量问题"，是**写坏了**，`add_triple` 之外的上游必须挡住：
 
 - `requires_exam` 的头必须是 `Disease`、尾必须是 `Exam`。头写成 `Symptom` 会造出「上腹隐痛 → 要做 → 胃镜」，这在临床上不成立（症状不直接开检查，中间必须先落到病）。
-- `contraindicated_for` 的头必须是 `Drug`。**头尾反了就是另一条知识**，代码里 `REVERSE_TOLERANT = {"contraindicated_for"}`（`agent/mcp-server/server.py:177`）专门处理「疾病患者禁用某药」与「某药禁用于某疾病」两种表述判重，但**入库方向统一为 Drug→Disease**。
+- `contraindicated_for` 的头必须是 `Drug`。**头尾反了就是另一条知识**，代码里 `REVERSE_TOLERANT = {"contraindicated_for"}`（`mcp-server/server.py:177`）专门处理「疾病患者禁用某药」与「某药禁用于某疾病」两种表述判重，但**入库方向统一为 Drug→Disease**。
 - `belongs_to_dept` 允许 `Symptom` 当头（"上腹隐痛归消化内科"是分诊要用的），这是唯一的双头类型关系。
 - `subclass_of` 禁止成环。`K21 subclass_of K21` 必须在写入前拒掉。
 
@@ -120,11 +120,11 @@
 
 ### 4.1 字段表
 
-以 `triple` 表 17 列为准（`agent/mcp-server/store.py:35-51`）：
+以 `triple` 表 17 列为准（`mcp-server/store.py:35-51`）：
 
 | 字段 | 类型 | 必填 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
-| `triple_id` | TEXT | 是 | 自动 `T-` + 8 位 hex | 主键。显式传入则用传入值 |
+| `triple_id` | TEXT | 是 | 自动 `T-` + `sha1(head_id\|rel\|tail_id)` 前 8 位（确定性：同三元组永远同 id） | 主键。显式传入则用传入值 |
 | `head_id` | TEXT | 是 | — | 头实体 canonical ID |
 | `head_type` | TEXT | 是 | — | 6 类之一 |
 | `head_label` | TEXT | 是 | — | 中文正名 |
@@ -142,7 +142,7 @@
 
 ### 4.2 JSON 形态（对外）
 
-`_triple_out()`（`agent/mcp-server/store.py:212`）输出的形状，这是 `kg_query` 的 `steps[].` 内容：
+`_triple_out()`（`mcp-server/store.py:212`）输出的形状，这是 `kg_query` 的 `steps[].` 内容：
 
 ```json
 {
@@ -235,7 +235,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 
 ## 7 抽取约束：阈值是 12 字，不是 30 字
 
-方案 §5.2 的第 5 条硬规则**原写**「段落长度 < 30 字或全是表头的，不抽」，已于 2026-10-29 同步改为 12 字。代码一直是 **12**（`agent/mcp-server/server.py:221`）。
+方案 §5.2 的第 5 条硬规则**原写**「段落长度 < 30 字或全是表头的，不抽」，已于 2026-10-29 同步改为 12 字。代码一直是 **12**（`mcp-server/server.py:221`）。
 
 **以 12 为准**，因为拿真实数据算过：
 
@@ -272,11 +272,11 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 | --- | --- | --- | --- |
 | 1 | `source_type` 三元组侧无列，只能靠 `asset_id` 反查 | 单条边不能自证"谁背书" | **接受**。反查成本低，加列会让 `snapshot()` 的 manifest 格式变更 |
 | 2 | `onto_propose` 头类型硬编码 `Disease` | 「布洛芬禁用于消化性溃疡」抽出来头类型是 `Disease` 而不是 `Drug`，**方向会反** | **必修**，T2 在 2.2 改成按 `resolve_entity` 查到的 `entity_type` 取类型。不修则 `contraindicated_for` 全废 |
-| 3 | 代码会产出 `may_cause`，但 8 类关系里没有这一类 | `PATTERNS` 第 2 条正则（`server.py:162-168`）匹配「可导致」输出 `rel="may_cause"`，写库后被 §3 的表判为非法 | **已裁决：加为第 9 类**，随 schema v1 在 W3 与 `v1.0` 快照一起落地（理由见 §9.1）。在此之前 T2 的 `agent/ontology/extract.py` 可产出 `may_cause` 候选，但入库前要标 `pending` |
+| 3 | 代码会产出 `may_cause`，但 8 类关系里没有这一类 | `PATTERNS` 第 2 条正则（`server.py:162-168`）匹配「可导致」输出 `rel="may_cause"`，写库后被 §3 的表判为非法 | **已裁决：加为第 9 类**，随 schema v1 在 W3 与 `v1.0` 快照一起落地（理由见 §9.1）。在此之前 T2 的 `ontology/extract.py` 可产出 `may_cause` 候选，但入库前要标 `pending` |
 | 4 | `aligned_to_standard` 边与 `standard_json` 字段冗余 | 差分同一条知识双份变化 | **暂留**。见 §3.3 |
 | 5 | `R10.1` 在 `alias` 里是 `Symptom`，在三元组里当 `Disease` 用 | 同一 ID 两处类型打架 | **待裁决**。倾向把 `R10.1` 改成 `Symptom`，但 `T-d2e6d769` 的 `has_symptom`（症状→症状）仍然不合法，需 T4 重抽 |
 | 6 | `_bump()` 次版本 +1，`v0.9` → `v0.10` | 想发 `v1.0` 必须显式传参，容易被忽略 | **接受**，写进 §1 当操作常识 |
-| 7 | `snapshot()` 写死 `DATA_DIR`，不认 `MEDPAL_DB` | 用副本库跑测试仍会往 `agent/mcp-server/data/` 写快照，污染工作区 | **接受**（已知），跑测试后记得 `git status` 看一眼 |
+| 7 | `snapshot()` 写死 `DATA_DIR`，不认 `MEDPAL_DB` | 用副本库跑测试仍会往 `mcp-server/data/` 写快照，污染工作区 | **接受**（已知），跑测试后记得 `git status` 看一眼 |
 
 ### 9.1 关于第 3 条的补充
 
@@ -301,7 +301,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 2. T1 裁决。裁决结论写回 §9 的「裁决」列；
 3. 改本文件的版本号 `v0` → `v1`，并在 §12 追加变更行；
 4. 改代码（`store.py` 的 DDL / `server.py` 的校验）；
-5. 跑 `python agent/tests/test_mcp_client.py`，必须 `MCP CLIENT OK`；
+5. 跑 `python tests/test_mcp_client.py`，必须 `MCP CLIENT OK`；
 6. 通知 T2 / T4 / T5 / T3。
 
 **只改数据不改结构不需要走这个流程**——`onto_propose` → `onto_commit` 那条路随便走。
@@ -350,10 +350,10 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 
 ```bash
 # 表结构
-grep -n "CREATE TABLE" -A 17 agent/mcp-server/store.py
+grep -n "CREATE TABLE" -A 17 mcp-server/store.py
 
 # 17 条的分布（实体类型 / 关系 / 置信度）
-cd agent/mcp-server && python -B -c "
+cd mcp-server && python -B -c "
 import sqlite3, collections
 c = sqlite3.connect('data/medpal.db')
 print('relations:', collections.Counter(r[0] for r in c.execute('select rel from triple')))
@@ -361,7 +361,7 @@ print('head_type:', collections.Counter(r[0] for r in c.execute('select head_typ
 "
 
 # 锚点长度分布（验证 12 字阈值）
-cd agent/mcp-server && python -B -c "
+cd mcp-server && python -B -c "
 import sqlite3, json
 c = sqlite3.connect('data/medpal.db')
 a = json.loads(c.execute('select anchors_json from asset').fetchone()[0])
@@ -371,7 +371,7 @@ print('>=12:', sum(1 for x in ls if x >= 12), '/', len(ls))
 "
 
 # 版本 bump 行为
-cd agent/mcp-server && python -B -c "
+cd mcp-server && python -B -c "
 import re
 src = open('server.py', encoding='utf-8').read()
 m = re.search(r'def _bump\(v: str\) -> str:.*?\n\n\n', src, re.S)

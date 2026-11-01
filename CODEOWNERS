@@ -1,0 +1,22 @@
+# CODEOWNERS —— 谁改谁审
+# 生效条件：账号必须是仓库 Collaborator / Team 成员，否则该条规则被忽略
+
+# 默认：T1 兜底
+*                                   @xiangyuli494-cmyk
+
+# 赛题3 主线
+/mcp-server/                        @xiangyuli494-cmyk
+/skills/                            @suyouZJF
+/eval/                              @suyouZJF
+/tools/                             @Dewqian
+/data/samples/                      @suyouZJF
+/data/asset-cards/                  @suyouZJF
+/docs/                              @xiangyuli494-cmyk
+/deploy/                            @xiangyuli494-cmyk
+/skeleton.py                        @xiangyuli494-cmyk
+
+# 门禁与工程
+/.github/                           @Dewqian
+/pyproject.toml                     @Dewqian
+/requirements.txt                   @Dewqian
+/requirements-dev.txt               @Dewqian
