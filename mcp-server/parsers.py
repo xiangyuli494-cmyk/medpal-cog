@@ -81,6 +81,20 @@ class TextParser:
         return ParsedDoc(path.stem, self.modality, blocks, anchors, {"chars": len(raw)})
 
 
+# PDF小节标题识别正则（合并自 parse/pdf.py）
+PDF_SECTION_RE = re.compile(
+    r"^\s*(?:第[一二三四五六七八九十百\d]+[章节部分]"
+    r"|\d+(?:\.\d+)*[\s、.]+"
+    r"|[一二三四五六七八九十]+、)"
+)
+PDF_MIN_SECTION_CHARS = 8
+
+
+def _pdf_is_heading(line: str) -> bool:
+    s = line.strip()
+    return bool(s) and len(s) <= 40 and bool(PDF_SECTION_RE.match(s))
+
+
 class PdfParser:
     modality = "pdf_text"
 
@@ -94,8 +108,14 @@ class PdfParser:
             return ParsedDoc(path.stem, self.modality, [], [], {"error": "pymupdf_not_installed"})
         doc = fitz.open(str(path))
         blocks, anchors = [], []
+        sec_no = 0
         for pno, page in enumerate(doc, start=1):
-            for tno, table in enumerate(page.find_tables(), start=1):
+            # 1. 提取表格（和原逻辑保持一致）
+            try:
+                tables = page.find_tables()
+            except Exception:
+                tables = None
+            for tno, table in enumerate(getattr(tables, "tables", []) or [], start=1):
                 for rno, row in enumerate(table.extract(), start=1):
                     text = " | ".join("" if c is None else str(c) for c in row)
                     if not text.strip(" |"):
@@ -104,10 +124,41 @@ class PdfParser:
                     anchors.append(
                         _anchor(str(path), "p%d.t%d.r%d" % (pno, tno, rno), "table_row", text)
                     )
+            # 2. 按小节切分页面文本（合并自 parse/pdf.py）
             text = page.get_text().strip()
-            if text:
-                blocks.append(Block("paragraph", text, {"page": pno}))
-                anchors.append(_anchor(str(path), "p%d.s1" % pno, "page", text))
+            if not text:
+                continue
+            current_para: list[str] = []
+            for raw_line in text.splitlines():
+                line = raw_line.strip()
+                if not line:
+                    continue
+                if _pdf_is_heading(line):
+                    # 先把之前攒的段落写进去
+                    if current_para:
+                        body = "\n".join(current_para).strip()
+                        if len(body) >= PDF_MIN_SECTION_CHARS:
+                            blocks.append(Block("paragraph", body, {"page": pno, "section": sec_no}))
+                            anchors.append(
+                                _anchor(str(path), "p%d.s%d" % (pno, sec_no or 1), "section", body)
+                            )
+                        current_para = []
+                    # 写入标题块
+                    sec_no += 1
+                    blocks.append(Block("heading", line, {"page": pno, "section": sec_no}))
+                    anchors.append(
+                        _anchor(str(path), "p%d.s%d" % (pno, sec_no), "section", line)
+                    )
+                else:
+                    current_para.append(line)
+            # 页面末尾剩余段落
+            if current_para:
+                body = "\n".join(current_para).strip()
+                if len(body) >= PDF_MIN_SECTION_CHARS:
+                    blocks.append(Block("paragraph", body, {"page": pno, "section": sec_no or 1}))
+                    anchors.append(
+                        _anchor(str(path), "p%d.s%d" % (pno, sec_no or 1), "section", body)
+                    )
         return ParsedDoc(path.stem, self.modality, blocks, anchors, {"pages": doc.page_count})
 
 
