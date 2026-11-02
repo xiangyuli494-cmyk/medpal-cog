@@ -407,7 +407,7 @@ def snapshot(conn, version, note=""):
     )
     conn.commit()
     path = DATA_DIR / ("ontology_" + version + ".jsonl")
-    with path.open("w", encoding="utf-8") as f:
+    with path.open("w", encoding="utf-8", newline="\n") as f:
         for r in rows:
             f.write(json.dumps(dict(r), ensure_ascii=False) + "\n")
     return {
