@@ -50,15 +50,15 @@ git push -u origin feat/kg-2hop
 
 | 规则 | 值 | 说明 |
 | --- | --- | --- |
-| Require a pull request before merging | 开 | 非管理员直推 `main` 会被拒；T1 是 admin，见 §4.1 |
+| Require a pull request before merging | 开 | 所有人（含 T1）直推 `main` 都会被拒 |
 | Required approvals | **1** | 三个人足够轮转 |
 | Dismiss stale approvals | 开 | 批完又推新提交 → 批准失效，重新批 |
 | Require status checks | `lint` / `test` / `pipeline` | 三个 job 名来自 `.github/workflows/ci.yml` |
 | Require conversation resolution | 开 | 评论没 resolve 合不了 |
 | Allow force pushes / deletions | 关 | 历史只增 |
-| Do not allow bypassing（`enforce_admins`） | **暂关**，T2/T3 加进来当天改**开** | 关着的时候 owner 直推 `main` 会成功（见 §4.1），等于规则对唯一 admin 不生效 |
+| Do not allow bypassing（`enforce_admins`） | **开**（2026-11-02 14:30 起） | 关着的时候 owner 直推 `main` 会成功（见 §4.1）；现在对 owner 也生效，T1 的 PR 必须由 T2 或 T3 approve |
 
-### 4.1 实测：不设 `enforce_admins` 时到底拦住谁（2026-11-01）
+### 4.1 历史实测：`enforce_admins=false` 时到底拦住谁（2026-11-01，已关闭该阀门）
 
 在 PR #1 合并后做了对照实验：本地在 `main` 上打一个空提交再 `git push origin main`。
 
@@ -73,7 +73,8 @@ To https://github.com/.../medpal-cog.git
 
 - 「不许直推」在 `enforce_admins=false` 下靠自觉，CI/approve 对 owner 完全不管用；
 - 但**强推**是硬拦的（`allow_force_pushes=false` 对 admin 也生效），撤回那条空提交只能临时打开强推、推完立刻恢复；
-- 想真正机械强制：等 T2/T3 账号进 Collaborator（能批 PR）当天执行 `ENFORCE_ADMINS=1 bash tools/gh-protect.sh`。在那之前保持 `false`，否则 T1 的 PR 没人能批、`main` 会冻住。
+- **2026-11-02 14:30 已切换到 `enforce_admins=true`**（T2 `zincumyu` 已能批 PR）。从这天起：`main` 只能由「分支 + PR + 1 个他人 approve + CI 三绿」进入，T1 自己也一样。
+- 应急口子：真遇到必须紧急放行（演示前一小时 CI 因外部原因红了），临时 `ENFORCE_ADMINS=0 bash tools/gh-protect.sh` 放行一次，**事后立刻切回并在群里说明**——这是例外，不是通道。
 
 重新装一遍或换机器时执行（幂等）：
 
