@@ -191,11 +191,11 @@ python tools/acceptance.py --with-eval
 
 | 想知道什么 | 看哪 |
 | --- | --- |
-| 技术方案（历史快照，数字口径已被排期取代） | [docs/赛题3-方案-v1.2.md](docs/赛题3-方案-v1.2.md) |
+| 技术方案（历史快照：六人排期与旧数字口径均已作废，只看技术判断） | [docs/赛题3-方案-v1.2.md](docs/赛题3-方案-v1.2.md) |
 | 工具契约与错误码 | [docs/mcp-contract.md](docs/mcp-contract.md) |
 | 本体 schema | [docs/ontology-schema.md](docs/ontology-schema.md) |
 | trace 结构 | [docs/trace-schema.md](docs/trace-schema.md) |
-| 角色与每周任务 | [docs/W1-角色任务卡.md](docs/W1-角色任务卡.md) |
+| 角色与每周任务 | [docs/任务卡-三人版.md](docs/任务卡-三人版.md) |
 | 工程规则 | [docs/rules.md](docs/rules.md) |
 | 为什么单独建这个仓 | [docs/adr/ADR-001-仓库拆分与历史迁移.md](docs/adr/ADR-001-仓库拆分与历史迁移.md) |
 | 历史怎么搬过来的 | [docs/migration.md](docs/migration.md) |
@@ -225,6 +225,6 @@ python tools/acceptance.py --with-eval
 `CODEOWNERS` 与上表已用真实账号；分支保护在两人都接受邀请后切 `ENFORCE_ADMINS=1`（见 issue #9）。
 
 排期见 [docs/冲刺计划-1130.md](docs/冲刺计划-1130.md)，每人每周任务见 [docs/任务卡-三人版.md](docs/任务卡-三人版.md)。
-旧六人分工（T1–T6）已停用，历史版本见 [docs/W1-角色任务卡.md](docs/W1-角色任务卡.md)。
+旧六人分工（T1–T6）的文档已于 2026-11-02 删除，历史见 git 与旧仓 `medpal`；本仓不再保留任何现行六人计划。
 
 代码与文档采用 [Apache License 2.0](LICENSE)。第三方数据来源、版本与许可见 [docs/赛题3-方案-v1.2.md](docs/赛题3-方案-v1.2.md) §4.3。
