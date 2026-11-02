@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv", "tmp", "data", "eval/reports", "mcp-server/data"]
+
+[tool.ruff.lint]
+# 只开三组：语法错误、未定义名、import 顺序。格式类规则不在这里吵。
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

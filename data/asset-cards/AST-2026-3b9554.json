@@ -1,0 +1,38 @@
+{
+  "asset_id": "AST-2026-3b9554",
+  "title": "合成门诊病历 19",
+  "modality": "image_report",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "D:\\华为ict\\medpal-cog\\data\\samples\\image\\bingli_19.png"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-02T20:29:49+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 1,
+    "anchors": 1,
+    "kinds": [
+      "figure"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-3b9554#img.r1",
+      "kind": "image_region",
+      "text": "bingli_19.png"
+    }
+  ],
+  "entities": [],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-02T20:29:49+08:00"
+}

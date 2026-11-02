@@ -1,0 +1,60 @@
+{
+  "name": "medpal-cog",
+  "version": "v0",
+  "description": "门诊主诉 → 跨文档取证 → 科室与检查建议（可进化决策智能体）",
+  "prompt_file": "agent/prompt.md",
+  "mcp": {
+    "transport": "streamable-http",
+    "url": "http://host.docker.internal:8090/mcp",
+    "url_stdio_hint": "python mcp-server/server.py",
+    "server_info_name": "medpal-cog",
+    "health_tool": "health",
+    "note": "Nexent 的容器里访问 Windows 宿主要用 host.docker.internal；同机 Linux 部署改成 127.0.0.1:8090。"
+  },
+  "tools": {
+    "mcp": [
+      "ingest_asset",
+      "get_asset_card",
+      "kg_query",
+      "onto_propose",
+      "onto_commit",
+      "std_align",
+      "trace_write",
+      "skill_export",
+      "kb_search",
+      "health"
+    ],
+    "platform": [
+      "search-knowledge-base",
+      "analyze-image"
+    ],
+    "platform_optional": true
+  },
+  "skills": [
+    "skills/s1-asset-audit",
+    "skills/s2-ontology-evolve",
+    "skills/s3-evidence-decision"
+  ],
+  "output_contract": {
+    "tail_lines": 3,
+    "patterns": [
+      "^科室：.+$",
+      "^检查项：.+$",
+      "^完整率：\\d+\\.\\d{2}$|^完整率：未取到$"
+    ],
+    "conflict_line": "^冲突：.+$",
+    "note": "三行固定收尾，顺序固定；冲突行在三行之前。评测与人工验收都按这个抓。"
+  },
+  "limits": {
+    "max_rounds": 4,
+    "max_hops": 2,
+    "min_evidence_per_claim": 2,
+    "low_confidence_threshold": 0.5
+  },
+  "guardrails": [
+    "不给药品剂量",
+    "不下确定性诊断",
+    "不引用没有 `anchor_id` 的证据",
+    "不谎称调用过工具"
+  ]
+}

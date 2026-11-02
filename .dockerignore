@@ -1,0 +1,14 @@
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+.git
+.github
+.venv
+tmp
+eval/reports
+mcp-server/reports
+data/asset-cards
+docs
+*.md
+!deploy/README.md

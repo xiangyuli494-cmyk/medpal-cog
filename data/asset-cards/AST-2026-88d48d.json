@@ -1,0 +1,49 @@
+{
+  "asset_id": "AST-2026-88d48d",
+  "title": "test_guide_01 01",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "D:\\华为ict\\medpal-cog\\data\\samples\\pdf\\test_guide_01.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-02T20:29:49+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 3,
+    "anchors": 3,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-88d48d#p1.s1",
+      "kind": "section",
+      "text": "··· ····\n·············PDF·········"
+    },
+    {
+      "anchor_id": "AST-2026-88d48d#p1.s1",
+      "kind": "section",
+      "text": "1.1 ····"
+    },
+    {
+      "anchor_id": "AST-2026-88d48d#p1.s1",
+      "kind": "section",
+      "text": "····1.1··················"
+    }
+  ],
+  "entities": [],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-02T20:29:49+08:00"
+}

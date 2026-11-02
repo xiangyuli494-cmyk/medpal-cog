@@ -1,0 +1,66 @@
+{
+  "id": "S-02",
+  "title": "报警：既往溃疡又出现黑便 → 内镜优先",
+  "source": "由 eval/run_eval.py 的规则引擎在 seed 库上回放生成 —— 只用于约定工具调用形状与三行输出格式，不是 Nexent 实跑记录",
+  "question": "既往消化性溃疡最近出现黑便",
+  "tool_calls": [
+    {
+      "tool": "kb_search",
+      "args": {
+        "query": "既往消化性溃疡最近出现黑便"
+      },
+      "ok": true,
+      "yields": "文档段落候选"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "term": "消化内科"
+      },
+      "ok": true,
+      "yields": "消化内科"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seeds": [],
+        "max_hops": 2
+      },
+      "ok": true,
+      "yields": "疾病→检查 / 疾病→科室 / 禁忌路径"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "既往消化性溃疡最近出现黑便"
+      },
+      "ok": true,
+      "yields": "TR-20261101-AECD"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s2.p1.c2",
+    "AST-2026-000137#s2.p1.c3",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2"
+  ],
+  "conflict_line": null,
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：胃镜",
+    "完整率：1.00"
+  ],
+  "engine": {
+    "dept": "消化内科",
+    "exams": [
+      "胃镜"
+    ],
+    "conflicts": [],
+    "trace_id": "TR-20261101-AECD",
+    "trace_completeness": 1.0,
+    "elapsed_ms": 13,
+    "out_of_scope": false
+  }
+}
