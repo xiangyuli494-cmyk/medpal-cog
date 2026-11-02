@@ -56,7 +56,7 @@ def test_prompt_has_three_line_tail():
 def test_sessions_match_output_contract():
     cfg = load_config()["output_contract"]
     patterns = [re.compile(p) for p in cfg["patterns"]]
-    files = sorted((AGENT / "sessions").glob("s-*.json"))
+    files = sorted((AGENT / "sessions").glob("*.json"))
     assert len(files) >= 3, "至少三份样例：常态 / 报警 / 冲突"
     for f in files:
         data = json.loads(f.read_text(encoding="utf-8"))
@@ -67,6 +67,24 @@ def test_sessions_match_output_contract():
         if data["conflict_line"]:
             assert re.match(cfg["conflict_line"], data["conflict_line"])
         assert all(e.startswith("AST-2026-") for e in data["evidence"])
+
+
+def test_real_sessions_have_provenance():
+    """agent/sessions/real-*.json 必须是 Nexent 实跑记录，不是手写的"看起来像实跑"。
+
+    判据三条：source 写明 Nexent 实跑与时间；tool_calls 非空且每条都带 ok；
+    证据锚点全部挂在真实资产上。不校验平台端的原始 SSE（那在提交者本地）。
+    """
+    files = sorted((AGENT / "sessions").glob("real-*.json"))
+    assert files, "至少一份 Nexent 实跑记录：real-w1-01.json"
+    for f in files:
+        data = json.loads(f.read_text(encoding="utf-8"))
+        assert "Nexent 实跑" in data["source"], f"{f.name} 没写实跑来源"
+        assert re.search(r"20\d{2}-\d{2}-\d{2}", data["source"]), f"{f.name} 缺实跑日期"
+        calls = data.get("tool_calls") or []
+        assert calls, f"{f.name} 没有任何 MCP 工具调用"
+        assert all("ok" in c for c in calls), f"{f.name} 有工具调用没记结果"
+        assert any(c["ok"] for c in calls), f"{f.name} 全部工具调用都失败，不能当成功证据"
 
 
 def test_guardrails_present():

@@ -1,0 +1,137 @@
+{
+  "engine": "nexent",
+  "platform": "Nexent v2.7.0（13 容器，console http://localhost:3000）",
+  "model": "deepseek-chat（model_id=1）",
+  "agent_id": 2,
+  "mcp": "http://host.docker.internal:8090/mcp（medpal-cog，10 工具）",
+  "id": "REAL-W1-02",
+  "title": "Nexent 实跑：长期服用止痛药与胃溃疡（冲突案例）",
+  "source": "Nexent 实跑 · 2026-11-02 15:04（Asia/Shanghai）· 平台 v2.7.0 · 模型 deepseek-chat · agent_id=2 · SSE 原始流转录 2570 行 / 1285 事件",
+  "question": "胃溃疡病史，最近长期服用止痛药，会不会伤胃？",
+  "tool_calls": [
+    {
+      "tool": "kb_search",
+      "args": {
+        "query": "胃溃疡 长期服用止痛药 NSAIDs 伤胃 风险",
+        "top_k": 5
+      },
+      "ok": false,
+      "yields": "kb_not_configured，回答中已列为证据缺口"
+    },
+    {
+      "tool": "kb_search",
+      "args": {
+        "query": "消化性溃疡 非甾体抗炎药 禁忌 出血",
+        "top_k": 5
+      },
+      "ok": false,
+      "yields": "kb_not_configured"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seed_entities": [
+          "胃溃疡",
+          "止痛药",
+          "NSAIDs",
+          "非甾体抗炎药"
+        ],
+        "max_hops": 2,
+        "limit": 30
+      },
+      "ok": true,
+      "yields": "K27 命中，止痛药为俗称未直接对齐"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "entity_text": "止痛药"
+      },
+      "ok": true,
+      "yields": "未对齐（俗称），回答里明确说明"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "entity_text": "胃溃疡"
+      },
+      "ok": true,
+      "yields": "ICD-10 K27"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seed_entities": [
+          "布洛芬",
+          "DRUG-IBU"
+        ],
+        "max_hops": 2,
+        "limit": 20
+      },
+      "ok": true,
+      "yields": "DRUG-IBU -contraindicated_for-> K27"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "entity_text": "布洛芬"
+      },
+      "ok": true,
+      "yields": "DRUG-IBU"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "entity_text": "非甾体抗炎药"
+      },
+      "ok": true,
+      "yields": "NSAIDs 类名"
+    },
+    {
+      "tool": "get_asset_card",
+      "args": {
+        "asset_id": "AST-2026-000137"
+      },
+      "ok": true,
+      "yields": "取回路径资产卡，s4 段三条禁忌原文"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "胃溃疡病史，最近长期服用止痛药，会不会伤胃？",
+        "steps": 4
+      },
+      "ok": true,
+      "yields": "含 gaps 三条缺口，完整率 1.00"
+    }
+  ],
+  "platform_tools": [
+    {
+      "tool": "search_memory",
+      "args": {
+        "query": "胃溃疡病史，最近长期服用止痛药，会不会伤胃？",
+        "top_k": 5
+      },
+      "note": "Nexent 内置"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c1",
+    "AST-2026-000137#s4.p1.c2",
+    "AST-2026-000137#s4.p1.c3"
+  ],
+  "conflict_line": "冲突：布洛芬（NSAIDs）与消化性溃疡存在禁忌关系",
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：幽门螺杆菌呼气试验、胃镜",
+    "完整率：1.00"
+  ],
+  "notes": [
+    "冲突行由 kg_query 的 contraindicated_for 真实三元组触发，非模板套话。",
+    "止痛药属俗称：模型如实说明未对齐、按 NSAIDs 代表推断，并提示对乙酰氨基酚类风险不同。",
+    "trace_write 带 gaps 三条：kb 未配置 / 俗称未对齐 / 缺少药名剂量疗程。"
+  ]
+}
