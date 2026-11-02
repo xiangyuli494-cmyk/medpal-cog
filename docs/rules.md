@@ -1,6 +1,6 @@
 # medpal-cog 工程规则（赛题3）
 
-> 版本 **v2.0** · 2026-11-01 · 三人制（T1 队长 / T2 / T3）
+> 版本 **v2.1** · 2026-11-02 · 三人制（T1 xiangyuli494-cmyk 队长 / T2 zincumyu / T3 Dewqian）
 > 适用范围：本仓库全部跟踪文件（`mcp-server/`、`ontology/`、`parse/`、`skills/`、`eval/`、`data/`、`web/`、`tools/`、`docs/`）。
 > 本文件 v1.0（2026-10-22，六人制、仓内 `agent/` 前缀）**已废止**；分支与合并的权威来源是 [`docs/git-flow.md`](git-flow.md) 与 [`CONTRIBUTING.md`](../CONTRIBUTING.md)，排期的权威来源是 [`docs/冲刺计划-1130.md`](冲刺计划-1130.md)。
 
