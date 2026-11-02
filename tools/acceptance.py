@@ -90,6 +90,7 @@ REQUIRED = [
     "agent/prompt.md",
     "agent/config.json",
     "agent/README.md",
+    "agent/sessions/real-w1-01.json",
 ]
 
 MANUAL = [
