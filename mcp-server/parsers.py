@@ -138,16 +138,30 @@ class PdfParser:
                     if current_para:
                         body = "\n".join(current_para).strip()
                         if len(body) >= PDF_MIN_SECTION_CHARS:
-                            blocks.append(Block("paragraph", body, {"page": pno, "section": sec_no}))
+                            blocks.append(
+                                Block("paragraph", body, {"page": pno, "section": sec_no})
+                            )
                             anchors.append(
-                                _anchor(str(path), "p%d.s%d" % (pno, sec_no or 1), "section", body)
+                                _anchor(
+                                    str(path),
+                                    "p%d.s%d" % (pno, sec_no or 1),
+                                    "section",
+                                    body
+                                )
                             )
                         current_para = []
                     # 写入标题块
                     sec_no += 1
-                    blocks.append(Block("heading", line, {"page": pno, "section": sec_no}))
+                    blocks.append(
+                        Block("heading", line, {"page": pno, "section": sec_no})
+                    )
                     anchors.append(
-                        _anchor(str(path), "p%d.s%d" % (pno, sec_no), "section", line)
+                        _anchor(
+                            str(path),
+                            "p%d.s%d" % (pno, sec_no),
+                            "section",
+                            line
+                        )
                     )
                 else:
                     current_para.append(line)
@@ -155,7 +169,9 @@ class PdfParser:
             if current_para:
                 body = "\n".join(current_para).strip()
                 if len(body) >= PDF_MIN_SECTION_CHARS:
-                    blocks.append(Block("paragraph", body, {"page": pno, "section": sec_no or 1}))
+                    blocks.append(
+                        Block("paragraph", body, {"page": pno, "section": sec_no or 1})
+                    )
                     anchors.append(
                         _anchor(str(path), "p%d.s%d" % (pno, sec_no or 1), "section", body)
                     )
