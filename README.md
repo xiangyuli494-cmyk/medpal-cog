@@ -219,10 +219,10 @@ python tools/acceptance.py --with-eval
 | 代号 | 账号 | 角色 |
 | --- | --- | --- |
 | **T1**（队长） | xiangyuli494-cmyk | 环境与 Nexent 集成、主智能体、跨文档演示、答辩材料、唯一 merge 权 |
-| **T2** | `T2_HANDLE` | 本体与推理：本体 v0.9→v1.1、`kg_query` 多跳、`onto_propose`/`onto_commit`、`std_align` |
-| **T3** | `T3_HANDLE` | 数据、评测与交付：Asset Card、PDF 解析接入、30 条评测、3 个 Skill 包、镜像与视频 |
+| **T2** | `zincumyu` | 本体与推理（**难任务优先**）：本体 v0.9→v1.1、`kg_query` 多跳、`onto_propose`/`onto_commit`、差分与回滚、`std_align` |
+| **T3** | `Dewqian` | 数据、评测与交付：Asset Card、PDF 解析去重与接入、30 条评测、3 个 Skill 包、镜像与视频 |
 
-`T2_HANDLE`/`T3_HANDLE` 是占位符：加进 Collaborator 后替换 `CODEOWNERS` 与上表。
+`CODEOWNERS` 与上表已用真实账号；分支保护在两人都接受邀请后切 `ENFORCE_ADMINS=1`（见 issue #9）。
 
 排期见 [docs/冲刺计划-1130.md](docs/冲刺计划-1130.md)，每人每周任务见 [docs/任务卡-三人版.md](docs/任务卡-三人版.md)。
 旧六人分工（T1–T6）已停用，历史版本见 [docs/W1-角色任务卡.md](docs/W1-角色任务卡.md)。
