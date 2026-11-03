@@ -1,7 +1,7 @@
 # MedPal-Cog MCP 工具契约 v1
 
 > 交付物 1.1 · T1 xiangyuli494-cmyk · 2026-10-25 · 状态：**冻结候选**
-> 适用对象：T2/T4 的实现、T6 的 client 与 CI 门禁、Nexent 挂载配置
+> 适用对象：T2 的实现、T3 的 client 与 CI 门禁、Nexent 挂载配置
 > 唯一事实来源：`mcp-server/server.py`、`mcp-server/store.py`。本文与代码冲突时以代码为准，并**改文档**。
 
 ---
@@ -33,7 +33,7 @@
 ### 0.2 两种连接方式
 
 ```bash
-# ① stdio（本地调试、MCP Inspector、T6 的 CI client）——默认
+# ① stdio（本地调试、MCP Inspector、T3 的 CI client）——默认
 python server.py
 
 # ② streamable-http（Nexent「远程链接」用）
@@ -121,7 +121,7 @@ MCP_TRANSPORT=streamable-http python server.py
 
 `source_type` 三值锁死「这条知识该由谁背书」：`icd10` / `pathway` / `drug_label`。
 
-> **v1 落地现状（写清楚，别让下游猜）**：`onto_propose` 的规则抽取器（`server.py:153-173`）目前只识别 3 类句式 → `requires_exam` / `contraindicated_for` / `may_cause`。其中前两类在词表内，`may_cause` **不在** 8 类里——2026-10-29 已裁定把它加为第 9 类，随 schema v1 在 W3 与 `v1.0` 快照一起落地（见 `docs/ontology-schema.md` §9 第 3 条），在此之前它只能作为 `pending` 候选、不入库。种子库 `v0.9` 实际含 6 类关系，缺 `treated_by` / `subclass_of`。这是**已知缺口**，不是契约缺失：schema 允许 8 类，抽取器覆盖 2 类有效关系，其余走 LLM few-shot（T4 负责）。
+> **v1 落地现状（写清楚，别让下游猜）**：`onto_propose` 的规则抽取器（`server.py:153-173`）目前只识别 3 类句式 → `requires_exam` / `contraindicated_for` / `may_cause`。其中前两类在词表内，`may_cause` **不在** 8 类里——2026-10-29 已裁定把它加为第 9 类，随 schema v1 在 W3 与 `v1.0` 快照一起落地（见 `docs/ontology-schema.md` §9 第 3 条），在此之前它只能作为 `pending` 候选、不入库。种子库 `v0.9` 实际含 6 类关系，缺 `treated_by` / `subclass_of`。这是**已知缺口**，不是契约缺失：schema 允许 8 类，抽取器覆盖 2 类有效关系，其余走 LLM few-shot（T2 负责）。
 
 ### 1.5 幂等与副作用
 
@@ -817,7 +817,7 @@ health() -> dict
 | 12 | `no_seed` | 种子实体为空 | `kg_query` | `store.py:247` | 先做实体归一 |
 | 13 | `no_path` | 有种子但连不上任何路径 | `kg_query` | `store.py:346` | 看 `unresolved` 换词重查 |
 
-**新增错误码流程**：先改本文 §3 → 再改代码 → 再让 T6 的 client 断言。顺序不能反。
+**新增错误码流程**：先改本文 §3 → 再改代码 → 再让 T3 的 client 断言。顺序不能反。
 
 ---
 
@@ -828,8 +828,8 @@ health() -> dict
 | 号 | 指什么 | 谁改 | 例 |
 | --- | --- | --- | --- |
 | `server_version` | 代码契约版本 | T1 | `0.1.0` |
-| `schema v0` / `v1` | 实体与关系的**结构** | T1 裁决 + T4 执行 | `v0` |
-| 本体快照 `v0.9` / `v1.0` / `v1.1` | **数据** | T4 | `v0.9` → `v1.0` |
+| `schema v0` / `v1` | 实体与关系的**结构** | T1 裁决 + T2 执行 | `v0` |
+| 本体快照 `v0.9` / `v1.0` / `v1.1` | **数据** | T2 | `v0.9` → `v1.0` |
 
 差分报告写「v0.9→v1.0」，不写「v0→v1」。
 
@@ -839,20 +839,20 @@ health() -> dict
 | --- | --- | --- |
 | 加工具、删工具、改入参名 / 类型 / 必填性 | `server_version` 升**次**号；契约文档同步改 | **T1 裁决**，提前一天公告 |
 | 加可选入参（有默认值）、加出参字段 | `server_version` 升次号；向后兼容，可当天改 | T1 知会 |
-| 改出参字段名、改错误码文案、改 `reason` 取值 | **破坏性**，必须同步改 §3 + T6 的断言 | T1 裁决 + 全员确认 |
+| 改出参字段名、改错误码文案、改 `reason` 取值 | **破坏性**，必须同步改 §3 + T3 的断言 | T1 裁决 + 全员确认 |
 | 改实体类型 / 关系类型集合 | `schema` 升主号（`v0`→`v1`）；旧数据需迁移脚本 | T1 裁决 |
-| 只加三元组数据 | 本体快照升次号（`v1.0`→`v1.1`） | T4 自主 |
+| 只加三元组数据 | 本体快照升次号（`v1.0`→`v1.1`） | T2 自主 |
 | 改 `trace.json` 结构 | 走 `docs/trace-schema.md`（交付物 1.2） | T1 |
 
 ### 4.3 冻结与解冻
 
-- 本文状态「冻结候选」→ T6 照本文写出可运行的 client 并通过 → 状态改「**已冻结 v1**」，此后只增不改；
+- 本文状态「冻结候选」→ T3 照本文写出可运行的 client 并通过 → 状态改「**已冻结 v1**」，此后只增不改；
 - 冻结后任何人发现文档与代码不一致，**先提 issue 给 T1**，不许自己改代码绕过；
 - 每周日 24:00 PR 合并前，T1 用 `python tests/test_mcp_client.py` 复核一次工具清单。
 
 ---
 
-## 5. 下游怎么验（T6 的硬门槛）
+## 5. 下游怎么验（T3 的硬门槛）
 
 按本文写一个 MCP client，跑通下面 5 条就算过：
 

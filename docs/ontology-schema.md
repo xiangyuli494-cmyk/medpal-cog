@@ -9,7 +9,7 @@
 | 权威性 | 实体类型、关系类型、三元组字段、命名规范、校验规则，以本文件为唯一口径。方案 §5.1 是设计意图的出处，两者冲突时以本文件为准并在 §9 登记 |
 | 代码依据 | `mcp-server/store.py`（表结构与读路径）、`mcp-server/server.py`（写路径与抽取） |
 
-> 这份文件的前身是 `docs/赛题3-方案-v1.2.md` §5.1。§5.1 讲的是「为什么这么设计」，本文讲的是「照这个写，写成什么样算对」。T2 建图、T4 对齐、T5 建库都按本文的字段名写，不按 §5.1 的叙述性文字猜。
+> 这份文件的前身是 `docs/赛题3-方案-v1.2.md` §5.1。§5.1 讲的是「为什么这么设计」，本文讲的是「照这个写，写成什么样算对」。T2 建图与对齐、T3 建库都按本文的字段名写，不按 §5.1 的叙述性文字猜。
 
 ---
 
@@ -17,7 +17,7 @@
 
 **管**：三元组长什么样、6 类实体各自的命名规则、8 类关系各自允许的头尾类型、哪些字段必填、什么算重复、什么算冲突、版本号怎么加。
 
-**不管**：怎么抽（T2 的 `ontology/extract.py`）、怎么对齐 ICD-10（T4 的 `ontology/align.py`）、怎么建向量库（T5）、怎么可视化（T3）。本文只规定它们交接的那一层数据形状。
+**不管**：怎么抽（T2 的 `ontology/extract.py`）、怎么对齐 ICD-10（T2 的 `ontology/align.py`）、怎么建向量库（T3）、怎么可视化（T3）。本文只规定它们交接的那一层数据形状。
 
 ---
 
@@ -58,7 +58,7 @@
 
 `` 下全仓 grep `Finding` 只命中两份文档（本文件与方案 §5.1），代码和库里一次都没有。原因是：检验结果要落到具体数值区间（"血红蛋白 < 110 g/L"），而现在的 `TableParser` 只把表格行切成分句，切不出「指标名 + 阈值 + 单位」三元结构。所以 `Finding` 定义保留、`v0.9` 不用、也不许临时拿 `Exam` 顶替——`Exam` 是"做什么检查"，`Finding` 是"检查出来的数"，两者混淆会让 `requires_exam` 的语义崩掉。
 
-启用 `Finding` 的前置条件：T5 的表格解析能输出「指标 - 阈值 - 单位」，否则不进本体。这一条写在这里，是为了防止 W2–W3 有人为了凑实体类型数硬塞。
+启用 `Finding` 的前置条件：T3 的表格解析能输出「指标 - 阈值 - 单位」，否则不进本体。这一条写在这里，是为了防止 W2–W3 有人为了凑实体类型数硬塞。
 
 ### 2.1 节点 ID 规则
 
@@ -99,7 +99,7 @@
 
 ### 3.2 `treated_by` 和 `subclass_of` 现在是空的
 
-`v0.9` 里这两类一条都没有：入库的 5 份文档（`AST-2026-000137` 加 `pathway_01..04` 四份）里没有给药方案，也没有病种层级。这不是缺陷——W2 起 T4 做 `onto_propose` 扩库时会自然长出来。但**汇报时不能说"8 类关系已全部落地"**，只能说"8 类已定义、6 类有实例"。
+`v0.9` 里这两类一条都没有：入库的 5 份文档（`AST-2026-000137` 加 `pathway_01..04` 四份）里没有给药方案，也没有病种层级。这不是缺陷——W2 起 T2 做 `onto_propose` 扩库时会自然长出来。但**汇报时不能说"8 类关系已全部落地"**，只能说"8 类已定义、6 类有实例"。
 
 ### 3.3 `aligned_to_standard` 与 `standard` 字段是冗余的
 
@@ -213,7 +213,7 @@
 
 **实际落点**：代码里 `source_type` 只出现在 `ingest_asset` 的入参（`server.py:64`，默认 `"public_standard"`），写进 `asset.source_json.type`，三元组表里没有这一列。
 
-所以现在**没法在单条三元组上判断 source_type**，只能顺着 `asset_id` 反查。这够用，但要写进 T4 的对齐校验：`contraindicated_for` 的边必须挂在 `drug_label` 资产上，如果挂在 `pathway` 上就是抽错了。
+所以现在**没法在单条三元组上判断 source_type**，只能顺着 `asset_id` 反查。这够用，但要写进 T2 的对齐校验：`contraindicated_for` 的边必须挂在 `drug_label` 资产上，如果挂在 `pathway` 上就是抽错了。
 
 `v0` 的裁决：**不新增列**，用反查。理由见 §9 第 1 条。
 
@@ -257,7 +257,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 | 1 | 头尾必须能落到已有节点或 ICD-10 编码 | `store.resolve_entity()`（`store.py:458`） | ✅ 已实现。先查 `head_label`，再查 `alias` |
 | 2 | 关系与实体类型必须匹配 | 抽取侧 | ⚠️ 部分。`onto_propose` 硬编码头 `Disease`、尾 `Exam`/`Disease`（`server.py:234`、`:238`），**不看实际类型** |
 | 3 | 同 `(head, rel, tail)` 已有 active 则判重不新增 | `store.add_triple()`（`store.py:171`） | ✅ 已实现。重复时只把 `confidence` 取 `max()` 更新，返回 `None` |
-| 4 | 语义冲突（如 `contraindicated_for` 与 `treated_by` 同时成立）标冲突 | 待 T4 | ❌ 未实现 |
+| 4 | 语义冲突（如 `contraindicated_for` 与 `treated_by` 同时成立）标冲突 | 待 T2 | ❌ 未实现 |
 | 5 | 段落 < 12 字或全是表头的不抽 | `server.py:220` | ✅ 已实现（阈值见 §7） |
 
 第 2 条是 `v0` 最大的实现缺口，具体见 §9 第 2 条。
@@ -274,7 +274,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 | 2 | `onto_propose` 头类型硬编码 `Disease` | 「布洛芬禁用于消化性溃疡」抽出来头类型是 `Disease` 而不是 `Drug`，**方向会反** | **必修**，T2 在 2.2 改成按 `resolve_entity` 查到的 `entity_type` 取类型。不修则 `contraindicated_for` 全废 |
 | 3 | 代码会产出 `may_cause`，但 8 类关系里没有这一类 | `PATTERNS` 第 2 条正则（`server.py:162-168`）匹配「可导致」输出 `rel="may_cause"`，写库后被 §3 的表判为非法 | **已裁决：加为第 9 类**，随 schema v1 在 W3 与 `v1.0` 快照一起落地（理由见 §9.1）。在此之前 T2 的 `ontology/extract.py` 可产出 `may_cause` 候选，但入库前要标 `pending` |
 | 4 | `aligned_to_standard` 边与 `standard_json` 字段冗余 | 差分同一条知识双份变化 | **暂留**。见 §3.3 |
-| 5 | `R10.1` 在 `alias` 里是 `Symptom`，在三元组里当 `Disease` 用 | 同一 ID 两处类型打架 | **待裁决**。倾向把 `R10.1` 改成 `Symptom`，但 `T-d2e6d769` 的 `has_symptom`（症状→症状）仍然不合法，需 T4 重抽 |
+| 5 | `R10.1` 在 `alias` 里是 `Symptom`，在三元组里当 `Disease` 用 | 同一 ID 两处类型打架 | **待裁决**。倾向把 `R10.1` 改成 `Symptom`，但 `T-d2e6d769` 的 `has_symptom`（症状→症状）仍然不合法，需 T2 重抽 |
 | 6 | `_bump()` 次版本 +1，`v0.9` → `v0.10` | 想发 `v1.0` 必须显式传参，容易被忽略 | **接受**，写进 §1 当操作常识 |
 | 7 | `snapshot()` 写死 `DATA_DIR`，不认 `MEDPAL_DB` | 用副本库跑测试仍会往 `mcp-server/data/` 写快照，污染工作区 | **接受**（已知），跑测试后记得 `git status` 看一眼 |
 
@@ -289,8 +289,8 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 | 角色 | 读哪些字段 | 不许做的事 |
 | --- | --- | --- |
 | T2 建图 / 推理 | `head_id` `rel` `tail_id` `confidence` `provenance` | 不许在遍历时自己造节点 ID；不许改 `status` 语义 |
-| T4 对齐 / 差分 | `standard_json` `status` `version_added` `version_removed` | 不许改 `triple_id`；不许绕过 `add_triple` 直接 `INSERT` |
-| T5 建库 | `head_label` `tail_label` + `anchor_id` 指回原文 | 不许把 `alias.surface` 当独立实体入库 |
+| T2 对齐 / 差分 | `standard_json` `status` `version_added` `version_removed` | 不许改 `triple_id`；不许绕过 `add_triple` 直接 `INSERT` |
+| T3 建库 | `head_label` `tail_label` + `anchor_id` 指回原文 | 不许把 `alias.surface` 当独立实体入库 |
 | T3 可视化 | `provenance.anchor_id` 拆 `#` 前段定位资产、后段定位句 | 不许假设 `anchor_id` 一定含 `#` |
 
 ---
@@ -302,7 +302,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 3. 改本文件的版本号 `v0` → `v1`，并在 §12 追加变更行；
 4. 改代码（`store.py` 的 DDL / `server.py` 的校验）；
 5. 跑 `python tests/test_mcp_client.py`，必须 `MCP CLIENT OK`；
-6. 通知 T2 / T4 / T5 / T3。
+6. 通知 T2 / T3。
 
 **只改数据不改结构不需要走这个流程**——`onto_propose` → `onto_commit` 那条路随便走。
 
@@ -318,7 +318,7 @@ manifest 的拼接格式是 `snapshot()` 里写死的（`store.py:350-370`），
 
 ## 附录 A 种子 v0.9 全量 17 条（`seed.py --reset` 口径；跑完 `tools/ingest_all.py` 后库内 37 条）
 
-供 T2 / T4 对照，避免各自猜 ID。
+供 T2 / T3 对照，避免各自猜 ID。
 
 | triple_id | head | rel | tail | conf |
 | --- | --- | --- | --- | --- |

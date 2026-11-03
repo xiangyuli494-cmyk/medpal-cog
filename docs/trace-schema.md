@@ -1,7 +1,7 @@
 # MedPal-Cog trace.json Schema v1
 
 > 交付物 1.2 · T1 xiangyuli494-cmyk · 2026-10-25 · 状态：**冻结候选**
-> 适用对象：T2 的 trace 生产、T3 的静态可视化、T4 的模板导出、T6 的溯源完整率检查
+> 适用对象：T2 的 trace 生产、T3 的静态可视化与溯源完整率检查、T1 的模板导出与材料
 > 唯一事实来源：`mcp-server/store.py`（`write_trace` / `get_trace` / `_ref_str` / `_evidence_exists`）、`mcp-server/server.py`（`trace_write` / `skill_export`）、`skeleton.py`
 > 本文与代码冲突时以代码为准，并**改文档**；本文与 `tools/trace.schema.json` 冲突时以 Schema 文件为准（它是可执行的）。
 
@@ -73,7 +73,7 @@
 | `conclusion` | object | 可选 | 调用方 | 顶层结论摘要，字段随业务走 |
 | `gaps` | string[] | ✅ | 调用方 | 缺口清单，人话。空也给 `[]`，不给 `null` |
 | `trace_completeness` | number 0–1 | ✅ | `store.py:534` | 溯源完整率，见 §6 |
-| `unresolved` | string[] | 派生 | `store.py:533` | 查不到落点的引用，给 T6 用 |
+| `unresolved` | string[] | 派生 | `store.py:533` | 查不到落点的引用，给 T3 用 |
 
 ---
 
@@ -112,7 +112,7 @@
 | `conclude` | 出结论 | anchor + `T-*` |
 | `skill_export` | 导出模板 | `[]` |
 
-新增 `op` 必须升 schema 次版本并同步本表——因为 T3 的图例、T4 的步骤段导出都按这张表分颜色/分段。
+新增 `op` 必须升 schema 次版本并同步本表——因为 T3 的图例、T1 的步骤段导出都按这张表分颜色/分段。
 
 ### 3.2 `ref` 与 `op` 的关系
 
@@ -183,7 +183,7 @@ store.write_trace(conn, "...", [{"i": 1, "op": "kg_query", "evidence": "T-d2e6d7
 
 ## 5. `sources`：来源资产必须派生，不能手填
 
-R4 要求"跨文档"。当下 `mcp-server/data/medpal.db` 里只有 **1 份资产** `AST-2026-000137`，14 条 trace 全是单文档——**"跨文档"目前演示不出来**，这是 T5 要供数据的地方，先记在这。
+R4 要求"跨文档"。当下 `mcp-server/data/medpal.db` 里只有 **1 份资产** `AST-2026-000137`，14 条 trace 全是单文档——**"跨文档"目前演示不出来**，这是 T3 要供数据的地方，先记在这。
 
 派生规则（`tools/validate_trace.py:derive_sources`）：
 
@@ -208,7 +208,7 @@ R4 要求"跨文档"。当下 `mcp-server/data/medpal.db` 里只有 **1 份资�
 
 **v1 裁决：以代码口径为准，因为它是能自动化的那个。**
 
-- 代码口径可以从 `steps_json` 完全重算，T6 的 CI 能每天跑；
+- 代码口径可以从 `steps_json` 完全重算，T3 的 CI 能每天跑；
 - 方案口径需要先把"哪一句算结论"人工标注出来，评审时反而变成弱点（"你这 95% 是谁标的"）；
 - 代码口径更严格：它要求**每一条**引用都落得到原文，不只是结论那几条。
 
@@ -234,7 +234,7 @@ R4 要求"跨文档"。当下 `mcp-server/data/medpal.db` 里只有 **1 份资�
 
 `server.py:416-421` 只做了排除（`entity_extract`/`conclude`/`conflict_check` 不进 allowed-tools），没有白名单。所以 schema 里 `op` 的枚举是唯一防线。
 
-**给 T4 的提醒**：模板导出用到的 `op` 必须过 schema 枚举，别从自由字段里捞。
+**给 T1 的提醒**：模板导出用到的 `op` 必须过 schema 枚举，别从自由字段里捞。
 
 ### 7.3 步序不排序、不校验
 
@@ -326,8 +326,8 @@ python -m pytest tests/test_trace_schema.py -q      # 18 passed
 | --- | --- | --- |
 | T2 生产 | `write_trace` 前自查 `steps` | `i` 严格递增；`evidence` 是数组；字典先 `_ref_str` |
 | T3 可视化 | 读 JSON 画 5 步链 | 必须容忍 `in`/`out` 缺失；`ref` 缺失时按 `op` 上色；换任意一份 trace 都要能画（任务卡 3.1 验收） |
-| T4 模板导出 | `steps.op` → `allowed-tools` | `op` 必须在 §3.1 枚举内，别捞到 `不存在的op`（§7.2） |
-| T6 CI | `validate_trace.py --quiet` | 退出码非 0 就红；完整率按代码口径（§6） |
+| T1 模板导出 | `steps.op` → `allowed-tools` | `op` 必须在 §3.1 枚举内，别捞到 `不存在的op`（§7.2） |
+| T3 CI | `validate_trace.py --quiet` | 退出码非 0 就红；完整率按代码口径（§6） |
 | 答辩 | 报告 `证据清单` 段 | 每条带 ✅/❌；❌ 必须能解释成"这部分超出本体覆盖" |
 
 ---
@@ -379,4 +379,4 @@ python -m pytest tests/test_trace_schema.py -q      # 18 passed
 | 测试 | `python -m pytest tests/test_trace_schema.py -q` → **18 passed** |
 | 迁移实测 | `../tmp/trace.json`（walking-skeleton/1）→ 合规 v1，`p1` 伪前缀改挂 `AST-2026-000137` 并在 `gaps` 留痕 |
 | 数据清理 | 删除探测脚本写入的 17 条畸形 trace 及其报告，库内只留 14 条离线基线 |
-| 未关闭 | §11 三条待裁决 + §7.2 缺口（`skill_export` 不过滤未知 `op`，属 T4 侧） |
+| 未关闭 | §11 三条待裁决 + §7.2 缺口（`skill_export` 不过滤未知 `op`，属 T1 侧） |
