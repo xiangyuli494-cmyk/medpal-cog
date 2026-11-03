@@ -1,4 +1,1 @@
-"""解析层：把异构文件转成带锚点的结构化文档（R1 数据资产层）。"""
-from parse.pdf import parse_pdf
-
-__all__ = ["parse_pdf"]
+"""解析层：已统一到 mcp-server/parsers.py，本目录仅保留兼容。"""

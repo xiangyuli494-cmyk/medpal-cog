@@ -109,8 +109,9 @@ class PdfParser:
         doc = fitz.open(str(path))
         blocks, anchors = [], []
         sec_no = 0
+        skipped_short = 0
         for pno, page in enumerate(doc, start=1):
-            # 1. 提取表格（和原逻辑保持一致）
+            # 1. 提取表格
             try:
                 tables = page.find_tables()
             except Exception:
@@ -124,33 +125,47 @@ class PdfParser:
                     anchors.append(
                         _anchor(str(path), "p%d.t%d.r%d" % (pno, tno, rno), "table_row", text)
                     )
-            # 2. 按小节切分页面文本（合并自 parse/pdf.py）
+            # 2. 按小节切分页面文本
             text = page.get_text().strip()
             if not text:
                 continue
             current_para: list[str] = []
+            para_in_sec = 0
             for raw_line in text.splitlines():
                 line = raw_line.strip()
                 if not line:
                     continue
                 if _pdf_is_heading(line):
-                    # 先把之前攒的段落写进去
+                    # 先把当前小节攒的段落写进去
                     if current_para:
                         body = "\n".join(current_para).strip()
                         if len(body) >= PDF_MIN_SECTION_CHARS:
-                            blocks.append(
-                                Block("paragraph", body, {"page": pno, "section": sec_no})
-                            )
-                            anchors.append(
-                                _anchor(
-                                    str(path),
-                                    "p%d.s%d" % (pno, sec_no or 1),
-                                    "section",
-                                    body
+                            if sec_no == 0:
+                                # 页首无标题前言，独立 anchor
+                                blocks.append(
+                                    Block("paragraph", body, {"page": pno, "section": 0})
                                 )
-                            )
+                                anchors.append(
+                                    _anchor(str(path), "p%d.pre" % pno, "page", body)
+                                )
+                            else:
+                                para_in_sec += 1
+                                blocks.append(
+                                    Block("paragraph", body, {"page": pno, "section": sec_no})
+                                )
+                                anchors.append(
+                                    _anchor(
+                                        str(path),
+                                        "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
+                                        "paragraph",
+                                        body
+                                    )
+                                )
+                        else:
+                            skipped_short += 1
                         current_para = []
-                    # 写入标题块
+                        para_in_sec = 0
+                    # 写入标题块（heading 独立 anchor ID）
                     sec_no += 1
                     blocks.append(
                         Block("heading", line, {"page": pno, "section": sec_no})
@@ -158,24 +173,48 @@ class PdfParser:
                     anchors.append(
                         _anchor(
                             str(path),
-                            "p%d.s%d" % (pno, sec_no),
-                            "section",
+                            "p%d.h%d" % (pno, sec_no),
+                            "heading",
                             line
                         )
                     )
                 else:
                     current_para.append(line)
-            # 页面末尾剩余段落
+            # 处理页面剩余段落：区分页首无标题前言 / 小节末尾正文
             if current_para:
                 body = "\n".join(current_para).strip()
                 if len(body) >= PDF_MIN_SECTION_CHARS:
-                    blocks.append(
-                        Block("paragraph", body, {"page": pno, "section": sec_no or 1})
-                    )
-                    anchors.append(
-                        _anchor(str(path), "p%d.s%d" % (pno, sec_no or 1), "section", body)
-                    )
-        return ParsedDoc(path.stem, self.modality, blocks, anchors, {"pages": doc.page_count})
+                    if sec_no == 0:
+                        # 页首无标题前言：独立 anchor，kind=page
+                        blocks.append(
+                            Block("paragraph", body, {"page": pno, "section": 0})
+                        )
+                        anchors.append(
+                            _anchor(str(path), "p%d.pre" % pno, "page", body)
+                        )
+                    else:
+                        # 小节末尾正文段落
+                        para_in_sec += 1
+                        blocks.append(
+                            Block("paragraph", body, {"page": pno, "section": sec_no})
+                        )
+                        anchors.append(
+                            _anchor(
+                                str(path),
+                                "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
+                                "paragraph",
+                                body
+                            )
+                        )
+                else:
+                    skipped_short += 1
+        return ParsedDoc(
+            path.stem,
+            self.modality,
+            blocks,
+            anchors,
+            {"pages": doc.page_count, "skipped_short_paragraphs": skipped_short}
+        )
 
 
 class TableParser:
