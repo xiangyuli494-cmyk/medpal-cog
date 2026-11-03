@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -273,8 +274,6 @@ class ImageReportParser:
         side = path.with_suffix(path.suffix + ".json")
         blocks, anchors = [], []
         if side.exists():
-            import json
-
             data = json.loads(side.read_text(encoding="utf-8"))
             for i, item in enumerate(data.get("items", []), start=1):
                 text = "{} {} {}".format(
