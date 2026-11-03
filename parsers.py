@@ -14,8 +14,6 @@ from pathlib import Path
 from typing import Protocol
 
 
-import parsers
-
 @dataclass
 class Block:
     kind: str  # heading | paragraph | table_row | figure
