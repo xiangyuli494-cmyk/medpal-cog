@@ -17,7 +17,7 @@
 | 数据资产台账 | **61 张 Asset Card**（文本 21 / 表格 20 / 图文 20） | `data/asset-cards/`，`data/samples/` 三类各 20 份 |
 | 本体 v0.9 | **37 三元组 + 43 锚点**（seed 手写 17 + 跨文档长 20） | `python mcp-server/seed.py --reset` → `python tools/ingest_all.py` |
 | 3 个 Skill 包 | **可导入** | `skills/s1-asset-audit`、`s2-ontology-evolve`、`s3-evidence-decision` |
-| 主智能体配置 v0 | **配置就绪，未实测** | `agent/prompt.md` + `agent/config.json`；接线见 `agent/README.md`，样例 `agent/sessions/` |
+| 主智能体配置 v0 | **已在 Nexent v2.7.0 实跑** | `agent/prompt.md` + `agent/config.json`；实跑记录 `agent/sessions/real-w1-01.json`（常态）、`real-w1-02.json`（冲突）；接线见 `agent/README.md` |
 | 离线评测 | **20 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
 | Walking Skeleton | **一条命令通电** | `python skeleton.py` |
 | 本体版本差分 | **可回放**（新增/删除/修改 + 编号漂移对账） | `python -m pytest tests/test_ontology_diff.py -q`（18 条） |

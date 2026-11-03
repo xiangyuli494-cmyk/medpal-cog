@@ -1,0 +1,127 @@
+{
+  "engine": "nexent",
+  "platform": "Nexent v2.7.0（13 容器，console http://localhost:3000）",
+  "model": "deepseek-chat（model_id=1）",
+  "agent_id": 2,
+  "mcp": "http://host.docker.internal:8090/mcp（medpal-cog，10 工具）",
+  "id": "REAL-W1-01",
+  "title": "Nexent 实跑：上腹隐痛夜间加重（常态案例）",
+  "source": "Nexent 实跑 · 2026-11-02 15:03（Asia/Shanghai）· 平台 v2.7.0 · 模型 deepseek-chat · agent_id=2 · 会话 conversation_id=5 · SSE 原始流转录 2570 行",
+  "question": "上腹隐痛三天，夜间加重，进食后缓解，该挂哪个科？",
+  "tool_calls": [
+    {
+      "tool": "kb_search",
+      "args": {
+        "query": "上腹隐痛 夜间加重 进食后缓解 消化性溃疡",
+        "top_k": 5
+      },
+      "ok": false,
+      "yields": "kb_not_configured：MCP 侧未配 KB_ENDPOINT，回答里已如实标注该缺口"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seed_entities": [
+          "上腹隐痛",
+          "夜间痛",
+          "进食后缓解"
+        ],
+        "max_hops": 2,
+        "limit": 20
+      },
+      "ok": true,
+      "yields": "resolved [SYM-EPI]，paths 指向 K27"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seed_entities": [
+          "消化性溃疡"
+        ],
+        "max_hops": 2,
+        "rel_filter": [
+          "needs_exam",
+          "recommended_exam",
+          "contraindicated_for",
+          "has_exam"
+        ],
+        "limit": 20
+      },
+      "ok": true,
+      "yields": "K27-DRUG-IBU（contraindicated_for）、K27-EX-HP-BT"
+    },
+    {
+      "tool": "std_align",
+      "args": {
+        "entity_text": "上腹隐痛"
+      },
+      "ok": true,
+      "yields": "SYM-EPI，精确匹配 0.90"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seed_entities": [
+          "消化性溃疡"
+        ],
+        "max_hops": 2,
+        "limit": 30
+      },
+      "ok": true,
+      "yields": "K27-DEP-GI-K29 两跳路径"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seed_entities": [
+          "消化性溃疡"
+        ],
+        "max_hops": 1,
+        "rel_filter": [
+          "requires_exam"
+        ],
+        "limit": 20
+      },
+      "ok": true,
+      "yields": "EX-HP-BT、EX-GASTRO"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "上腹隐痛三天，夜间加重，进食后缓解，该挂哪个科？",
+        "steps": 4
+      },
+      "ok": true,
+      "yields": "决策链落库，完整率 1.00"
+    }
+  ],
+  "platform_tools": [
+    {
+      "tool": "search_memory",
+      "args": {
+        "query": "上腹隐痛三天，夜间加重，进食后缓解，该挂哪个科？",
+        "top_k": 5
+      },
+      "note": "Nexent 内置，非本项目 MCP"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s2.p1.c3",
+    "AST-2026-000137#s2.p1.c2",
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2"
+  ],
+  "conflict_line": "冲突：无（本次未提及用药；提示布洛芬/NSAIDs 与消化性溃疡存在禁忌关系，若在服请告知医生）",
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：幽门螺杆菌呼气试验、胃镜",
+    "完整率：1.00"
+  ],
+  "notes": [
+    "夜间加重被判为非报警信号（须为痛醒才触发报警优先内镜），与 agent/prompt.md 的硬规则一致。",
+    "首次调用返回 500，根因是 Nexent v2.7.0 在 AgentRequest.history=None 时不兜底；请求体补 \"history\": [] 后正常。",
+    "工具调用由平台代码执行器执行，模型必须写 Python 代码块而非 function call；沙箱禁止 import。"
+  ]
+}

@@ -32,7 +32,7 @@ set NO_PROXY=127.0.0.1,localhost
 | 文档 | `docs/{简述}` | `docs/git-flow` |
 | 工程 | `chore/{简述}` | `chore/ci-cache` |
 
-- **不直接 push `main`**：保护已开，非管理员的直推会被拒（`protected branch hook declined`）；T1 是 admin，`enforce_admins=false` 期间技术上仍能推，**纪律上不许**（见 [git-flow §4.1](docs/git-flow.md)）。
+- **不直接 push `main`**：保护已开且 `enforce_admins=true`（2026-11-02 起），**管理员也推不进去**，一律走分支 + PR。
 - 流程：开分支 → push → 开 PR → **至少 1 个 approve** → CI 三绿 → **T1（队长）点合并**。
 - **T1 自己开的 PR 必须由 T2 或 T3 approve**（GitHub 不计给自己批的票）。
 - 批完又推了新提交，旧批准自动失效（dismiss stale reviews），需要重新批。

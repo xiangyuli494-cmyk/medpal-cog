@@ -72,21 +72,32 @@ curl -s -X POST http://host.docker.internal:8090/mcp \
 python -m pytest tests/test_agent_config.py -q     # 配置自洽 + 样例符合契约
 ```
 
-## 6 回填实测（W1 闸门要的那份「一次会话 json」）
+## 6 实跑记录（W1 闸门要的那份「一次会话 json」）—— 已回填
 
-在平台跑通一次后，把会话导出成 `agent/sessions/real-w1-01.json`，至少包含：
+`agent/sessions/real-w1-01.json`（常态：上腹隐痛夜间加重）与 `real-w1-02.json`（冲突：长期止痛药 + 胃溃疡）是 **Nexent v2.7.0 平台内真跑**的记录，不是手写样例：
 
-```json
-{
-  "source": "nexent v2.7.0 实跑，2026-11-0X，控制台 http://localhost:3000",
-  "question": "……",
-  "tool_calls": [{"tool": "kb_search", "ok": true}],
-  "answer_tail": ["科室：…", "检查项：…", "完整率：1.00"],
-  "screenshot": "docs/assets/w1-session.png"
-}
+| 字段 | 含义 |
+| --- | --- |
+| `source` | 实跑时间、平台版本、模型、`conversation_id`，开头写明「Nexent 实跑」 |
+| `tool_calls` | 实际执行的 MCP 工具 + 参数 + `ok` + 取到了什么 |
+| `platform_tools` | 平台内置工具（`search_memory`），与我们的 MCP 分开放，不混算 |
+| `evidence` | 回答引用的锚点，全部 `AST-2026-` 开头 |
+| `conflict_line` | 冲突行；没冲突时写「冲突：无（…）」而不是留空 |
+| `expected_tail` | 三行尾：科室 / 检查项 / 完整率 |
+
+复现方式（先按 §1–§3 接好线）：
+
+1. 起 MCP：`python mcp-server/server.py`（`MCP_PORT=8090`，streamable-http）。
+2. `POST http://localhost:3000/api/agent/run`，请求体 **必须带 `"history": []`** —— 不带会 500（v2.7.0 缺陷，栈与修法见 `docs/env.md` §2.8）。
+3. 工具调用由**代码执行器**执行：模型写 Python 代码块，沙箱**禁 `import`**，并行用平台注入的 `parallel_executor(tasks=[...])`。
+
+校验（CI 会跑）：
+
+```bash
+python -m pytest tests/test_agent_config.py -q
 ```
 
-没有这份文件，R5「Nexent 可运行」只能写「配置就绪、未实测」。
+其中 `test_real_sessions_have_provenance` 强制要求：`source` 含「Nexent 实跑」与日期、`tool_calls` 非空且至少一条 `ok: true` —— 拿手写的会话文件冒充实跑会直接红。
 
 ## 7 故障对照
 

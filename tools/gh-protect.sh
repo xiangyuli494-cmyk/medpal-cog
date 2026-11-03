@@ -10,8 +10,9 @@ set -euo pipefail
 REPO=${REPO:-xiangyuli494-cmyk/medpal-cog}
 BRANCH=${BRANCH:-main}
 # ENFORCE_ADMINS=1 → 连 admin/owner 也必须走 PR + approve（没人能直推、没人能绕过）。
-# 现在只有 T1 一个 collaborator，开了就没人能批 T1 的 PR；等 T2/T3 账号加进来当天再开：
-#   ENFORCE_ADMINS=1 bash tools/gh-protect.sh
+# 2026-11-02 起默认开着：T2 能批 PR 后必须开，否则规则对 owner 不生效。
+#   应急临时关闭：ENFORCE_ADMINS=0 bash tools/gh-protect.sh（放行后立刻切回）
+#   重新开启：ENFORCE_ADMINS=1 bash tools/gh-protect.sh
 ENFORCE_ADMINS=${ENFORCE_ADMINS:-0}
 if [ "${ENFORCE_ADMINS}" = "1" ]; then ENFORCE_JSON=true; else ENFORCE_JSON=false; fi
 

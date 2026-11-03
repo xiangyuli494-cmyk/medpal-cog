@@ -296,9 +296,53 @@ docker compose --env-file ../env/.env -p nexent -f ./compose/docker-compose.yml 
 | 现象 | 影响 | 说明 |
 | --- | --- | --- |
 | `nexent-runtime` 日志刷 `otel-collector` 解析失败 | 无 | 未部署 monitoring 组件（`deploy.options` 里 `monitoringProvider: otlp` 但没选 monitoring），遥测上报失败只打 WARN/ERROR，不影响推理 |
-| 磁盘只剩 14 GB | 有风险 | 见 §2.1 |
+| ~~磁盘只剩 14 GB~~ **11/02 清盘后 E: 26 GB 可用** | 已缓解 | 见 §2.7；演示前仍跑 `docker system df` |
 | 未装 WSL 的 Ubuntu 发行版 | 无 | 本机只有 `docker-desktop` 发行版，Docker Desktop 后端正常工作，说明未命中 §1.3 |
 | 控制台页脚版本号 | 展示问题 | 未登录时页脚显示 `v1.0.0`，登录后才是 `v2.7.0`；本机部署版本为 v2.7.0 |
+
+### 2.7 复核：2026-11-02（T1-3）
+
+采集时间 2026-11-02 15:10–15:25，同一台演示主机（Windows 11 + WSL2 + Docker Desktop，平台 v2.7.0）。
+
+| §2.5 项 | 命令 | 实测输出 |
+| --- | --- | --- |
+| 1 容器齐 | `docker ps -q \| wc -l` | `13`（config / data-process / elasticsearch / mcp / minio / northbound / postgresql / redis / runtime / web / supabase-auth / supabase-db / supabase-kong，全 Up） |
+| 2 Web 通 | `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/` | `307`（未登录跳登录页，正常） |
+| 3 ES 绿 | `docker exec nexent-elasticsearch curl -s -u elastic:$PW localhost:9200/_cluster/health` | `{"status":"green","number_of_nodes":1,"active_primary_shards":3,"active_shards_percent_as_number":100.0}` |
+| 4 数据目录不在 9p | 容器内 `nsenter -t 1` 后 `stat -f -c 'fstype=%T' /var/lib/docker/volumes` | `fstype=ext2/ext3` |
+
+Python 版本（runtime 容器内）：`docker exec nexent-runtime /opt/backend/.venv/bin/python -V` → `Python 3.11.16`，与 §0 记录的沙箱版本一致。
+
+**磁盘口径（容易搞错，写清）**：平台盘是 **E:**，不是 C:。
+
+```
+$ wsl -l -v
+  NAME              STATE      VERSION
+* docker-desktop    Running    2
+$ reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss" /s
+    BasePath    REG_SZ    \\\?\E:\docker\wsl\main
+$ docker info --format '{{.DockerRootDir}} {{.Driver}}'
+/var/lib/docker overlayfs
+```
+
+镜像、容器、卷全部落在 `E:\docker\wsl\main\ext4.vhdx` 里，所以「≥20 GB」这条门槛按 E: 判：
+
+| 盘 | 容量 | 可用 | 是否承载平台数据 |
+| --- | --- | --- | --- |
+| C: | 151 G | 19 G | 否（系统盘） |
+| D: | 165 G | 45 G | 否 |
+| **E:** | 161 G | **26 G** | **是**（`E:\docker\wsl\main`） |
+
+清盘记录（15:05–15:20）：删 `%LOCALAPPDATA%\pip\Cache`（446 MB）、`%APPDATA%
+pm-cache`（31 MB）、`%LOCALAPPDATA%\Temp\B6E4C122-B7C7-482A-A710-0122B0AFF65C\swap.vhdx`（2.1 GB，10-27 遗留 swap 盘）；E: 与 D: 由 T1 手工清理。E: 从 9.7 GB 回到 26 GB，过 20 GB 门槛。
+
+> 没做的两件事，写在这里免得下次重新评估：① `docker system df` 里可回收的 2.39 GB 属于在用镜像的旧层，`docker image prune` 删不掉；② 本机 shell 不是管理员，`Dism /Online /Cleanup-Image /StartComponentCleanup` 跑不了（能跑通常再省 1–3 GB）。
+
+### 2.8 平台侧三条实测限制（11/02 新增，对应计划 §7 的 E-8 / E-9 / E-10）
+
+1. **`POST /api/agent/run` 不带 `history` 必 500**：栈在 `conversation_management_service.py:279`，`history=None` 时 `sum(1 for item in ...)` 不兜底。请求体带 `"history": []` 即 200。
+2. **MCP 工具走代码执行器，不走原生 function call**：模型须写 Python 代码块；沙箱禁 `import`（白名单 40 个标准库，`concurrent.futures` 不在内），并行要用平台注入的 `parallel_executor(tasks=[(工具, 参数, "别名"), ...])`。写错会退化成输出 `<｜｜DSML｜｜ calls>` 文本，工具不执行。
+3. **`kb_search` 未配 `KB_ENDPOINT` 时返回 `ok:false / reason:kb_not_configured`**：回答里必须如实标为证据缺口，不许拿三元组冒充段落级检索证据。
 
 ## 3 判定「环境好了」的四条指标
 
