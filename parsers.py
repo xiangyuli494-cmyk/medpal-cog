@@ -276,9 +276,7 @@ class ImageReportParser:
         if side.exists():
             data = json.loads(side.read_text(encoding="utf-8"))
             for i, item in enumerate(data.get("items", []), start=1):
-                text = "{} {} {}".format(
-                    item.get("name", ""), item.get("value", ""), item.get("range", "")
-                )
+                text = f"{item.get('name', '')} {item.get('value', '')} {item.get('range', '')}"
                 blocks.append(Block("table_row", text, {"region": i}))
                 anchors.append(_anchor(str(path), "img.r%d" % i, "image_region", text))
         else:
