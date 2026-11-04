@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT / "mcp-server"))
 
 import seed  # noqa: E402
 import store  # noqa: E402
+
 from parsers import ENTITY_HINTS, SYNONYMS  # noqa: E402
 
 DEPTS = {"DEP-GI": "消化内科", "DEP-SURG": "普外科", "DEP-CARD": "心内科"}

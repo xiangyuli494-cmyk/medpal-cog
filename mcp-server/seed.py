@@ -11,8 +11,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import parsers
 import store
+
+import parsers
 
 
 def D(i: str, label: str) -> dict:

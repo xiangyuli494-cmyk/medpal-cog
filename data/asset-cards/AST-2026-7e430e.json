@@ -1,0 +1,70 @@
+{
+  "asset_id": "AST-2026-7e430e",
+  "title": "test_guide_01 01",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "data/samples/pdf/test_guide_01.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-04T12:41:03+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 6,
+    "anchors": 6,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-7e430e#p1.pre",
+      "kind": "page",
+      "text": "这是就诊指南前言：患者出现上腹隐痛、反酸烧心症状，建议及时就诊。"
+    },
+    {
+      "anchor_id": "AST-2026-7e430e#p1.h1",
+      "kind": "heading",
+      "text": "第一章 消化内科就诊指南"
+    },
+    {
+      "anchor_id": "AST-2026-7e430e#p1.h2",
+      "kind": "heading",
+      "text": "1.1 胃镜检查准备"
+    },
+    {
+      "anchor_id": "AST-2026-7e430e#p1.s2.p1",
+      "kind": "paragraph",
+      "text": "检查前需空腹8小时，停用抗凝药物，避免钡餐造影后短期内检查。"
+    },
+    {
+      "anchor_id": "AST-2026-7e430e#p1.h3",
+      "kind": "heading",
+      "text": "1.2 幽门螺杆菌检测"
+    },
+    {
+      "anchor_id": "AST-2026-7e430e#p1.s3.p1",
+      "kind": "paragraph",
+      "text": "碳13呼气试验需要空腹，检查前4周停用抗生素、质子泵抑制剂。"
+    }
+  ],
+  "entities": [
+    "上腹隐痛",
+    "烧心",
+    "消化内科",
+    "胃镜",
+    "幽门螺杆菌"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-04T12:41:03+08:00"
+}

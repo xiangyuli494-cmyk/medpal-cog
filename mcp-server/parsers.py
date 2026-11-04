@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -81,6 +82,20 @@ class TextParser:
         return ParsedDoc(path.stem, self.modality, blocks, anchors, {"chars": len(raw)})
 
 
+# PDF小节标题识别正则（合并自 parse/pdf.py）
+PDF_SECTION_RE = re.compile(
+    r"^\s*(?:第[一二三四五六七八九十百\d]+[章节部分]"
+    r"|\d+(?:\.\d+)*[\s、.]+"
+    r"|[一二三四五六七八九十]+、)"
+)
+PDF_MIN_SECTION_CHARS = 8
+
+
+def _pdf_is_heading(line: str) -> bool:
+    s = line.strip()
+    return bool(s) and len(s) <= 40 and bool(PDF_SECTION_RE.match(s))
+
+
 class PdfParser:
     modality = "pdf_text"
 
@@ -94,8 +109,15 @@ class PdfParser:
             return ParsedDoc(path.stem, self.modality, [], [], {"error": "pymupdf_not_installed"})
         doc = fitz.open(str(path))
         blocks, anchors = [], []
+        sec_no = 0
+        skipped_short = 0
         for pno, page in enumerate(doc, start=1):
-            for tno, table in enumerate(page.find_tables(), start=1):
+            # 1. 提取表格
+            try:
+                tables = page.find_tables()
+            except Exception:
+                tables = None
+            for tno, table in enumerate(getattr(tables, "tables", []) or [], start=1):
                 for rno, row in enumerate(table.extract(), start=1):
                     text = " | ".join("" if c is None else str(c) for c in row)
                     if not text.strip(" |"):
@@ -104,11 +126,96 @@ class PdfParser:
                     anchors.append(
                         _anchor(str(path), "p%d.t%d.r%d" % (pno, tno, rno), "table_row", text)
                     )
+            # 2. 按小节切分页面文本
             text = page.get_text().strip()
-            if text:
-                blocks.append(Block("paragraph", text, {"page": pno}))
-                anchors.append(_anchor(str(path), "p%d.s1" % pno, "page", text))
-        return ParsedDoc(path.stem, self.modality, blocks, anchors, {"pages": doc.page_count})
+            if not text:
+                continue
+            current_para: list[str] = []
+            para_in_sec = 0
+            for raw_line in text.splitlines():
+                line = raw_line.strip()
+                if not line:
+                    continue
+                if _pdf_is_heading(line):
+                    # 先把当前小节攒的段落写进去
+                    if current_para:
+                        body = "\n".join(current_para).strip()
+                        if len(body) >= PDF_MIN_SECTION_CHARS:
+                            if sec_no == 0:
+                                # 页首无标题前言，独立 anchor
+                                blocks.append(
+                                    Block("paragraph", body, {"page": pno, "section": 0})
+                                )
+                                anchors.append(
+                                    _anchor(str(path), "p%d.pre" % pno, "page", body)
+                                )
+                            else:
+                                para_in_sec += 1
+                                blocks.append(
+                                    Block("paragraph", body, {"page": pno, "section": sec_no})
+                                )
+                                anchors.append(
+                                    _anchor(
+                                        str(path),
+                                        "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
+                                        "paragraph",
+                                        body
+                                    )
+                                )
+                        else:
+                            skipped_short += 1
+                        current_para = []
+                        para_in_sec = 0
+                    # 写入标题块（heading 独立 anchor ID）
+                    sec_no += 1
+                    blocks.append(
+                        Block("heading", line, {"page": pno, "section": sec_no})
+                    )
+                    anchors.append(
+                        _anchor(
+                            str(path),
+                            "p%d.h%d" % (pno, sec_no),
+                            "heading",
+                            line
+                        )
+                    )
+                else:
+                    current_para.append(line)
+            # 处理页面剩余段落：区分页首无标题前言 / 小节末尾正文
+            if current_para:
+                body = "\n".join(current_para).strip()
+                if len(body) >= PDF_MIN_SECTION_CHARS:
+                    if sec_no == 0:
+                        # 页首无标题前言：独立 anchor，kind=page
+                        blocks.append(
+                            Block("paragraph", body, {"page": pno, "section": 0})
+                        )
+                        anchors.append(
+                            _anchor(str(path), "p%d.pre" % pno, "page", body)
+                        )
+                    else:
+                        # 小节末尾正文段落
+                        para_in_sec += 1
+                        blocks.append(
+                            Block("paragraph", body, {"page": pno, "section": sec_no})
+                        )
+                        anchors.append(
+                            _anchor(
+                                str(path),
+                                "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
+                                "paragraph",
+                                body
+                            )
+                        )
+                else:
+                    skipped_short += 1
+        return ParsedDoc(
+            path.stem,
+            self.modality,
+            blocks,
+            anchors,
+            {"pages": doc.page_count, "skipped_short_paragraphs": skipped_short}
+        )
 
 
 class TableParser:
@@ -167,8 +274,6 @@ class ImageReportParser:
         side = path.with_suffix(path.suffix + ".json")
         blocks, anchors = [], []
         if side.exists():
-            import json
-
             data = json.loads(side.read_text(encoding="utf-8"))
             for i, item in enumerate(data.get("items", []), start=1):
                 text = "{} {} {}".format(
