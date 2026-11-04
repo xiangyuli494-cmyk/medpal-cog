@@ -17,8 +17,9 @@ import json
 import re
 from pathlib import Path
 
-import parsers
 import store
+
+import parsers
 
 DOCS = [
     "data/samples/text/pathway_01.md",
