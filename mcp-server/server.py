@@ -20,9 +20,10 @@ import time
 import uuid
 from pathlib import Path
 
-import parsers
 import store
 from mcp.server.fastmcp import FastMCP
+
+import parsers
 
 SERVER_VERSION = "0.1.0"
 mcp = FastMCP(
