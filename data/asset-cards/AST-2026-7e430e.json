@@ -5,7 +5,7 @@
   "source": {
     "type": "synthetic",
     "publisher": "",
-    "path": "D:\\华为ict\\medpal-cog\\data\\samples\\pdf\\test_guide_01.pdf"
+    "path": "data/samples/pdf/test_guide_01.pdf"
   },
   "version": {
     "value": "v1",
