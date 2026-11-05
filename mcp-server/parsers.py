@@ -106,115 +106,162 @@ class PdfParser:
         try:
             import fitz  # PyMuPDF
         except ImportError:
-            return ParsedDoc(path.stem, self.modality, [], [], {"error": "pymupdf_not_installed"})
-        doc = fitz.open(str(path))
+            return ParsedDoc(path.stem, self.modality, [], [], {
+                "error": "pymupdf_not_installed",
+                "error_type": "DEPENDENCY_MISSING",
+            })
+
         blocks, anchors = [], []
         sec_no = 0
         skipped_short = 0
-        for pno, page in enumerate(doc, start=1):
-            # 1. 提取表格
-            try:
-                tables = page.find_tables()
-            except Exception:
-                tables = None
-            for tno, table in enumerate(getattr(tables, "tables", []) or [], start=1):
-                for rno, row in enumerate(table.extract(), start=1):
-                    text = " | ".join("" if c is None else str(c) for c in row)
-                    if not text.strip(" |"):
-                        continue
-                    blocks.append(Block("table_row", text, {"page": pno, "table": tno, "row": rno}))
-                    anchors.append(
-                        _anchor(str(path), "p%d.t%d.r%d" % (pno, tno, rno), "table_row", text)
-                    )
-            # 2. 按小节切分页面文本
-            text = page.get_text().strip()
-            if not text:
-                continue
-            current_para: list[str] = []
-            para_in_sec = 0
-            for raw_line in text.splitlines():
-                line = raw_line.strip()
-                if not line:
-                    continue
-                if _pdf_is_heading(line):
-                    # 先把当前小节攒的段落写进去
-                    if current_para:
-                        body = "\n".join(current_para).strip()
-                        if len(body) >= PDF_MIN_SECTION_CHARS:
-                            if sec_no == 0:
-                                # 页首无标题前言，独立 anchor
-                                blocks.append(
-                                    Block("paragraph", body, {"page": pno, "section": 0})
-                                )
-                                anchors.append(
-                                    _anchor(str(path), "p%d.pre" % pno, "page", body)
-                                )
-                            else:
-                                para_in_sec += 1
-                                blocks.append(
-                                    Block("paragraph", body, {"page": pno, "section": sec_no})
-                                )
-                                anchors.append(
-                                    _anchor(
-                                        str(path),
-                                        "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
-                                        "paragraph",
-                                        body
-                                    )
-                                )
-                        else:
-                            skipped_short += 1
-                        current_para = []
-                        para_in_sec = 0
-                    # 写入标题块（heading 独立 anchor ID）
-                    sec_no += 1
-                    blocks.append(
-                        Block("heading", line, {"page": pno, "section": sec_no})
-                    )
-                    anchors.append(
-                        _anchor(
-                            str(path),
-                            "p%d.h%d" % (pno, sec_no),
-                            "heading",
-                            line
-                        )
-                    )
-                else:
-                    current_para.append(line)
-            # 处理页面剩余段落：区分页首无标题前言 / 小节末尾正文
-            if current_para:
-                body = "\n".join(current_para).strip()
-                if len(body) >= PDF_MIN_SECTION_CHARS:
-                    if sec_no == 0:
-                        # 页首无标题前言：独立 anchor，kind=page
-                        blocks.append(
-                            Block("paragraph", body, {"page": pno, "section": 0})
-                        )
+        total_text_len = 0
+        pages = 0
+
+        try:
+            doc = fitz.open(str(path))
+        except Exception:
+            return ParsedDoc(path.stem, self.modality, [], [], {
+                "error": "PDF文件损坏或不是合法PDF格式",
+                "error_type": "CORRUPTED_FILE",
+            })
+
+        # 检测加密 PDF
+        if doc.is_encrypted:
+            doc.close()
+            return ParsedDoc(path.stem, self.modality, [], [], {
+                "error": "PDF文件已加密，需要密码才能读取",
+                "error_type": "ENCRYPTED_PDF",
+            })
+
+        pages = doc.page_count
+        try:
+            for pno, page in enumerate(doc, start=1):
+                # 1. 提取表格
+                try:
+                    tables = page.find_tables()
+                except Exception:
+                    tables = None
+                for tno, table in enumerate(getattr(tables, "tables", []) or [], start=1):
+                    for rno, row in enumerate(table.extract(), start=1):
+                        text = " | ".join("" if c is None else str(c) for c in row)
+                        if not text.strip(" |"):
+                            continue
+                        blocks.append(Block(
+                            "table_row", text,
+                            {"page": pno, "table": tno, "row": rno}
+                        ))
                         anchors.append(
-                            _anchor(str(path), "p%d.pre" % pno, "page", body)
+                            _anchor(str(path), "p%d.t%d.r%d" % (pno, tno, rno), "table_row", text)
                         )
-                    else:
-                        # 小节末尾正文段落
-                        para_in_sec += 1
+                # 2. 按小节切分页面文本
+                text = page.get_text().strip()
+                total_text_len += len(text)
+                if not text:
+                    continue
+                current_para: list[str] = []
+                para_in_sec = 0
+                for raw_line in text.splitlines():
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    if _pdf_is_heading(line):
+                        # 先把当前小节攒的段落写进去
+                        if current_para:
+                            body = "\n".join(current_para).strip()
+                            if len(body) >= PDF_MIN_SECTION_CHARS:
+                                if sec_no == 0:
+                                    blocks.append(
+                                        Block("paragraph", body, {"page": pno, "section": 0})
+                                    )
+                                    anchors.append(
+                                        _anchor(str(path), "p%d.pre" % pno, "page", body)
+                                    )
+                                else:
+                                    para_in_sec += 1
+                                    blocks.append(
+                                        Block("paragraph", body, {"page": pno, "section": sec_no})
+                                    )
+                                    anchors.append(
+                                        _anchor(
+                                            str(path),
+                                            "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
+                                            "paragraph",
+                                            body
+                                        )
+                                    )
+                            else:
+                                skipped_short += 1
+                            current_para = []
+                            para_in_sec = 0
+                        sec_no += 1
                         blocks.append(
-                            Block("paragraph", body, {"page": pno, "section": sec_no})
+                            Block("heading", line, {"page": pno, "section": sec_no})
                         )
                         anchors.append(
                             _anchor(
                                 str(path),
-                                "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
-                                "paragraph",
-                                body
+                                "p%d.h%d" % (pno, sec_no),
+                                "heading",
+                                line
                             )
                         )
-                else:
-                    skipped_short += 1
+                    else:
+                        current_para.append(line)
+                if current_para:
+                    body = "\n".join(current_para).strip()
+                    if len(body) >= PDF_MIN_SECTION_CHARS:
+                        if sec_no == 0:
+                            blocks.append(
+                                Block("paragraph", body, {"page": pno, "section": 0})
+                            )
+                            anchors.append(
+                                _anchor(str(path), "p%d.pre" % pno, "page", body)
+                            )
+                        else:
+                            para_in_sec += 1
+                            blocks.append(
+                                Block("paragraph", body, {"page": pno, "section": sec_no})
+                            )
+                            anchors.append(
+                                _anchor(
+                                    str(path),
+                                    "p%d.s%d.p%d" % (pno, sec_no, para_in_sec),
+                                    "paragraph",
+                                    body
+                                )
+                            )
+                    else:
+                        skipped_short += 1
+        except Exception as e:
+            doc.close()
+            return ParsedDoc(path.stem, self.modality, blocks, anchors, {
+                "pages": pages,
+                "skipped_short_paragraphs": skipped_short,
+                "error": f"解析异常: {str(e)[:100]}",
+                "error_type": "UNKNOWN_ERROR",
+            })
+
+        doc.close()
+
+        # 检测无文本扫描件
+        if total_text_len == 0:
+            return ParsedDoc(path.stem, self.modality, [], [], {
+                "pages": pages,
+                "skipped_short_paragraphs": skipped_short,
+                "error": "当前PDF仅包含图片，无原生可提取文本（扫描件）",
+                "error_type": "NO_EXTRACTABLE_TEXT",
+            })
+
         return ParsedDoc(
             path.stem,
             self.modality,
             blocks,
             anchors,
-            {"pages": doc.page_count, "skipped_short_paragraphs": skipped_short}
+            {
+                "pages": pages,
+                "skipped_short_paragraphs": skipped_short,
+                "total_text_chars": total_text_len,
+            }
         )
 
 

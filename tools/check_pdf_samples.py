@@ -15,6 +15,11 @@ FILES = [
     "pdf_04_multipage.pdf",
     "pdf_05_font_size.pdf",
     "pdf_06_image_mix.pdf",
+    "pdf_07_encrypted.pdf",
+    "pdf_08_scan_image_only.pdf",
+    "pdf_09_cross_page_table.pdf",
+    "pdf_10_blank.pdf",
+    "pdf_11_long_text.pdf",
 ]
 
 parser = PdfParser()

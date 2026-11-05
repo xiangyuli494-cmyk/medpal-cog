@@ -55,3 +55,52 @@ def test_skipped_short_counted():
     doc = parser.parse(SAMPLE_PDF)
     assert "skipped_short_paragraphs" in doc.metadata
     assert doc.metadata["skipped_short_paragraphs"] >= 0
+
+
+# ============ 异常 case 测试 ============
+
+PDF_DIR = ROOT / "data" / "samples" / "pdf"
+
+
+def test_encrypted_pdf_detected():
+    """加密PDF被正确拦截，返回ENCRYPTED_PDF错误类型。"""
+    parser = PdfParser()
+    doc = parser.parse(PDF_DIR / "pdf_07_encrypted.pdf")
+    assert doc.metadata.get("error_type") == "ENCRYPTED_PDF"
+    assert "加密" in doc.metadata.get("error", "")
+    assert len(doc.blocks) == 0
+    assert len(doc.anchors) == 0
+
+
+def test_scan_image_only_detected():
+    """纯图片扫描件被正确识别，返回NO_EXTRACTABLE_TEXT。"""
+    parser = PdfParser()
+    doc = parser.parse(PDF_DIR / "pdf_08_scan_image_only.pdf")
+    assert doc.metadata.get("error_type") == "NO_EXTRACTABLE_TEXT"
+    assert "图片" in doc.metadata.get("error", "") or "扫描" in doc.metadata.get("error", "")
+    assert len(doc.blocks) == 0
+
+
+def test_blank_pdf_detected():
+    """空白PDF被识别为无文本扫描件。"""
+    parser = PdfParser()
+    doc = parser.parse(PDF_DIR / "pdf_10_blank.pdf")
+    assert doc.metadata.get("error_type") == "NO_EXTRACTABLE_TEXT"
+    assert len(doc.blocks) == 0
+
+
+def test_cross_page_table_parsed():
+    """跨页表格PDF能正常解析，不崩溃。"""
+    parser = PdfParser()
+    doc = parser.parse(PDF_DIR / "pdf_09_cross_page_table.pdf")
+    assert doc.metadata.get("pages") == 2
+    table_rows = [b for b in doc.blocks if b.kind == "table_row"]
+    assert len(table_rows) >= 5
+
+
+def test_long_text_multipage():
+    """多页长文本PDF解析正常，页数正确。"""
+    parser = PdfParser()
+    doc = parser.parse(PDF_DIR / "pdf_11_long_text.pdf")
+    assert doc.metadata.get("pages") == 6
+    assert doc.metadata.get("total_text_chars", 0) > 0
