@@ -1,6 +1,11 @@
 """生成6份PDF测试样本，用于PDF解析器基线评测"""
 from pathlib import Path
+
 import fitz  # PyMuPDF
+
+OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "samples" / "pdf"
+OUT_DIR.mkdir(exist_ok=True, parents=True)
+
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "samples" / "pdf"
 OUT_DIR.mkdir(exist_ok=True, parents=True)
