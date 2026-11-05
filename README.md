@@ -225,6 +225,6 @@ python tools/acceptance.py --with-eval
 `CODEOWNERS` 与上表已用真实账号；分支保护在两人都接受邀请后切 `ENFORCE_ADMINS=1`（见 issue #9）。
 
 排期见 [docs/冲刺计划-1130.md](docs/冲刺计划-1130.md)，每人每周任务见 [docs/任务卡-三人版.md](docs/任务卡-三人版.md)。
-旧六人分工（T1–T6）的文档已于 2026-11-02 删除，历史见 git 与旧仓 `medpal`；本仓不再保留任何现行六人计划。
+旧的六人分工文档已于 2026-11-02 删除，历史见 git 与旧仓 `medpal`；本仓不再保留任何现行六人计划。
 
 代码与文档采用 [Apache License 2.0](LICENSE)。第三方数据来源、版本与许可见 [docs/赛题3-方案-v1.2.md](docs/赛题3-方案-v1.2.md) §4.3。
