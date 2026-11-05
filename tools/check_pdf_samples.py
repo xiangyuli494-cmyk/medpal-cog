@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "mcp-server"))
 
-from parsers import PdfParser
+from parsers import PdfParser  # noqa: E402
 
 PDF_DIR = ROOT / "data" / "samples" / "pdf"
 FILES = [
@@ -29,16 +29,16 @@ for fname in FILES:
     print(f"块总数: {len(doc.blocks)}")
     print(f"锚点总数: {len(doc.anchors)}")
     print(f"跳过短段落: {doc.metadata.get('skipped_short_paragraphs', '?')}")
-    print(f"\n块类型分布:")
+    print("\n块类型分布:")
     kinds = {}
     for b in doc.blocks:
         kinds[b.kind] = kinds.get(b.kind, 0) + 1
     for k, v in kinds.items():
         print(f"  {k}: {v}")
-    print(f"\n标题块:")
+    print("\n标题块:")
     for b in doc.blocks:
         if b.kind == "heading":
             print(f"  - {b.text[:50]}")
-    print(f"\n前3个锚点:")
+    print("\n前3个锚点:")
     for a in doc.anchors[:3]:
         print(f"  {a['anchor_id']} [{a['kind']}] {a['text'][:40]}")
