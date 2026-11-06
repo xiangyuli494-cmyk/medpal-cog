@@ -82,18 +82,28 @@ class TextParser:
         return ParsedDoc(path.stem, self.modality, blocks, anchors, {"chars": len(raw)})
 
 
-# PDF小节标题识别正则（合并自 parse/pdf.py）
+# PDF小节标题识别正则
 PDF_SECTION_RE = re.compile(
-    r"^\s*(?:第[一二三四五六七八九十百\d]+[章节部分]"
-    r"|\d+(?:\.\d+)*[\s、.]+"
-    r"|[一二三四五六七八九十]+、)"
+    r"^\s*(?:"
+    r"第[一二三四五六七八九十百\d]+[章节部分]"  # 第一章、第二节
+    r"|\d+(?:\.\d+)*\.?\s+"  # 1. xxx / 1.1 xxx（数字开头 + 可选点号 + 空格）
+    r"|\d+、"  # 1、xxx
+    r"|[一二三四五六七八九十]+、"  # 一、xxx
+    r")"
 )
 PDF_MIN_SECTION_CHARS = 8
+# 纯数字/小数行（表格里的数值单元格，不是标题）
+_PURE_NUMBER_RE = re.compile(r"^[\d.\s]+$")
 
 
 def _pdf_is_heading(line: str) -> bool:
     s = line.strip()
-    return bool(s) and len(s) <= 40 and bool(PDF_SECTION_RE.match(s))
+    if not s or len(s) > 40:
+        return False
+    # 排除纯数字/小数行（比如表格里的 "5.8"、"123.45"）
+    if _PURE_NUMBER_RE.match(s):
+        return False
+    return bool(PDF_SECTION_RE.match(s))
 
 
 class PdfParser:

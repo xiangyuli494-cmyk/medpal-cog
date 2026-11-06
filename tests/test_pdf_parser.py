@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str((ROOT / "mcp-server").resolve()))
 
-from parsers import PdfParser  # noqa: E402
+from parsers import PdfParser, _pdf_is_heading  # noqa: E402
 
 SAMPLE_PDF = ROOT / "data" / "samples" / "pdf" / "test_guide_01.pdf"
 
@@ -104,3 +104,16 @@ def test_long_text_multipage():
     doc = parser.parse(PDF_DIR / "pdf_11_long_text.pdf")
     assert doc.metadata.get("pages") == 6
     assert doc.metadata.get("total_text_chars", 0) > 0
+
+
+# ============ 正则误判反向测试（评审要求） ============
+
+def test_number_text_not_heading():
+    """反向用例：'3.5万样本说明' 不应被识别为标题。"""
+    assert _pdf_is_heading("3.5万样本说明") is False
+
+
+def test_pure_number_not_heading():
+    """反向用例：纯数字/小数行（表格数值）不应被识别为标题。"""
+    assert _pdf_is_heading("5.8") is False
+    assert _pdf_is_heading("123.45") is False
