@@ -1,0 +1,24 @@
+{"id":1,"name":"正常单页PDF：文本无乱码、无截断","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_1page.pdf"}
+{"id":2,"name":"正常多页PDF：页锚点覆盖全部页","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_3page.pdf"}
+{"id":3,"name":"章节标题识别：标题与正文分块","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"heading_doc.pdf"}
+{"id":4,"name":"表格行锚点：p{页}.t{表}.r{行}","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"table_doc.pdf"}
+{"id":5,"name":"空白页不产生锚点，其余页不丢字","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"blank_mixed.pdf"}
+{"id":6,"name":"无文字层PDF：规范化降级，不建空卡","locked":true,"expect":"fail","group":"normal","degrade":true,"fixture":"image_only.pdf"}
+{"id":7,"name":"特殊符号保留：≥ ± 等不乱码","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"special_chars.pdf"}
+{"id":8,"name":"长文本分段：数字开头的正文不当标题","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"long_text.pdf"}
+{"id":9,"name":"多级编号标题：4 级以上标题不漏识别","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"nested_headings.pdf"}
+{"id":10,"name":"0字节PDF：规范化降级，不抛异常","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"zero_byte.pdf"}
+{"id":11,"name":"坏文件头PDF：规范化降级，不抛异常","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"broken_header.pdf"}
+{"id":12,"name":"假扩展名(.pdf 实为文本)：规范化降级","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"fake_ext.pdf"}
+{"id":13,"name":"加密PDF：识别加密并提示需密码","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"encrypted.pdf"}
+{"id":14,"name":"路径不存在：file_not_found 且回显路径","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"missing_does_not_exist.pdf"}
+{"id":15,"name":"无解析器扩展名：no_parser","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"unsupported.xyz"}
+{"id":16,"name":"锚点契约：字段齐全、挂 asset_id、不重复","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_3page.pdf"}
+{"id":17,"name":"资产号契约：AST-年-6位hex","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_1page.pdf"}
+{"id":18,"name":"重复解析稳定：锚点与资产号都不漂","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_3page.pdf"}
+{"id":19,"name":"4 并发解析：无状态污染、结果一致","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_3page.pdf"}
+{"id":20,"name":"长文档入库：块数不截断、耗时可控","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"long_text.pdf"}
+{"id":21,"name":"入库即写卡：get_asset_card 可反查","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"normal_1page.pdf"}
+{"id":22,"name":"解析失败不写卡：台账无幽灵卡","locked":true,"expect":"fail","group":"abnormal","degrade":false,"fixture":"broken_header.pdf"}
+{"id":23,"name":"批量入库 10 份：资产号不重复","locked":true,"expect":"ok","group":"normal","degrade":false,"fixture":"batch"}
+{"id":24,"name":"异常件降级说明：reason 合法 + hint 非空","locked":true,"expect":"fail","group":"abnormal","degrade":true,"fixture":"zero_byte.pdf"}

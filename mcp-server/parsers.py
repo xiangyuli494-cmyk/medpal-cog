@@ -94,6 +94,10 @@ PDF_SECTION_RE = re.compile(
 PDF_MIN_SECTION_CHARS = 8
 # 纯数字/小数行（表格里的数值单元格，不是标题）
 _PURE_NUMBER_RE = re.compile(r"^[\d.\s]+$")
+# 句子标点：带这些标点的是正文，不是标题。
+# 光靠「数字开头」的小节编号正则不够——编号列表每行都以 1.1/1.2 开头，
+# 整页正文会被误判成标题（实测 240 行正文 → 0 个段落，长文档彻底失去段落结构）。
+PDF_SENTENCE_PUNCT = "。；;：:，,"
 
 
 def _pdf_is_heading(line: str) -> bool:
@@ -102,6 +106,9 @@ def _pdf_is_heading(line: str) -> bool:
         return False
     # 排除纯数字/小数行（比如表格里的 "5.8"、"123.45"）
     if _PURE_NUMBER_RE.match(s):
+        return False
+    # 句子标点闸门：有句末标点、或以标点收尾的，按正文处理
+    if "。" in s or s.endswith(tuple(PDF_SENTENCE_PUNCT)):
         return False
     return bool(PDF_SECTION_RE.match(s))
 
