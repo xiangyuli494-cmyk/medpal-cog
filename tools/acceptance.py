@@ -92,6 +92,7 @@ REQUIRED = [
     "agent/config.json",
     "agent/README.md",
     "agent/sessions/real-w1-01.json",
+    "tools/onto_diff.py",
 ]
 
 MANUAL = [
@@ -307,7 +308,7 @@ def main(argv: list[str]) -> int:
     missing = [f for f in REQUIRED if not (ROOT / f).exists()]
     add(
         "A-13",
-        "必备文档/入口齐（21 项）",
+        f"必备文档/入口齐（{len(REQUIRED)} 项）",
         not missing,
         "全在" if not missing else "缺 " + ", ".join(missing[:3]),
     )
