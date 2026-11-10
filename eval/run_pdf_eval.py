@@ -240,7 +240,12 @@ def c09_nested_headings(ctx: Ctx):
         return False, f"多级标题漏识别：{kinds}"
     if kinds.count("paragraph") < 3:
         return False, f"多级标题下正文未成段：{kinds}"
-    return True, f"heading={kinds.count('heading')} paragraph={kinds.count('paragraph')}"
+    texts = [b.text for b in d.blocks if b.kind == "heading"]
+    if not any("概述" in t for t in texts):
+        return False, f"冒号结尾的小节标题被当正文切掉：headings={texts}"
+    return True, (
+        f"heading={kinds.count('heading')} paragraph={kinds.count('paragraph')}，冒号标题保留"
+    )
 
 
 def _expect_fail(ctx: Ctx, name: str, must_mention: tuple[str, ...] = ()):

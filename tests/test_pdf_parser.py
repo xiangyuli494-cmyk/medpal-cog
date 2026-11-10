@@ -117,3 +117,27 @@ def test_pure_number_not_heading():
     """反向用例：纯数字/小数行（表格数值）不应被识别为标题。"""
     assert _pdf_is_heading("5.8") is False
     assert _pdf_is_heading("123.45") is False
+
+
+def test_colon_tail_heading_kept():
+    """冒号结尾的小节标题仍是标题（医学文档常见写法，不能被当正文切掉）。"""
+    assert _pdf_is_heading("第三章 治疗原则：") is True
+    assert _pdf_is_heading("一、适应证：") is True
+    assert _pdf_is_heading("1.1 背景：") is True
+
+
+def test_long_comma_line_is_body():
+    """长句以逗号/分号收尾按正文处理：编号列表每行以 1.1 开头也不能算标题。"""
+    long_line = "1.1 患者主诉上腹隐痛三月余，伴反酸嗳气，进食后加重，夜间症状明显，"
+    assert len(long_line) > 30
+    assert _pdf_is_heading(long_line) is False
+
+
+def test_short_comma_line_still_heading():
+    """短行以逗号收尾仍按标题候选，避免把短小标题切进正文。"""
+    assert _pdf_is_heading("1.1 概述，") is True
+
+
+def test_sentence_period_is_body():
+    """带句号的编号行是正文，不是标题。"""
+    assert _pdf_is_heading("1.1 本例患者以反酸、烧心为主要表现。") is False
