@@ -1,0 +1,66 @@
+{
+  "id": "V1-03",
+  "title": "W2 冲突：服用布洛芬 → 禁忌提示（v1.0 库）",
+  "source": "由 tools/make_evo_evidence.py 在交付库副本（v1.0）上回放生成 —— 固化 v1.0 的问答形状与三行输出，不是 Nexent 实跑记录",
+  "ontology_version": "v1.0",
+  "question": "反复上腹隐痛，最近吃布洛芬止痛，应该挂哪个科室？",
+  "tool_calls": [
+    {
+      "tool": "std_align",
+      "args": {
+        "term": "上腹隐痛、布洛芬"
+      },
+      "ok": true,
+      "yields": "实体归一：上腹隐痛、布洛芬"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seeds": [
+          "上腹隐痛",
+          "布洛芬"
+        ],
+        "max_hops": 2
+      },
+      "ok": true,
+      "yields": "7 条证据路径"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "反复上腹隐痛，最近吃布洛芬止痛，应该挂哪个科室？"
+      },
+      "ok": true,
+      "yields": "TR-20261110-E5BD"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s2.p1.c2",
+    "AST-2026-000137#s2.p1.c3",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2",
+    "AST-2026-691cca#s6.p1.c1"
+  ],
+  "conflict_line": "冲突：布洛芬（NSAIDs）与消化性溃疡存在禁忌关系",
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：幽门螺杆菌呼气试验、胃镜",
+    "完整率：1.00"
+  ],
+  "engine": {
+    "dept": "消化内科",
+    "exams": [
+      "幽门螺杆菌呼气试验",
+      "胃镜"
+    ],
+    "conflicts": [
+      "布洛芬"
+    ],
+    "trace_id": "TR-20261110-E5BD",
+    "trace_completeness": 1.0,
+    "elapsed_ms": 17,
+    "out_of_scope": false
+  }
+}

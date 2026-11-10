@@ -1,0 +1,70 @@
+{
+  "asset_id": "AST-2026-17b719",
+  "title": "pdf_02_table 02",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_02_table.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 6,
+    "anchors": 6,
+    "kinds": [
+      "paragraph",
+      "table_row"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-17b719#p1.t1.r1",
+      "kind": "table_row",
+      "text": "疾病名称 | 首选检查 | 次选检查 | 禁忌"
+    },
+    {
+      "anchor_id": "AST-2026-17b719#p1.t1.r2",
+      "kind": "table_row",
+      "text": "消化性溃疡 | 胃镜 | 上消化道造影 | 无"
+    },
+    {
+      "anchor_id": "AST-2026-17b719#p1.t1.r3",
+      "kind": "table_row",
+      "text": "幽门螺杆菌感染 | 呼气试验 | 胃镜活检 | 近期服用PPI"
+    },
+    {
+      "anchor_id": "AST-2026-17b719#p1.t1.r4",
+      "kind": "table_row",
+      "text": "胃炎 | 胃镜 | 胃功能四项 | 无"
+    },
+    {
+      "anchor_id": "AST-2026-17b719#p1.t1.r5",
+      "kind": "table_row",
+      "text": "胃食管反流病 | 胃镜 | 24小时pH监测 | 无"
+    },
+    {
+      "anchor_id": "AST-2026-17b719#p1.pre",
+      "kind": "page",
+      "text": "常见消化系统疾病检查项目表\n疾病名称\n首选检查\n次选检查\n禁忌\n消化性溃疡\n胃镜\n上消化道造影\n无\n幽门螺杆菌感染\n呼气试验\n胃镜活检\n近期服用PPI\n胃炎\n胃镜\n胃功能四项\n无\n胃食管反流病\n胃镜\n24小时pH监测\n无"
+    }
+  ],
+  "entities": [
+    "消化性溃疡",
+    "胃镜",
+    "幽门螺杆菌",
+    "胃炎",
+    "胃食管反流病"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

@@ -1,0 +1,40 @@
+{
+  "asset_id": "AST-2026-3950ae",
+  "title": "pdf_06_image_mix 06",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_06_image_mix.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 1,
+    "anchors": 1,
+    "kinds": [
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-3950ae#p1.pre",
+      "kind": "page",
+      "text": "消化性溃疡好发部位示意图\n消化性溃疡最好发于胃角和十二指肠球部。下图展示了胃的解剖结构和溃疡常见发生部位。\n[胃解剖示意图]"
+    }
+  ],
+  "entities": [
+    "消化性溃疡"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

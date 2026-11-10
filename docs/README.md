@@ -11,6 +11,7 @@
 | 调工具 / 加工具 | [mcp-contract.md](mcp-contract.md) |
 | 改本体 / 加三元组 | [ontology-schema.md](ontology-schema.md) |
 | 看两版本体差了什么（v0.9 → v1.0） | `python tools/onto_diff.py --from v0.9 --to v1.0`（不传路径，按版本号） |
+| 看「进化到底改变了什么决策」 | [进化预演-v0.9-to-v1.0.md](进化预演-v0.9-to-v1.0.md)（同一问题两版对比 + 机制 + 复现命令） |
 | 改决策链结构 | [trace-schema.md](trace-schema.md) |
 | 知道这周干什么、几号交 | [冲刺计划-1130.md](冲刺计划-1130.md)（总排期 + 闸门 + 风险） |
 | 一项算不算做完 | [冲刺计划-1130.md §10](冲刺计划-1130.md)：16 项结构 + 7 项指标，`python tools/acceptance.py --with-eval` |

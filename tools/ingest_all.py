@@ -92,8 +92,10 @@ def main() -> int:
                 card["version"]["captured_at"] = prev["version"].get(
                     "captured_at", card["version"].get("captured_at")
                 )
+        # 结尾补一个换行：POSIX 文本文件约定，也免得 git 每次提示 "No newline at end of file"
         (CARDS / f"{card['asset_id']}.json").write_text(
-json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
+            json.dumps(card, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
             newline="\n",
         )
 
@@ -118,6 +120,19 @@ json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
     con.close()
     print("  跨文档本体:", grown["docs"], "份文档 /", grown["triples"], "条新三元组",
           grown["skipped"] or "")
+
+    # 再走一遍「工具链进化」：第二批文档 propose → commit 出版本，
+    # 让库里的本体不是一次性写死，而是留有 v0.9 → v1.0 的版本轨迹（W2 进化预演）
+    import ontology_evolve  # noqa: PLC0415
+
+    con = sqlite3.connect(str(DB))
+    con.row_factory = sqlite3.Row
+    evo = ontology_evolve.evolve(con)
+    con.commit()
+    con.close()
+    print("  本体进化:", evo["base_version"], "→", evo["new_version"],
+          "| 候选", evo["proposed"], "条 / 提交", evo["committed"],
+          "| 版本内", evo["triples_total"], "条 | manifest", evo["manifest_hash"])
     odd = [(n, m) for n, m in mapping.items() if (n.endswith((".csv", ".xlsx")) and m != "table")]
     if odd:
         print("  ⚠ 表格类但模态不是 table:", odd)

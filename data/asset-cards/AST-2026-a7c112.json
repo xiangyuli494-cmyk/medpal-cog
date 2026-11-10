@@ -1,0 +1,61 @@
+{
+  "asset_id": "AST-2026-a7c112",
+  "title": "pdf_05_font_size 05",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_05_font_size.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 5,
+    "anchors": 5,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-a7c112#p1.pre",
+      "kind": "page",
+      "text": "消化性溃疡诊疗规范"
+    },
+    {
+      "anchor_id": "AST-2026-a7c112#p1.h1",
+      "kind": "heading",
+      "text": "第一章 概述"
+    },
+    {
+      "anchor_id": "AST-2026-a7c112#p1.s1.p1",
+      "kind": "paragraph",
+      "text": "消化性溃疡主要指发生于胃和十二指肠的慢性溃疡，是一多发病、常见病。"
+    },
+    {
+      "anchor_id": "AST-2026-a7c112#p1.h2",
+      "kind": "heading",
+      "text": "第二章 检查方法"
+    },
+    {
+      "anchor_id": "AST-2026-a7c112#p1.s2.p1",
+      "kind": "paragraph",
+      "text": "内镜检查是确诊消化性溃疡的主要方法。"
+    }
+  ],
+  "entities": [
+    "消化性溃疡"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

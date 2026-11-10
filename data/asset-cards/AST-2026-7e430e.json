@@ -5,11 +5,11 @@
   "source": {
     "type": "synthetic",
     "publisher": "",
-    "path": "data/samples/pdf/test_guide_01.pdf"
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\test_guide_01.pdf"
   },
   "version": {
     "value": "v1",
-    "captured_at": "2026-11-04T12:41:03+08:00",
+    "captured_at": "2026-11-10T16:27:12+08:00",
     "supersedes": null
   },
   "sensitivity": "synthetic",
@@ -66,5 +66,5 @@
     "status": "ready"
   },
   "ingested_by": "T5",
-  "created_at": "2026-11-04T12:41:03+08:00"
+  "created_at": "2026-11-10T16:27:12+08:00"
 }

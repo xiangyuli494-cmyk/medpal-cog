@@ -1,0 +1,109 @@
+{
+  "asset_id": "AST-2026-1fcd14",
+  "title": "pdf_09_cross_page_table 09",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_09_cross_page_table.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 15,
+    "anchors": 15,
+    "kinds": [
+      "paragraph",
+      "table_row"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r1",
+      "kind": "table_row",
+      "text": "日期 | 项目 | 结果 | 参考范围"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r2",
+      "kind": "table_row",
+      "text": "2026-01- | 01WBC | 5.8 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r3",
+      "kind": "table_row",
+      "text": "2026-02- | 01WBC | 6.1 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r4",
+      "kind": "table_row",
+      "text": "2026-03- | 01WBC | 5.5 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r5",
+      "kind": "table_row",
+      "text": "2026-04- | 01WBC | 6.7 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r6",
+      "kind": "table_row",
+      "text": "2026-05- | 01WBC | 5.9 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r7",
+      "kind": "table_row",
+      "text": "2026-06- | 01WBC | 6.3 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r8",
+      "kind": "table_row",
+      "text": "2026-07- | 01WBC | 5.2 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r9",
+      "kind": "table_row",
+      "text": "2026-08- | 01WBC | 6.0 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r10",
+      "kind": "table_row",
+      "text": "2026-09- | 01WBC | 5.7 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.t1.r11",
+      "kind": "table_row",
+      "text": "2026-10- | 01WBC | 6.4 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p1.pre",
+      "kind": "page",
+      "text": "长期随访检验记录表\n日期\n项目\n结果\n参考范围\n2026-01-01\nWBC\n5.8\n4-10\n2026-02-01\nWBC\n6.1\n4-10\n2026-03-01\nWBC\n5.5\n4-10\n2026-04-01\nWBC\n6.7\n4-10\n2026-05-01\nWBC\n5.9\n4-10\n2026-06-01\nWBC\n6.3\n4-10\n2026-07-01\nWBC\n5.2\n4-10\n2026-08-"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p2.t1.r1",
+      "kind": "table_row",
+      "text": "2026-11- | 01WBC | 5.6 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p2.t1.r2",
+      "kind": "table_row",
+      "text": "2026-12- | 01WBC | 6.2 | 4-10"
+    },
+    {
+      "anchor_id": "AST-2026-1fcd14#p2.pre",
+      "kind": "page",
+      "text": "续表\n2026-11-01\nWBC\n5.6\n4-10\n2026-12-01\nWBC\n6.2\n4-10"
+    }
+  ],
+  "entities": [],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

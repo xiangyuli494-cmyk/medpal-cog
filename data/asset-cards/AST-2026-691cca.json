@@ -1,0 +1,97 @@
+{
+  "asset_id": "AST-2026-691cca",
+  "title": "缺铁性贫血临床路径摘要（合成样例 21）",
+  "modality": "text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\text\\pathway_21.md"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:31:51+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 11,
+    "anchors": 11,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-691cca#s1.h",
+      "kind": "section",
+      "text": "缺铁性贫血临床路径摘要（合成样例 21）"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s2.h",
+      "kind": "section",
+      "text": "诊断依据"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s2.p1.c1",
+      "kind": "sentence",
+      "text": "主诉与检查支持 缺铁性贫血（ICD-10 D50.9），就诊科室 血液内科"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s3.h",
+      "kind": "section",
+      "text": "检查项目"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s3.p1.c1",
+      "kind": "sentence",
+      "text": "血常规、血清铁蛋白、骨髓涂片"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s4.h",
+      "kind": "section",
+      "text": "治疗原则"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s4.p1.c1",
+      "kind": "sentence",
+      "text": "缺铁性贫血需要做血常规检查以评估贫血程度"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s5.h",
+      "kind": "section",
+      "text": "随访要求"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s5.p1.c1",
+      "kind": "sentence",
+      "text": "缺铁性贫血可导致乏力，治疗四周后复查血清铁蛋白"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s6.h",
+      "kind": "section",
+      "text": "关联依据"
+    },
+    {
+      "anchor_id": "AST-2026-691cca#s6.p1.c1",
+      "kind": "sentence",
+      "text": "消化性溃疡可导致缺铁性贫血，长期隐性失血是主要原因"
+    }
+  ],
+  "entities": [
+    "缺铁性贫血",
+    "血液内科",
+    "血常规",
+    "血清铁蛋白",
+    "骨髓涂片",
+    "贫血",
+    "消化性溃疡"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:31:51+08:00"
+}

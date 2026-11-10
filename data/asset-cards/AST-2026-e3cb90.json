@@ -1,0 +1,111 @@
+{
+  "asset_id": "AST-2026-e3cb90",
+  "title": "pdf_04_multipage 04",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_04_multipage.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 14,
+    "anchors": 14,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-e3cb90#p1.h1",
+      "kind": "heading",
+      "text": "第一章 消化性溃疡总论"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p1.s1.p1",
+      "kind": "paragraph",
+      "text": "消化性溃疡是临床常见的消化系统疾病之一，主要包括胃溃疡和十二指肠溃疡。本病的发作与季节变"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p1.h2",
+      "kind": "heading",
+      "text": "1.1 病因"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p1.s2.p1",
+      "kind": "paragraph",
+      "text": "消化性溃疡的病因主要包括以下几个方面：\n- 幽门螺杆菌感染\n- 药物因素（如NSAIDs、阿司匹林等）\n- 遗传因素\n- 饮食因素\n- 精神因素"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p1.h3",
+      "kind": "heading",
+      "text": "1.2 发病机制"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p1.s3.p1",
+      "kind": "paragraph",
+      "text": "酸性胃液对黏膜的消化作用是溃疡形成的基本因素。正常情况下，胃黏膜具有一系列防御和修复机制"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.h4",
+      "kind": "heading",
+      "text": "第二章 胃溃疡"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.h5",
+      "kind": "heading",
+      "text": "2.1 临床表现"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.s5.p1",
+      "kind": "paragraph",
+      "text": "胃溃疡的临床表现与十二指肠溃疡有所不同。胃溃疡的疼痛多在餐后1小时内出现，经1～2小时后"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.h6",
+      "kind": "heading",
+      "text": "2.2 诊断"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.s6.p1",
+      "kind": "paragraph",
+      "text": "胃镜检查是诊断胃溃疡的首选方法。胃镜下可见胃黏膜出现圆形或椭圆形的溃疡，底部洁白，边缘整"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.h7",
+      "kind": "heading",
+      "text": "第三章 十二指肠溃疡"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.h8",
+      "kind": "heading",
+      "text": "3.1 临床表现"
+    },
+    {
+      "anchor_id": "AST-2026-e3cb90#p2.s8.p1",
+      "kind": "paragraph",
+      "text": "十二指肠溃疡的疼痛多在空腹时出现，餐后可缓解。疼痛部位多在右上腹。"
+    }
+  ],
+  "entities": [
+    "消化性溃疡",
+    "胃溃疡",
+    "幽门螺杆菌",
+    "布洛芬",
+    "阿司匹林",
+    "胃镜"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

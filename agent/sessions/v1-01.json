@@ -1,0 +1,63 @@
+{
+  "id": "V1-01",
+  "title": "W2 常态：上腹隐痛夜间加重 → 消化内科 + 两项检查（v1.0 库）",
+  "source": "由 tools/make_evo_evidence.py 在交付库副本（v1.0）上回放生成 —— 固化 v1.0 的问答形状与三行输出，不是 Nexent 实跑记录",
+  "ontology_version": "v1.0",
+  "question": "反复上腹隐痛3个月，夜间加重，进食后缓解",
+  "tool_calls": [
+    {
+      "tool": "std_align",
+      "args": {
+        "term": "上腹隐痛"
+      },
+      "ok": true,
+      "yields": "实体归一：上腹隐痛"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seeds": [
+          "上腹隐痛"
+        ],
+        "max_hops": 2
+      },
+      "ok": true,
+      "yields": "7 条证据路径"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "反复上腹隐痛3个月，夜间加重，进食后缓解"
+      },
+      "ok": true,
+      "yields": "TR-20261110-DBE2"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s2.p1.c2",
+    "AST-2026-000137#s2.p1.c3",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2",
+    "AST-2026-691cca#s6.p1.c1"
+  ],
+  "conflict_line": "",
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：幽门螺杆菌呼气试验、胃镜",
+    "完整率：1.00"
+  ],
+  "engine": {
+    "dept": "消化内科",
+    "exams": [
+      "幽门螺杆菌呼气试验",
+      "胃镜"
+    ],
+    "conflicts": [],
+    "trace_id": "TR-20261110-DBE2",
+    "trace_completeness": 1.0,
+    "elapsed_ms": 13,
+    "out_of_scope": false
+  }
+}

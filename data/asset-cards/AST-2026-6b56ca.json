@@ -1,0 +1,52 @@
+{
+  "asset_id": "AST-2026-6b56ca",
+  "title": "pdf_03_number_title 03",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_03_number_title.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 3,
+    "anchors": 3,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-6b56ca#p1.pre",
+      "kind": "page",
+      "text": "2026年临床消化科诊疗指南更新说明\n本指南基于3.5万样本量的临床数据修订，涵盖消化性溃疡、胃炎等常见疾病的最新诊疗规范。\n2025年回顾\n2025年全国消化科门诊量达到1.2亿人次，其中消化性溃疡占比约8%。\n3.5万样本说明\n本次修订纳入了全国20家三甲医院共35000例临床病例数据，确保指南的科学性和权威性。"
+    },
+    {
+      "anchor_id": "AST-2026-6b56ca#p1.h1",
+      "kind": "heading",
+      "text": "第四章 用药建议"
+    },
+    {
+      "anchor_id": "AST-2026-6b56ca#p1.s1.p1",
+      "kind": "paragraph",
+      "text": "质子泵抑制剂是治疗消化性溃疡的首选药物，疗程通常为4-8周。"
+    }
+  ],
+  "entities": [
+    "消化性溃疡",
+    "胃炎"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

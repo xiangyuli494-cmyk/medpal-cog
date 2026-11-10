@@ -1,0 +1,154 @@
+{
+  "id": "EVO-W2-01",
+  "title": "进化预演：同一个缺铁性贫血问题，v0.9 答不出、v1.0 答得出",
+  "source": "由 tools/make_evo_evidence.py 在 tmp/ 下现建两个状态回放生成：A 态=seed+第一批文档（v0.9），B 态=交付库副本（v1.0）。不是 Nexent 实跑记录",
+  "question": "患者乏力、面色苍白，怀疑缺铁性贫血，应该挂哪个科室、要做哪些检查？",
+  "entity_extract": [
+    "缺铁性贫血"
+  ],
+  "before": {
+    "ontology_version": "v0.9",
+    "dept": "",
+    "exams": [],
+    "out_of_scope": true,
+    "trace_id": "TR-20261110-8A13",
+    "evidence": [],
+    "expected_tail": [
+      "科室：未取到",
+      "检查项：无",
+      "完整率：1.00"
+    ]
+  },
+  "after": {
+    "ontology_version": "v1.0",
+    "dept": "血液内科",
+    "exams": [
+      "血常规",
+      "血清铁蛋白",
+      "骨髓涂片"
+    ],
+    "out_of_scope": false,
+    "trace_id": "TR-20261110-97C3",
+    "evidence": [
+      "AST-2026-000137#s1.h",
+      "AST-2026-000137#s2.p1.c3",
+      "AST-2026-000137#s3.p1.c1",
+      "AST-2026-000137#s3.p1.c2",
+      "AST-2026-000137#s4.p1.c2",
+      "AST-2026-118938#s3.p1.c1",
+      "AST-2026-3f44e0#s3.p1.c1",
+      "AST-2026-491013#s3.p1.c1",
+      "AST-2026-691cca#s2.p1.c1",
+      "AST-2026-691cca#s3.p1.c1",
+      "AST-2026-691cca#s6.p1.c1",
+      "AST-2026-7c8f9f#s3.p1.c1"
+    ],
+    "expected_tail": [
+      "科室：血液内科",
+      "检查项：血常规、血清铁蛋白、骨髓涂片",
+      "完整率：1.00"
+    ]
+  },
+  "delta": {
+    "dept_changed": true,
+    "exams_added": [
+      "血常规",
+      "血清铁蛋白",
+      "骨髓涂片"
+    ],
+    "out_of_scope": [
+      true,
+      false
+    ]
+  },
+  "why_it_changed": "v1.0 新增 4 份样例文档与 19 条别名后，本体里出现 D50.9（缺铁性贫血）这一节点：belongs_to_dept→血液内科、requires_exam→血清铁蛋白/骨髓涂片/血常规。v0.9 里这条链不存在，问题里的「缺铁性贫血」无法归一，决策链在第一步就断，结论退化成「超出覆盖范围」；v1.0 里同一句话能走到科室与检查项，因此同批评测里这题的分数从 0 变为满分 —— 这就是「决策会变」的机械原因，而不是换了个提示词。",
+  "new_triples": [
+    {
+      "triple_id": "T-2520f06d",
+      "rel": "aligned_to_standard",
+      "tail": "ICD-10 D50.9"
+    },
+    {
+      "triple_id": "T-61a53f16",
+      "rel": "belongs_to_dept",
+      "tail": "血液内科"
+    },
+    {
+      "triple_id": "T-c7396d21",
+      "rel": "requires_exam",
+      "tail": "骨髓涂片"
+    },
+    {
+      "triple_id": "T-d333142e",
+      "rel": "requires_exam",
+      "tail": "血常规"
+    },
+    {
+      "triple_id": "T-681b2cc8",
+      "rel": "requires_exam",
+      "tail": "血清铁蛋白"
+    }
+  ],
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s2.p1.c3",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2",
+    "AST-2026-118938#s3.p1.c1",
+    "AST-2026-3f44e0#s3.p1.c1",
+    "AST-2026-491013#s3.p1.c1",
+    "AST-2026-691cca#s2.p1.c1",
+    "AST-2026-691cca#s3.p1.c1",
+    "AST-2026-691cca#s6.p1.c1",
+    "AST-2026-7c8f9f#s3.p1.c1"
+  ],
+  "expected_tail": [
+    "科室：血液内科",
+    "检查项：血常规、血清铁蛋白、骨髓涂片",
+    "完整率：1.00"
+  ],
+  "conflict_line": "",
+  "tool_calls": [
+    {
+      "tool": "std_align",
+      "args": {
+        "term": "缺铁性贫血"
+      },
+      "ok": true,
+      "yields": "实体归一：缺铁性贫血"
+    },
+    {
+      "tool": "kg_query",
+      "args": {
+        "seeds": [
+          "缺铁性贫血"
+        ],
+        "max_hops": 2
+      },
+      "ok": true,
+      "yields": "12 条证据路径"
+    },
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "患者乏力、面色苍白，怀疑缺铁性贫血，应该挂哪个科室、要做哪些检查？"
+      },
+      "ok": true,
+      "yields": "TR-20261110-97C3"
+    }
+  ],
+  "engine": {
+    "dept": "血液内科",
+    "exams": [
+      "血常规",
+      "血清铁蛋白",
+      "骨髓涂片"
+    ],
+    "conflicts": [],
+    "trace_id": "TR-20261110-97C3",
+    "trace_completeness": 1.0,
+    "elapsed_ms": 15,
+    "out_of_scope": false
+  }
+}

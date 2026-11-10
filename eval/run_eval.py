@@ -17,6 +17,7 @@ import argparse
 import contextlib
 import io
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -51,9 +52,20 @@ ALARM_WORDS = ("体重下降", "消瘦", "贫血", "呕血", "黑便", "吞咽�
 EXAM_LIST_WORDS = ("哪些检查", "什么检查", "检查项目", "查什么", "怎么查", "还需要查", "要做什么")
 
 
+# ICD-10 疾病段：A00-Z99 里除症状/体征段（R）以外的编码都可能是疾病。
+# 早期只认 K/R 是因为当时语料只有消化科；v1.0 长进血液/内分泌/普外/呼吸之后，
+# E05.9、D50.9 这类主诊断会被判成「不是疾病」，焦点疾病就会滑到路过路径的 K35.8 上，
+# 结论变成「看消化内科」——所以判定必须跟着本体扩，而不是写死两个字母。
+ICD_DISEASE = re.compile(r"^[A-Z]\d{2}(?:\.\d+)?$")
+SYMPTOM_CODES = {"R10.1"}
+
+
 def _is_disease(node_id) -> bool:
-    """ICD-10 的 K/R 段在本体里当疾病用；R10.1 是症状编码，不算疾病。"""
-    return bool(node_id) and str(node_id).startswith(("K", "R")) and node_id != "R10.1"
+    """ICD-10 编码且不在症状段黑名单里，就当疾病；R10.1 是上腹痛的症状码，不算。"""
+    s = str(node_id or "")
+    if s in SYMPTOM_CODES or not ICD_DISEASE.match(s):
+        return False
+    return True
 
 
 def seed_weight(conn, seed_ids: set[str]) -> dict[str, float]:
@@ -143,6 +155,16 @@ def answer(conn, question: str, max_hops: int = 2):
     #   ②问题已点名疾病（"胃溃疡病史"）且不是在索要检查清单 → 只答病因学检查，内镜视为已做；
     #   ③用户在明确索要检查清单（"需要做哪些检查"）→ 全列，这是知情需求。
     alarm = any(k in question for k in ALARM_WORDS)
+    # 「报警症状先做内镜」是消化道出血/肿瘤的规则，不能套到血液科疾病上：
+    # 「缺铁性贫血」本身就含「贫血」两个字，若不分科室就套用，会把血清铁蛋白/骨髓涂片全裁掉，
+    # 只剩一个跟本病无关的胃镜。判定按焦点疾病是否挂过胃镜这条边来做，跟语料走而不是写死病名。
+    alarm_gastro = alarm and any(
+        conn.execute(
+            "SELECT 1 FROM triple WHERE head_id=? AND rel='requires_exam' AND tail_id='EX-GASTRO'",
+            (d,),
+        ).fetchone()
+        for d in (focus_diseases or ())
+    )
     wants_exam_list = any(k in question for k in EXAM_LIST_WORDS)
     confirmed_disease = bool(seed_types.get("Disease"))
 
@@ -170,12 +192,17 @@ def answer(conn, question: str, max_hops: int = 2):
                 if named_exams and to_id not in named_exams:
                     continue
                 # 报警症状优先内镜：其余检查此时平铺会稀释「先做哪一项」这个决策结论
-                if alarm and to_id != "EX-GASTRO":
+                if alarm_gastro and to_id != "EX-GASTRO":
                     continue
                 # 病史已明确、且不是在索要检查清单：内镜视为已完成，只补病因学检查。
                 # 但报警症状（呕血/黑便/消瘦/吞咽困难）优先内镜，这一条要先于「已做过」生效，
                 # 否则「消化性溃疡 + 黑便」会得出零检查项——那是把最该做的内镜丢了。
-                if confirmed_disease and not wants_exam_list and to_id == "EX-GASTRO" and not alarm:
+                if (
+                    confirmed_disease
+                    and not wants_exam_list
+                    and to_id == "EX-GASTRO"
+                    and not alarm_gastro
+                ):
                     continue
                 exams.append(to_label)
             elif rel == "contraindicated_for" and on_focus:

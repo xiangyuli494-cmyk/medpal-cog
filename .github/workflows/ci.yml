@@ -56,6 +56,8 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt -r requirements-dev.txt
       - run: python mcp-server/seed.py --reset
+      - name: 本体进化到 v1.0（propose → commit）
+        run: python mcp-server/ontology_evolve.py
       - name: Walking Skeleton 通电
         run: python skeleton.py
       - name: 离线评测

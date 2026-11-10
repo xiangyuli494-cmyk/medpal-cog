@@ -1,0 +1,88 @@
+{
+  "asset_id": "AST-2026-036164",
+  "title": "pdf_01_normal_text 01",
+  "modality": "pdf_text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\pdf\\pdf_01_normal_text.pdf"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:23:25+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 10,
+    "anchors": 10,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-036164#p1.pre",
+      "kind": "page",
+      "text": "消化性溃疡诊疗指南"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.h1",
+      "kind": "heading",
+      "text": "第一章 概述"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.s1.p1",
+      "kind": "paragraph",
+      "text": "消化性溃疡主要指发生于胃和十二指肠的慢性溃疡，是一多发病、常见病。溃疡的形成有各种因素，"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.h2",
+      "kind": "heading",
+      "text": "第二章 临床表现"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.s2.p1",
+      "kind": "paragraph",
+      "text": "上腹部疼痛是本病的主要症状。多位于上腹部，也可出现在左上腹部或胸骨、剑突后。常呈隐痛、钝"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.h3",
+      "kind": "heading",
+      "text": "第三章 检查"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.h4",
+      "kind": "heading",
+      "text": "1. 内镜检查"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.s4.p1",
+      "kind": "paragraph",
+      "text": "内镜检查是确诊消化性溃疡的主要方法。胃镜检查可以直接观察到胃黏膜的情况。"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.h5",
+      "kind": "heading",
+      "text": "2. 幽门螺杆菌检测"
+    },
+    {
+      "anchor_id": "AST-2026-036164#p1.s5.p1",
+      "kind": "paragraph",
+      "text": "幽门螺杆菌检测对于消化性溃疡的诊断和治疗具有重要意义。"
+    }
+  ],
+  "entities": [
+    "消化性溃疡",
+    "胃镜",
+    "幽门螺杆菌"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:23:25+08:00"
+}

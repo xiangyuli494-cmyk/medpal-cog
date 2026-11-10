@@ -31,6 +31,9 @@ def _env() -> dict:
 
 STEPS = [
     ("种子库", [PY, "mcp-server/seed.py", "--reset"], "17"),
+    # 进化预演：v0.9 → v1.0。这一步失败说明 onto_propose/onto_commit 链断了，
+    # 比测试先报更有指向性（测试里也有一条独立校验）
+    ("本体进化", [PY, "mcp-server/ontology_evolve.py"], "v1.0"),
     # pytest -q 在 addopts 也是 -q 时不打汇总行，退出码即结论
     ("测试", [PY, "-m", "pytest", "tests"], None),
     ("评测", [PY, "eval/run_eval.py"], "100"),

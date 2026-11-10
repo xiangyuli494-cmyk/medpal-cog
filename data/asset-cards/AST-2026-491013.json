@@ -1,0 +1,97 @@
+{
+  "asset_id": "AST-2026-491013",
+  "title": "甲状腺功能亢进症临床路径摘要（合成样例 22）",
+  "modality": "text",
+  "source": {
+    "type": "synthetic",
+    "publisher": "",
+    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\text\\pathway_22.md"
+  },
+  "version": {
+    "value": "v1",
+    "captured_at": "2026-11-10T16:31:51+08:00",
+    "supersedes": null
+  },
+  "sensitivity": "synthetic",
+  "structure": {
+    "blocks": 11,
+    "anchors": 11,
+    "kinds": [
+      "heading",
+      "paragraph"
+    ]
+  },
+  "anchors": [
+    {
+      "anchor_id": "AST-2026-491013#s1.h",
+      "kind": "section",
+      "text": "甲状腺功能亢进症临床路径摘要（合成样例 22）"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s2.h",
+      "kind": "section",
+      "text": "诊断依据"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s2.p1.c1",
+      "kind": "sentence",
+      "text": "主诉与检查支持 甲状腺功能亢进症（ICD-10 E05.9），就诊科室 内分泌科"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s3.h",
+      "kind": "section",
+      "text": "检查项目"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s3.p1.c1",
+      "kind": "sentence",
+      "text": "甲状腺功能、甲状腺超声、血常规"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s4.h",
+      "kind": "section",
+      "text": "治疗原则"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s4.p1.c1",
+      "kind": "sentence",
+      "text": "甲状腺功能亢进症需要做甲状腺功能检查确认激素水平"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s5.h",
+      "kind": "section",
+      "text": "随访要求"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s5.p1.c1",
+      "kind": "sentence",
+      "text": "抗甲状腺药物治疗期间每四到六周复查一次肝功能"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s6.h",
+      "kind": "section",
+      "text": "关联依据"
+    },
+    {
+      "anchor_id": "AST-2026-491013#s6.p1.c1",
+      "kind": "sentence",
+      "text": "甲状腺功能亢进症可导致心房颤动，需同步评估心律"
+    }
+  ],
+  "entities": [
+    "甲状腺功能亢进症",
+    "内分泌科",
+    "甲状腺功能",
+    "甲状腺超声",
+    "血常规",
+    "甲状腺",
+    "心房颤动"
+  ],
+  "kb": {
+    "base": "med-text",
+    "doc_id": "",
+    "status": "ready"
+  },
+  "ingested_by": "T5",
+  "created_at": "2026-11-10T16:31:51+08:00"
+}

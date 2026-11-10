@@ -27,6 +27,15 @@ DOCS = [
     "data/samples/text/pathway_04.md",
 ]
 
+# 第二批（W2）：四份新样例文档，用来演示本体从 v0.9 长到 v1.0。
+# 与 DOCS 分开，是因为这一批的结构关系要挂在 v1.0 上、不能把基线 v0.9 重写一遍。
+BATCH2 = [
+    "data/samples/text/pathway_21.md",
+    "data/samples/text/pathway_22.md",
+    "data/samples/text/pathway_23.md",
+    "data/samples/text/pathway_24.md",
+]
+
 # 科室固定编号：跨文档复用同一科室时不能长出两个 id
 DEPT_IDS = {
     "消化内科": "DEP-GI",
@@ -35,6 +44,7 @@ DEPT_IDS = {
     "呼吸内科": "DEP-RESP",
     "泌尿外科": "DEP-URO",
     "普外科": "DEP-SURG",
+    "血液内科": "DEP-HEMA",
 }
 
 # 检查项编号同理；没登记的按名字哈希兜底，保证同一检查只有一个 id
@@ -50,6 +60,12 @@ EXAM_IDS = {
     "C反应蛋白": "EX-CRP",
     "泌尿系超声": "EX-US-KUB",
     "尿常规": "EX-URINE",
+    "血清铁蛋白": "EX-FERRITIN",
+    "骨髓涂片": "EX-BM-SMEAR",
+    "甲状腺功能": "EX-TFT",
+    "甲状腺超声": "EX-US-THY",
+    "腹部超声": "EX-US-ABD",
+    "肺功能": "EX-PFT",
 }
 
 TITLE = re.compile(r"^(.+?)临床路径")

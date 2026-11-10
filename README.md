@@ -14,8 +14,9 @@
 | 能力 | 状态 | 证据（一条命令） |
 | --- | --- | --- |
 | MCP Server，10 个工具 | **可跑** | `python mcp-server/server.py`（stdio）／`MCP_TRANSPORT=streamable-http python mcp-server/server.py`（Nexent 远程链接） |
-| 数据资产台账 | **61 张 Asset Card**（文本 21 / 表格 20 / 图文 20） | `data/asset-cards/`，`data/samples/` 三类各 20 份 |
-| 本体 v0.9 | **37 三元组 + 43 锚点**（seed 手写 17 + 跨文档长 20） | `python mcp-server/seed.py --reset` → `python tools/ingest_all.py` |
+| 数据资产台账 | **74 张 Asset Card**（text 25 / table 20 / image_report 20 / pdf_text 9） | `data/asset-cards/`，`python tools/ingest_all.py` 重建 |
+| 本体 v0.9 → v1.0 | **61 活跃三元组 + 74 张卡**（v0.9 37 条；v1.0 新增 24 条，version 表 2 行） | `python mcp-server/seed.py --reset` → `python tools/ingest_all.py` |
+| 本体进化预演 | **同一问题两版两种答案**（v0.9 答不出、v1.0 答得出，差异可追到新增的边） | `python tools/make_evo_evidence.py`；说明见 [docs/进化预演-v0.9-to-v1.0.md](docs/进化预演-v0.9-to-v1.0.md) |
 | 3 个 Skill 包 | **可导入** | `skills/s1-asset-audit`、`s2-ontology-evolve`、`s3-evidence-decision` |
 | 主智能体配置 v0 | **已在 Nexent v2.7.0 实跑** | `agent/prompt.md` + `agent/config.json`；实跑记录 `agent/sessions/real-w1-01.json`（常态）、`real-w1-02.json`（冲突）；接线见 `agent/README.md` |
 | 离线评测 | **20 条，六项指标 100%** | `python eval/run_eval.py`（**不是答辩分**，见 §6） |
