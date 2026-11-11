@@ -94,6 +94,13 @@ PDF_SECTION_RE = re.compile(
 PDF_MIN_SECTION_CHARS = 8
 # 纯数字/小数行（表格里的数值单元格，不是标题）
 _PURE_NUMBER_RE = re.compile(r"^[\d.\s]+$")
+# 正文闸门：光靠「数字开头」的小节编号正则不够——编号列表每行都以 1.1/1.2 开头，
+# 整页正文会被误判成标题（实测 240 行正文 → 0 个段落，长文档彻底失去段落结构）。
+# 但不能见标点就切：医学文档里「第三章 治疗原则：」「一、适应证：」是典型的小节标题，
+# 冒号出现在标题尾部很正常，所以冒号不参与判定。
+PDF_SENTENCE_END = "。"  # 句末标点：出现即正文，不看长短
+PDF_TAIL_PUNCT = ("；", ";", "，", ",")  # 分句标点：只有「行尾 + 长句」才算正文
+PDF_LONG_LINE_CHARS = 30  # 长句阈值：短行以分句标点结尾，仍按标题候选处理
 
 
 def _pdf_is_heading(line: str) -> bool:
@@ -102,6 +109,13 @@ def _pdf_is_heading(line: str) -> bool:
         return False
     # 排除纯数字/小数行（比如表格里的 "5.8"、"123.45"）
     if _PURE_NUMBER_RE.match(s):
+        return False
+    # 句号闸门：正文句末标点，一律按正文
+    if PDF_SENTENCE_END in s:
+        return False
+    # 逗号/分号闸门：只有「行尾 + 超过 30 字」的长句才是正文；
+    # 短行（小标题）即使以逗号/分号收尾也保留标题候选资格
+    if len(s) > PDF_LONG_LINE_CHARS and s.endswith(PDF_TAIL_PUNCT):
         return False
     return bool(PDF_SECTION_RE.match(s))
 
