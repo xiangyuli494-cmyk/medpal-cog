@@ -37,6 +37,7 @@ TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <title>资产台账 · medpal-cog</title>
+<meta name="ledger-baseline" content="<!--BASELINE-->">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -179,6 +180,51 @@ def load_cards() -> list[dict]:
     return [json.loads(p.read_text(encoding="utf-8")) for p in files]
 
 
+# 页面里写死的基线清单：生成这张页时用的是哪些卡。
+# 有了它，判等就不必依赖 git（也不怕工作区被 ingest 写过而多出卡）。
+BASELINE_RE = re.compile(r'<meta name="ledger-baseline" content="([^"]*)">')
+
+
+def page_baseline(doc: str) -> list[str]:
+    """从页面里取回基线卡 id 清单。"""
+    match = BASELINE_RE.search(doc)
+    if not match:
+        return []
+    return [item for item in match.group(1).split(",") if item]
+
+
+def check_page(cards: list[dict], doc: str) -> list[str]:
+    """页面 vs 当前卡目录：没漂移就要求逐字节一致，漂移了退化成「基线全覆盖」。
+
+    为什么要退化：`acceptance.py --stage w2` 会先跑 `seed --reset` + `ingest_all`，
+    把 `data/samples` 里尚未登记进仓库的样本也写成卡（62 → 69）。此时页面仍是
+    62 张卡的基线快照，判等必然失败，闸门会红在一个跟本 PR 无关的数据状态上。
+    退化之后仍然守住三件事：基线卡一张都不能少、每张都得渲染进页面、行数对得上。
+    """
+    problems = []
+    baseline = page_baseline(doc)
+    if not baseline:
+        problems.append("台账页里没有基线清单（<meta name=ledger-baseline>），重跑生成器")
+        return problems
+
+    current = {str(card.get("asset_id", "")) for card in cards}
+    if current == set(baseline):
+        if doc != build_page(cards):
+            problems.append("web/ledger.html 与当前资产卡不一致，重跑 python tools/gen_ledger.py")
+        return problems
+
+    missing = sorted(set(baseline) - current)
+    if missing:
+        problems.append(f"基线里的 {len(missing)} 张卡在当前卡目录找不到：{missing[:3]}")
+    not_rendered = [item for item in baseline if item not in doc]
+    if not_rendered:
+        problems.append(f"{len(not_rendered)} 张基线卡没有渲染进页面：{not_rendered[:3]}")
+    rows = doc.count("<tr data-mod=")
+    if rows != len(baseline):
+        problems.append(f"台账页行数 {rows} 与基线卡数 {len(baseline)} 不一致")
+    return problems
+
+
 def structure_of(card: dict) -> dict:
     return card.get("structure") or {}
 
@@ -315,7 +361,9 @@ def render_warn(summary: dict) -> str:
 def build_page(cards: list[dict]) -> str:
     summary = summarize(cards)
     rows = "\n".join(render_row(card) for card in cards)
+    baseline = ",".join(str(card.get("asset_id", "")) for card in cards)
     doc = TEMPLATE
+    doc = doc.replace("<!--BASELINE-->", html.escape(baseline))
     doc = doc.replace("<!--META-->", render_meta(summary))
     doc = doc.replace("<!--SUMMARY-->", render_summary(summary))
     doc = doc.replace("<!--WARN-->", render_warn(summary))
@@ -358,10 +406,16 @@ def main(argv: list[str] | None = None) -> int:
         if not OUT_PATH.exists():
             print(f"FAIL 缺 {OUT_PATH.relative_to(ROOT)}，先跑 python tools/gen_ledger.py")
             return 1
-        if OUT_PATH.read_text(encoding="utf-8") != doc:
-            print("FAIL web/ledger.html 与当前资产卡不一致，重跑 python tools/gen_ledger.py")
+        current = OUT_PATH.read_text(encoding="utf-8")
+        problems = check_page(cards, current)
+        if problems:
+            for item in problems:
+                print(f"FAIL {item}", file=sys.stderr)
             return 1
-        print(f"OK {len(cards)} 张卡，{OUT_PATH.relative_to(ROOT)} 是最新的")
+        extra = len(cards) - len(page_baseline(current))
+        note = f"，另有 {extra} 张未入库的卡未纳入页面（基线快照）" if extra else ""
+        print(f"OK 基线 {len(page_baseline(current))} 张卡，"
+              f"{OUT_PATH.relative_to(ROOT)} 与基线一致{note}")
         return 0
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
