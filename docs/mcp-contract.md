@@ -399,7 +399,17 @@ onto_propose(asset_ids: list[str], scope: str = "") -> dict
 | `asset_ids` | list[str] | 是 | — | 要抽的资产；不存在的进 `rejected`，不中断 |
 | `scope` | str | 否 | `""` | 标注抽取范围，原样回传，仅作说明 |
 
-**只写 `pending_diff` 表，不动本体。** 低资源策略 = 约束输出空间：只允许 3 类句式模板 + 六类实体 / 八类关系；规则校验在前（类型匹配、重复、空头尾），通过的才进待审队列（`server.py:180-300`）。
+**只写 `pending_diff` 表，不动本体。** 低资源策略 = 约束输出空间：只允许 3 类句式模板 + 六类实体 / 八类关系；规则校验在前（类型匹配、重复、空头尾），通过的才进待审队列（`server.py:200-440`）。
+
+**候选按三类规则分流**，每条带 `kind`，`onto_commit` 按 kind 决定怎么写：
+
+| kind | 触发规则 | 写库动作 |
+| --- | --- | --- |
+| `new` | 文档里有、本体会没有该关系（含「别名命中」把表面词归一到 canonical id） | 新增三元组 |
+| `revise` | 本体会已有，但这次证据置信度更高、或出处不同（`was` 里记旧值） | 只提置信度 + 补 provenance，不新增行 |
+| `deprecate` | **同义关系冲突**：同一 head 同一关系下另有互为别名的 tail（`conflict` 里记保留/废弃哪个） | 目标三元组标 `status='removed'` |
+
+另有一条独立规则 **ICD-10 缺对齐**：候选里出现过的疾病节点若没有 `aligned_to_standard` 边，补一条对齐候选（`rule: "icd_missing_alignment"`，置信度 0.99）；疾病节点 id 不是 ICD-10 形态的进 `rejected`，`reason: "icd_unmapped"`。
 
 **出参**
 
@@ -410,12 +420,13 @@ onto_propose(asset_ids: list[str], scope: str = "") -> dict
 | `scope` | str | 原样回传 |
 | `candidates` | list | 候选三元组，见下 |
 | `rejected` | list | 被拒项，见下 |
-| `counts` | object | `{candidates, rejected}` |
+| `counts` | object | `{candidates, rejected, kind_new, kind_revise, kind_deprecate}` |
 
 `candidates[]` 项：
 
 ```json
 {
+  "kind": "new",
   "head": {"id": "K27", "type": "Disease", "label": "消化性溃疡"},
   "rel": "requires_exam",
   "tail": {"id": "EX-GASTRO", "type": "Exam", "label": "胃镜"},
@@ -424,17 +435,18 @@ onto_propose(asset_ids: list[str], scope: str = "") -> dict
 }
 ```
 
-`confidence` 固定 0.72（规则抽取的保守先验，等人工确认后再上调）。
+`confidence` 固定 0.72（规则抽取的保守先验，等人工确认后再上调）。`new` 的全新候选是这个值；`revise` / `deprecate` 取新旧两者的较大值，旧值记在 `was` / `conflict` 里。
 
-`rejected[]` 项两种形态，`reason` 四值之一：
+`rejected[]` 项两种形态，`reason` 六值之一：
 
 | reason | 触发行 | 含义 |
 | --- | --- | --- |
-| `asset_not_found` | `server.py:216` | 资产号不存在 |
-| `too_short` | `server.py:221` | 锚点文本 < 12 字（方案原写 30 字，2026-10-29 裁定**以 12 为准**，见 `docs/ontology-schema.md` §7） |
-| `no_pattern_match` | `server.py:246` | 锚点没有任何句式命中 |
-| `entity_unresolved` | `server.py:260` | 头或尾落不到已有节点 |
-| `duplicate` | `server.py:279` | `(head, rel, tail)` 已有 active 记录（`contraindicated_for` 反向也算重复） |
+| `asset_not_found` | `server.py:245` | 资产号不存在 |
+| `too_short` | `server.py:250` | 锚点文本 < 12 字（方案原写 30 字，2026-10-29 裁定**以 12 为准**，见 `docs/ontology-schema.md` §7） |
+| `no_pattern_match` | `server.py:275` | 锚点没有任何句式命中 |
+| `entity_unresolved` | `server.py:291` | 头或尾落不到已有节点 |
+| `duplicate` | `server.py:339` | `(head, rel, tail)` 已有 active 记录（`contraindicated_for` 反向也算重复） |
+| `icd_unmapped` | `server.py:393` | 疾病节点 id 不是 ICD-10 形态，提不了对齐边 |
 
 ```json
 {"anchor_id": "AST-2026-000137#s2.h", "reason": "too_short"}
@@ -483,31 +495,41 @@ onto_propose(asset_ids: list[str], scope: str = "") -> dict
 ### 2.5 `onto_commit` — 确认 diff 并发布新本体版本
 
 ```python
-onto_commit(diff_id: str, approve_all: bool = True,
+onto_commit(diff_id: str = "", approve_all: bool = True,
             approve_ids: list[str] = None,
-            version: str = "", note: str = "") -> dict
+            version: str = "", note: str = "", to: str = "") -> dict
 ```
+
+**两种用法**：`to` 为空 → 提交 `diff_id` 指向的待审 diff 并发布新版本；`to` 非空 → **回滚**到该已发布版本，再照常发布一个新版本（回滚也是一次发布，版本号前进）。回滚不产生待审 diff，**`diff_id` 可以不传**。
 
 **入参**
 
 | 名 | 类型 | 必填 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
-| `diff_id` | str | 是 | — | `onto_propose` 的产出 |
+| `diff_id` | str | `to` 为空时必填 | `""` | `onto_propose` 的产出 |
 | `approve_all` | bool | 否 | true | true 全收；false 时按 `approve_ids` 过滤 |
 | `approve_ids` | list[str] | 否 | null | **按 `provenance.anchor_id` 匹配**，不是按候选下标 |
 | `version` | str | 否 | `""` | 留空自动 `_bump()` 上一版 |
 | `note` | str | 否 | `""` | 留空写 `"from <diff_id>"` |
+| `to` | str | 否 | `""` | 回滚目标版本号，如 `v1.0`；快照文件不存在则报 `snapshot_not_found` |
+
+候选按 `kind` 写入：`new` 新增、`revise` 只提置信度并补 provenance（不新增行）、`deprecate` 把目标三元组标 `status='removed'` 并记 `version_removed`。schema 8 类之外的 `rel`（如待落地的 `may_cause`）一律跳过并计入 `skipped_not_in_schema`，不写进库。
 
 **出参**
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `ok` | bool | |
-| `diff_id` | str | 原样回传 |
+| `diff_id` | str | 原样回传（回滚时为 `""`） |
 | `version` | str | 发布后的版本号 |
 | `added` | int | 真正新增的三元组数（重复的只更新 confidence，不计入） |
+| `revised` | int | 按 `revise` 更新的条数 |
+| `deprecated` | int | 按 `deprecate` 标废弃的条数 |
+| `skipped_not_in_schema` | int | `rel` 不在 8 类里、被跳过的条数 |
 | `snapshot` | object | 见下 |
 | `previous` | str \| null | 上一版版本号 |
+
+回滚时额外回 `target`（回滚到哪个版本）、`revived`（复活条数）、`removed`（标移除条数），其余字段同上。
 
 `snapshot`：
 

@@ -109,15 +109,25 @@ json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8",
 
     # 台账入库完再把本体长出来：单文档长不出跨文档取证，另四份样例的
     # 疾病/科室/检查按文档写明的关系进三元组（mcp-server/ontology_grow.py）
+    import ontology_extend  # noqa: PLC0415
     import ontology_grow  # noqa: PLC0415
 
     con = sqlite3.connect(str(DB))
     con.row_factory = sqlite3.Row
     grown = ontology_grow.grow(con)
     con.commit()
+    # v0.9 到此为止：37 条冻结基线，不再往这个版本里加东西。
+    # 之后长出来的关系属于 v1.0——表格与指南里写着、但 pathway 摘要没有的边
+    # （首选/次选检查、以某检查确诊、首选药物），见 mcp-server/ontology_extend.py。
+    # 写进 v1.0 而不是 v0.9：否则 v0.9 快照会被改写，「37」这个基线就不可复现了。
+    ext = ontology_extend.grow(con, "v1.0")
+    con.commit()
     con.close()
     print("  跨文档本体:", grown["docs"], "份文档 /", grown["triples"], "条新三元组",
           grown["skipped"] or "")
+    print("  表格与指南:", ext["triples"], "条新三元组（重复跳过", ext["duplicate"], "条）")
+    if ext["unresolved"]:
+        print("  写不出实体（等对齐）:", len(ext["unresolved"]), "处")
     odd = [(n, m) for n, m in mapping.items() if (n.endswith((".csv", ".xlsx")) and m != "table")]
     if odd:
         print("  ⚠ 表格类但模态不是 table:", odd)
