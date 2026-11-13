@@ -88,6 +88,7 @@ REQUIRED = [
     "mcp-server/parsers.py",
     "tests/test_pdf_parser.py",
     "web/trace.html",
+    "web/ledger.html",
     "agent/prompt.md",
     "agent/config.json",
     "agent/README.md",

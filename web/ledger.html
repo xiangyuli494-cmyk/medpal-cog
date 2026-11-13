@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>资产台账 · medpal-cog</title>
+<meta name="ledger-baseline" content="AST-2026-000137,AST-2026-01c2da,AST-2026-056a4d,AST-2026-06f336,AST-2026-0eda3b,AST-2026-0f9f8b,AST-2026-118938,AST-2026-16bfc2,AST-2026-1ebfd0,AST-2026-21c98f,AST-2026-2f0e5c,AST-2026-2f30d4,AST-2026-2fb4f5,AST-2026-36bc6a,AST-2026-3a2442,AST-2026-3b9554,AST-2026-3fe0e1,AST-2026-45ffe8,AST-2026-48dc79,AST-2026-49ab13,AST-2026-4ade3c,AST-2026-53628f,AST-2026-5c1c10,AST-2026-5c2a0d,AST-2026-5e24f3,AST-2026-6edb70,AST-2026-714881,AST-2026-74ced1,AST-2026-76721b,AST-2026-78ca03,AST-2026-7aa855,AST-2026-7e430e,AST-2026-833a2d,AST-2026-846aa5,AST-2026-9148ed,AST-2026-920f74,AST-2026-92fc84,AST-2026-94703d,AST-2026-958800,AST-2026-9b12f0,AST-2026-9ebfa9,AST-2026-9efdfa,AST-2026-a44b2e,AST-2026-a633c3,AST-2026-a98a2a,AST-2026-b402c0,AST-2026-b906f0,AST-2026-c5bcca,AST-2026-c6e880,AST-2026-c87d1e,AST-2026-d24360,AST-2026-d7148d,AST-2026-d84ce4,AST-2026-e5300e,AST-2026-e7792c,AST-2026-ec38e2,AST-2026-ed411d,AST-2026-ee86e9,AST-2026-f1d0ff,AST-2026-f712c4,AST-2026-fcea9a,AST-2026-fd2074">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+body { background: #f4f7fa; padding: 24px; color: #222; }
+.container { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+.sub { font-size: 13.5px; color: #666; margin-bottom: 18px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.chip { background: #fff; border-radius: 8px; padding: 12px 16px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.chip .k { font-size: 12.5px; color: #888; }
+.chip .v { font-size: 22px; font-weight: 600; margin-top: 2px; }
+.chip .v.red { color: #cf1322; }
+.bar { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;
+       box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap;
+       gap: 8px; align-items: center; font-size: 14px; }
+.bar input[type=text] { flex: 1 1 240px; min-width: 200px; padding: 7px 10px;
+       border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; }
+.btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px;
+       padding: 6px 12px; font-size: 13.5px; cursor: pointer; color: #444; }
+.btn.on { background: #1677ff; border-color: #1677ff; color: #fff; }
+.bar label { display: flex; align-items: center; gap: 5px; color: #555; }
+.bar .shown { margin-left: auto; color: #888; font-size: 13px; }
+.warn-box { background: #fff2f2; border: 1px solid #ffccc7; border-radius: 8px;
+            padding: 14px 18px; margin-bottom: 16px; }
+.warn-box h2 { font-size: 16px; color: #cf1322; margin-bottom: 8px; }
+.warn-box li { font-size: 13.5px; color: #a8071a; margin: 4px 0 4px 18px; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px;
+        overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-size: 13.5px; }
+thead th { background: #fafbfd; text-align: left; padding: 11px 12px; font-weight: 600;
+           color: #333; border-bottom: 1px solid #e8ecf2; white-space: nowrap; }
+tbody td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; vertical-align: top; }
+tbody tr.bad { background: #fffafa; }
+.mono { font-family: Consolas, monospace; font-size: 12.5px; }
+.muted { color: #888; font-size: 12.5px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px;
+         font-size: 12px; white-space: nowrap; }
+.badge.text { background: #e8f3ff; color: #0958d9; }
+.badge.table { background: #eaf7ee; color: #237804; }
+.badge.image_report { background: #f9f0ff; color: #722ed1; }
+.badge.pdf_text { background: #fff7e6; color: #ad6800; }
+.badge.other { background: #f2f2f2; color: #595959; }
+.num0 { color: #cf1322; font-weight: 600; }
+.foot { margin-top: 18px; font-size: 12.5px; color: #888; line-height: 1.7; }
+.foot code { font-family: Consolas, monospace; background: #eef1f5; padding: 1px 5px;
+             border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>资产台账 · medpal-cog</h1>
+<p class="sub">共 62 份（文本 21、表格 20、图文 20、PDF文本 1）；锚点合计 204 个。本页只读资产卡，不含解析与检索逻辑。</p>
+<div class="chips">
+  <div class="chip"><div class="k">资产卡</div><div class="v">62</div></div>
+  <div class="chip"><div class="k">锚点合计</div><div class="v">204</div></div>
+  <div class="chip"><div class="k">文本</div><div class="v">21</div></div>
+  <div class="chip"><div class="k">表格</div><div class="v">20</div></div>
+  <div class="chip"><div class="k">图文</div><div class="v">20</div></div>
+  <div class="chip"><div class="k">PDF文本</div><div class="v">1</div></div>
+  <div class="chip"><div class="k">知识库 ready</div><div class="v">62</div></div>
+  <div class="chip"><div class="k">告警</div><div class="v red">21</div></div>
+</div>
+<div class="warn-box">
+  <h2>告警</h2>
+  <ul>
+    <li>识别实体为空：AST-2026-01c2da、AST-2026-056a4d、AST-2026-0eda3b、AST-2026-21c98f、AST-2026-2f0e5c、AST-2026-36bc6a…… 共 21 张（下表红色行可逐条看）</li>
+    <li>61 / 62 张卡的 source.path 是本机绝对路径（页面上已归一成仓库相对路径显示）。这是数据面待修的坑：别人 clone 下来锚点溯源会断链，修复点在写卡的 `mcp-server/server.py`。</li>
+  </ul>
+</div>
+<div class="bar">
+  <input type="text" id="q" placeholder="搜资产号 / 标题 / 实体" autocomplete="off">
+  <button class="btn on" data-mod="all">全部</button>
+  <button class="btn" data-mod="text">文本</button>
+  <button class="btn" data-mod="table">表格</button>
+  <button class="btn" data-mod="image_report">图文</button>
+  <button class="btn" data-mod="pdf_text">PDF文本</button>
+  <label><input type="checkbox" id="warnOnly">只看告警</label>
+  <span class="shown" id="shown"></span>
+</div>
+<table id="ledger">
+  <thead>
+    <tr>
+      <th>资产号</th><th>标题</th><th>模态</th><th>来源</th>
+      <th>锚点</th><th>实体</th><th>知识库</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-000137 消化性溃疡临床路径（2023 版）摘要 text data/samples/pathway_k27.md 消化性溃疡 上腹隐痛 胃镜 幽门螺杆菌 布洛芬"><td class="mono">AST-2026-000137</td><td>消化性溃疡临床路径（2023 版）摘要</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/pathway_k27.md</span></td><td class="mono">15</td><td>消化性溃疡、上腹隐痛、胃镜、幽门螺杆菌、布洛芬</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-01c2da 合成门诊病历 02 image_report data/samples/image/bingli_02.png "><td class="mono">AST-2026-01c2da</td><td>合成门诊病历 02</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_02.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-056a4d 合成门诊病历 06 image_report data/samples/image/bingli_06.png "><td class="mono">AST-2026-056a4d</td><td>合成门诊病历 06</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_06.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-06f336 门诊记录 11 table data/samples/table/menzhen_11.csv 高血压"><td class="mono">AST-2026-06f336</td><td>门诊记录 11</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_11.csv</span></td><td class="mono">1</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-0eda3b 合成门诊病历 12 image_report data/samples/image/bingli_12.png "><td class="mono">AST-2026-0eda3b</td><td>合成门诊病历 12</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_12.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-0f9f8b 肾结石临床路径摘要（合成样例 19） text data/samples/text/pathway_19.md 结石"><td class="mono">AST-2026-0f9f8b</td><td>肾结石临床路径摘要（合成样例 19）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_19.md</span></td><td class="mono">7</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-118938 肺炎临床路径摘要（合成样例 3） text data/samples/text/pathway_03.md 肺炎"><td class="mono">AST-2026-118938</td><td>肺炎临床路径摘要（合成样例 3）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_03.md</span></td><td class="mono">7</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-16bfc2 2型糖尿病临床路径摘要（合成样例 12） text data/samples/text/pathway_12.md 糖尿病"><td class="mono">AST-2026-16bfc2</td><td>2型糖尿病临床路径摘要（合成样例 12）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_12.md</span></td><td class="mono">7</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-1ebfd0 高血压病临床路径摘要（合成样例 16） text data/samples/text/pathway_16.md 高血压"><td class="mono">AST-2026-1ebfd0</td><td>高血压病临床路径摘要（合成样例 16）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_16.md</span></td><td class="mono">7</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-21c98f 合成门诊病历 11 image_report data/samples/image/bingli_11.png "><td class="mono">AST-2026-21c98f</td><td>合成门诊病历 11</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_11.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-2f0e5c 合成门诊病历 14 image_report data/samples/image/bingli_14.png "><td class="mono">AST-2026-2f0e5c</td><td>合成门诊病历 14</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_14.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-2f30d4 门诊记录 19 table data/samples/table/menzhen_19.csv 结石"><td class="mono">AST-2026-2f30d4</td><td>门诊记录 19</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_19.csv</span></td><td class="mono">1</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-2fb4f5 门诊记录 06 table data/samples/table/menzhen_06.csv 高血压"><td class="mono">AST-2026-2fb4f5</td><td>门诊记录 06</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_06.csv</span></td><td class="mono">1</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-36bc6a 合成门诊病历 04 image_report data/samples/image/bingli_04.png "><td class="mono">AST-2026-36bc6a</td><td>合成门诊病历 04</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_04.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-3a2442 合成门诊病历 20 image_report data/samples/image/bingli_20.png "><td class="mono">AST-2026-3a2442</td><td>合成门诊病历 20</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_20.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-3b9554 合成门诊病历 19 image_report data/samples/image/bingli_19.png "><td class="mono">AST-2026-3b9554</td><td>合成门诊病历 19</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_19.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-3fe0e1 门诊记录 03 table data/samples/table/menzhen_03.csv 肺炎"><td class="mono">AST-2026-3fe0e1</td><td>门诊记录 03</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_03.csv</span></td><td class="mono">1</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-45ffe8 门诊记录 08 table data/samples/table/menzhen_08.csv 肺炎"><td class="mono">AST-2026-45ffe8</td><td>门诊记录 08</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_08.csv</span></td><td class="mono">1</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-48dc79 合成门诊病历 08 image_report data/samples/image/bingli_08.png "><td class="mono">AST-2026-48dc79</td><td>合成门诊病历 08</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_08.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-49ab13 门诊记录 09 table data/samples/table/menzhen_09.csv 结石"><td class="mono">AST-2026-49ab13</td><td>门诊记录 09</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_09.csv</span></td><td class="mono">1</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-4ade3c 肾结石临床路径摘要（合成样例 14） text data/samples/text/pathway_14.md 结石"><td class="mono">AST-2026-4ade3c</td><td>肾结石临床路径摘要（合成样例 14）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_14.md</span></td><td class="mono">7</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-53628f 门诊记录 04 table data/samples/table/menzhen_04.csv 结石"><td class="mono">AST-2026-53628f</td><td>门诊记录 04</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_04.csv</span></td><td class="mono">1</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-5c1c10 合成门诊病历 09 image_report data/samples/image/bingli_09.png "><td class="mono">AST-2026-5c1c10</td><td>合成门诊病历 09</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_09.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-5c2a0d 消化性溃疡临床路径摘要（合成样例 5） text data/samples/text/pathway_05.md 消化性溃疡 消化内科 胃镜 幽门螺杆菌"><td class="mono">AST-2026-5c2a0d</td><td>消化性溃疡临床路径摘要（合成样例 5）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_05.md</span></td><td class="mono">7</td><td>消化性溃疡、消化内科、胃镜、幽门螺杆菌</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-5e24f3 门诊记录 18 table data/samples/table/menzhen_18.csv 肺炎"><td class="mono">AST-2026-5e24f3</td><td>门诊记录 18</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_18.csv</span></td><td class="mono">1</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-6edb70 高血压病临床路径摘要（合成样例 6） text data/samples/text/pathway_06.md 高血压"><td class="mono">AST-2026-6edb70</td><td>高血压病临床路径摘要（合成样例 6）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_06.md</span></td><td class="mono">7</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-714881 门诊记录 02 table data/samples/table/menzhen_02.csv 糖尿病"><td class="mono">AST-2026-714881</td><td>门诊记录 02</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_02.csv</span></td><td class="mono">1</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-74ced1 门诊记录 05 table data/samples/table/menzhen_05.csv 消化性溃疡 消化内科 胃镜"><td class="mono">AST-2026-74ced1</td><td>门诊记录 05</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_05.csv</span></td><td class="mono">1</td><td>消化性溃疡、消化内科、胃镜</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-76721b 高血压病临床路径摘要（合成样例 11） text data/samples/text/pathway_11.md 高血压"><td class="mono">AST-2026-76721b</td><td>高血压病临床路径摘要（合成样例 11）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_11.md</span></td><td class="mono">7</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-78ca03 消化性溃疡临床路径摘要（合成样例 10） text data/samples/text/pathway_10.md 消化性溃疡 消化内科 胃镜 幽门螺杆菌"><td class="mono">AST-2026-78ca03</td><td>消化性溃疡临床路径摘要（合成样例 10）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_10.md</span></td><td class="mono">7</td><td>消化性溃疡、消化内科、胃镜、幽门螺杆菌</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-7aa855 门诊记录 12 table data/samples/table/menzhen_12.csv 糖尿病"><td class="mono">AST-2026-7aa855</td><td>门诊记录 12</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_12.csv</span></td><td class="mono">1</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="pdf_text" data-warn="0" data-text="ast-2026-7e430e test_guide_01 01 pdf_text data/samples/pdf/test_guide_01.pdf 上腹隐痛 烧心 消化内科 胃镜 幽门螺杆菌"><td class="mono">AST-2026-7e430e</td><td>test_guide_01 01</td><td><span class="badge pdf_text">PDF文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/pdf/test_guide_01.pdf</span></td><td class="mono">6</td><td>上腹隐痛、烧心、消化内科、胃镜、幽门螺杆菌</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-833a2d 高血压病临床路径摘要（合成样例 1） text data/samples/text/pathway_01.md 高血压"><td class="mono">AST-2026-833a2d</td><td>高血压病临床路径摘要（合成样例 1）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_01.md</span></td><td class="mono">7</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-846aa5 消化性溃疡临床路径摘要（合成样例 15） text data/samples/text/pathway_15.md 消化性溃疡 消化内科 胃镜 幽门螺杆菌"><td class="mono">AST-2026-846aa5</td><td>消化性溃疡临床路径摘要（合成样例 15）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_15.md</span></td><td class="mono">7</td><td>消化性溃疡、消化内科、胃镜、幽门螺杆菌</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-9148ed 合成门诊病历 07 image_report data/samples/image/bingli_07.png "><td class="mono">AST-2026-9148ed</td><td>合成门诊病历 07</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_07.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-920f74 合成门诊病历 17 image_report data/samples/image/bingli_17.png "><td class="mono">AST-2026-920f74</td><td>合成门诊病历 17</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_17.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-92fc84 合成门诊病历 18 image_report data/samples/image/bingli_18.png "><td class="mono">AST-2026-92fc84</td><td>合成门诊病历 18</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_18.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-94703d 2型糖尿病临床路径摘要（合成样例 7） text data/samples/text/pathway_07.md 糖尿病"><td class="mono">AST-2026-94703d</td><td>2型糖尿病临床路径摘要（合成样例 7）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_07.md</span></td><td class="mono">7</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-958800 门诊记录 01 table data/samples/table/menzhen_01.csv 高血压"><td class="mono">AST-2026-958800</td><td>门诊记录 01</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_01.csv</span></td><td class="mono">1</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-9b12f0 2型糖尿病临床路径摘要（合成样例 17） text data/samples/text/pathway_17.md 糖尿病"><td class="mono">AST-2026-9b12f0</td><td>2型糖尿病临床路径摘要（合成样例 17）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_17.md</span></td><td class="mono">7</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-9ebfa9 合成门诊病历 13 image_report data/samples/image/bingli_13.png "><td class="mono">AST-2026-9ebfa9</td><td>合成门诊病历 13</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_13.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-9efdfa 合成门诊病历 01 image_report data/samples/image/bingli_01.png "><td class="mono">AST-2026-9efdfa</td><td>合成门诊病历 01</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_01.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-a44b2e 合成门诊病历 15 image_report data/samples/image/bingli_15.png "><td class="mono">AST-2026-a44b2e</td><td>合成门诊病历 15</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_15.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-a633c3 合成门诊病历 03 image_report data/samples/image/bingli_03.png "><td class="mono">AST-2026-a633c3</td><td>合成门诊病历 03</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_03.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-a98a2a 门诊记录 13 table data/samples/table/menzhen_13.csv 肺炎"><td class="mono">AST-2026-a98a2a</td><td>门诊记录 13</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_13.csv</span></td><td class="mono">1</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-b402c0 肺炎临床路径摘要（合成样例 13） text data/samples/text/pathway_13.md 肺炎"><td class="mono">AST-2026-b402c0</td><td>肺炎临床路径摘要（合成样例 13）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_13.md</span></td><td class="mono">7</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-b906f0 合成门诊病历 05 image_report data/samples/image/bingli_05.png "><td class="mono">AST-2026-b906f0</td><td>合成门诊病历 05</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_05.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-c5bcca 门诊记录 10 table data/samples/table/menzhen_10.csv 消化性溃疡 消化内科 胃镜"><td class="mono">AST-2026-c5bcca</td><td>门诊记录 10</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_10.csv</span></td><td class="mono">1</td><td>消化性溃疡、消化内科、胃镜</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-c6e880 肾结石临床路径摘要（合成样例 9） text data/samples/text/pathway_09.md 结石"><td class="mono">AST-2026-c6e880</td><td>肾结石临床路径摘要（合成样例 9）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_09.md</span></td><td class="mono">7</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="1" data-text="ast-2026-c87d1e 检验参考区间 table data/samples/table/reference_ranges.xlsx "><td class="mono">AST-2026-c87d1e</td><td>检验参考区间</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/reference_ranges.xlsx</span></td><td class="mono">4</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-d24360 消化性溃疡临床路径摘要（合成样例 20） text data/samples/text/pathway_20.md 消化性溃疡 消化内科 胃镜 幽门螺杆菌"><td class="mono">AST-2026-d24360</td><td>消化性溃疡临床路径摘要（合成样例 20）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_20.md</span></td><td class="mono">7</td><td>消化性溃疡、消化内科、胃镜、幽门螺杆菌</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-d7148d 合成门诊病历 10 image_report data/samples/image/bingli_10.png "><td class="mono">AST-2026-d7148d</td><td>合成门诊病历 10</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_10.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="image_report" data-warn="1" data-text="ast-2026-d84ce4 合成门诊病历 16 image_report data/samples/image/bingli_16.png "><td class="mono">AST-2026-d84ce4</td><td>合成门诊病历 16</td><td><span class="badge image_report">图文</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/image/bingli_16.png</span></td><td class="mono">1</td><td>（无）</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-e5300e 肾结石临床路径摘要（合成样例 4） text data/samples/text/pathway_04.md 结石"><td class="mono">AST-2026-e5300e</td><td>肾结石临床路径摘要（合成样例 4）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_04.md</span></td><td class="mono">7</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-e7792c 2型糖尿病临床路径摘要（合成样例 2） text data/samples/text/pathway_02.md 糖尿病"><td class="mono">AST-2026-e7792c</td><td>2型糖尿病临床路径摘要（合成样例 2）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_02.md</span></td><td class="mono">7</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-ec38e2 肺炎临床路径摘要（合成样例 8） text data/samples/text/pathway_08.md 肺炎"><td class="mono">AST-2026-ec38e2</td><td>肺炎临床路径摘要（合成样例 8）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_08.md</span></td><td class="mono">7</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-ed411d 门诊记录 17 table data/samples/table/menzhen_17.csv 糖尿病"><td class="mono">AST-2026-ed411d</td><td>门诊记录 17</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_17.csv</span></td><td class="mono">1</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-ee86e9 门诊记录 14 table data/samples/table/menzhen_14.csv 结石"><td class="mono">AST-2026-ee86e9</td><td>门诊记录 14</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_14.csv</span></td><td class="mono">1</td><td>结石</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-f1d0ff 门诊记录 15 table data/samples/table/menzhen_15.csv 消化性溃疡 消化内科 胃镜"><td class="mono">AST-2026-f1d0ff</td><td>门诊记录 15</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_15.csv</span></td><td class="mono">1</td><td>消化性溃疡、消化内科、胃镜</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="text" data-warn="0" data-text="ast-2026-f712c4 肺炎临床路径摘要（合成样例 18） text data/samples/text/pathway_18.md 肺炎"><td class="mono">AST-2026-f712c4</td><td>肺炎临床路径摘要（合成样例 18）</td><td><span class="badge text">文本</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/text/pathway_18.md</span></td><td class="mono">7</td><td>肺炎</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-fcea9a 门诊记录 07 table data/samples/table/menzhen_07.csv 糖尿病"><td class="mono">AST-2026-fcea9a</td><td>门诊记录 07</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_07.csv</span></td><td class="mono">1</td><td>糖尿病</td><td><span class="mono">ready</span></td></tr>
+    <tr data-mod="table" data-warn="0" data-text="ast-2026-fd2074 门诊记录 16 table data/samples/table/menzhen_16.csv 高血压"><td class="mono">AST-2026-fd2074</td><td>门诊记录 16</td><td><span class="badge table">表格</span></td><td><span class="mono">synthetic</span><br><span class="muted mono">data/samples/table/menzhen_16.csv</span></td><td class="mono">1</td><td>高血压</td><td><span class="mono">ready</span></td></tr>
+  </tbody>
+</table>
+<div class="foot">
+  数据来源 <code>data/asset-cards/*.json</code>，本页由
+  <code>python tools/gen_ledger.py</code> 生成，不要手改。
+  校验 <code>python tools/gen_ledger.py --check</code>。
+  同一份输入重复生成逐字节一致；卡里若写着本机绝对路径，生成器会中断并报出是哪张卡。
+</div>
+</div>
+<script>
+var rows = Array.prototype.slice.call(document.querySelectorAll('#ledger tbody tr'));
+var mod = 'all';
+var btnList = Array.prototype.slice.call(document.querySelectorAll('.btn'));
+function apply() {
+  var q = document.getElementById('q').value.trim().toLowerCase();
+  var warnOnly = document.getElementById('warnOnly').checked;
+  var shown = 0;
+  rows.forEach(function (r) {
+    var okMod = (mod === 'all') || (r.getAttribute('data-mod') === mod);
+    var okQ = !q || r.getAttribute('data-text').indexOf(q) !== -1;
+    var okWarn = !warnOnly || r.getAttribute('data-warn') === '1';
+    var show = okMod && okQ && okWarn;
+    r.style.display = show ? '' : 'none';
+    if (show) { shown += 1; }
+  });
+  document.getElementById('shown').textContent = '显示 ' + shown + ' / ' + rows.length;
+}
+btnList.forEach(function (b) {
+  b.addEventListener('click', function () {
+    mod = b.getAttribute('data-mod');
+    btnList.forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    apply();
+  });
+});
+document.getElementById('q').addEventListener('input', apply);
+document.getElementById('warnOnly').addEventListener('change', apply);
+apply();
+</script>
+</body>
+</html>
