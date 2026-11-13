@@ -26,7 +26,7 @@ def test_ledger_matches_cards_or_covers_baseline():
     cards = gen_ledger.load_cards()
     current = gen_ledger.OUT_PATH.read_text(encoding="utf-8")
     problems = gen_ledger.check_page(cards, current)
-    assert problems == [], "；".join(problems) + "（重跑 python tools/gen_ledger.py）"
+    assert problems == [], "；".join(problems)
 
 
 def test_ledger_covers_every_baseline_card():
