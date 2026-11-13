@@ -186,8 +186,16 @@ def main(argv: list[str]) -> int:
 
     # 判定必须建立在「按当前代码重建的库」上：读一份过期的本地库，
     # 会把「代码没问题、库没重建」报成结构不变量失败。
+    #
+    # 第三步 publish.py：W2 闸门要求 version 表 ≥2 行（v0.9 + v1.0）、且 v1.0 有快照文件。
+    # 只跑 seed + ingest 时流水线长出来的关系是「已入 triples 表、但没发布成版本」，
+    # v1.0 就永远不存在——这一步把它正式定格，`diff_versions(v0.9,v1.0)` 才有得回放。
     if not args.no_seed:
-        for step in (["mcp-server/seed.py", "--reset"], ["tools/ingest_all.py"]):
+        for step in (
+            ["mcp-server/seed.py", "--reset"],
+            ["tools/ingest_all.py"],
+            ["mcp-server/publish.py", "--version", "v1.0", "--note", "W2 本体：表格与指南抽取"],
+        ):
             sd = run([PY, *step])
             if sd.returncode != 0:
                 print(f"[FAIL] 建库失败：{step[0]} → {tail(sd)}")
