@@ -18,6 +18,7 @@
 | 知道自己那几项怎么算过 | [任务卡-三人版.md](任务卡-三人版.md) |
 | 提交前自查 | [rules.md](rules.md) |
 | 评审怎么讲 | [judge-guide.md](judge-guide.md) |
+| 看 62 张资产卡到底长什么样 | [../web/ledger.html](../web/ledger.html)（双击可开，生成与校验 `python tools/gen_ledger.py --check`） |
 | 交接给下一个人 | [handoff/TEMPLATE.md](handoff/TEMPLATE.md)；已填样例：[handoff/W1-T2-本体差分与两跳抽检.md](handoff/W1-T2-本体差分与两跳抽检.md) |
 | 看这周到底交了啥、数字对不对得上 | [handoff/W1-周报-2026-11-08.md](handoff/W1-周报-2026-11-08.md)（数字看板 + R1–R5 对照 + 返工教训） |
 | 这个仓怎么来的 | [adr/ADR-001-仓库拆分与历史迁移.md](adr/ADR-001-仓库拆分与历史迁移.md)、[migration.md](migration.md)（含第二批：旧仓未合并分支怎么搬的） |
