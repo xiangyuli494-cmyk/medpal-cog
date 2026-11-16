@@ -1,6 +1,6 @@
 {
   "name": "medpal-cog",
-  "version": "v0",
+  "version": "v1",
   "description": "门诊主诉 → 跨文档取证 → 科室与检查建议（可进化决策智能体）",
   "prompt_file": "agent/prompt.md",
   "mcp": {
@@ -47,7 +47,7 @@
   },
   "limits": {
     "max_rounds": 4,
-    "max_hops": 2,
+    "max_hops": 3,
     "min_evidence_per_claim": 2,
     "low_confidence_threshold": 0.5
   },
