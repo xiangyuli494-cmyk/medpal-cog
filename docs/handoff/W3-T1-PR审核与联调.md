@@ -41,9 +41,11 @@
 
 ## 3 环境恢复后执行
 
-当前 Windows HypervisorPresent=False，Docker daemon 不可用，控制台 :3000 拒绝连接。
-交接记录显示已设 hypervisorlaunchtype=auto、尚需重启；本会话没有重启电脑。
-本次读取 BCD 配置被权限拒绝，未修改启动配置。
+11/16 的 Hypervisor/Docker 故障已在用户重启后恢复。11/17 实测 HypervisorPresent=True，
+14 容器运行，:3000 HTTP 200，容器内 MCP initialize 成功。三个 Skill 已上传并挂载，
+v1 提示词已应用到 agent_id=2 草稿，工具白名单为 10 个。
+真实常态调用返回 model_authentication_error，模型连通检查为 false；下一步先修复模型凭据。
+[原始复核摘要](evidence/W3-T1-platform-recovery-2026-11-17.json) 保留失败状态，不作为成功 Skill 会话。
 
 1. 保存工作并重启后验证 `HypervisorPresent`，启动 Docker Desktop 与既有 Nexent。
 2. 验 M-1：`docker ps --format "{{.Names}} {{.Status}}"`，≥13 个目标容器运行。
