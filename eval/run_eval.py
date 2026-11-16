@@ -187,6 +187,12 @@ def answer(conn, question: str, max_hops: int = 2):
             if st.get("provenance"):
                 ev.append(store._ref_str(st["provenance"]))
 
+    # 问题里只点名了科室、没有任何临床实体（疾病/症状/检查/药）时，不做定科回显：
+    # 「体检发现甲状腺结节，需要看消化内科吗」里的「消化内科」是被问的对象，不是结论的依据。
+    # 不加这一条，任何提到「消化内科」的负样本都会被回显成「消化内科」，假阳性。
+    if set(seed_types) <= {"Department"}:
+        depts, exams, conflicts = [], [], []
+
     steps.append({"i": 4, "op": "conflict_check", "out": sorted(set(conflicts)), "evidence": []})
     # 科室不能只看第一跳：多跳路径里同一个科室会重复出现，取出现次数最多的那个
     dept = max(set(depts), key=depts.count) if depts else ""
