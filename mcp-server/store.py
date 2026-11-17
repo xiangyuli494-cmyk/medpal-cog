@@ -534,26 +534,36 @@ def _ref_str(e):
 
 
 def write_trace(conn, question, steps, agent_version="v1.0", elapsed_ms=0, gaps=None):
-    tid = "TR-" + datetime.now(CST).strftime("%Y%m%d") + "-" + uuid.uuid4().hex[:4].upper()
     cur = current_version(conn)
     onto = cur["version"] if cur else "v0.9"
-    conn.execute(
-        "INSERT INTO trace "
-        "(trace_id,question,agent_version,ontology_version,steps_json,gaps_json,"
-        "elapsed_ms,created_at) "
-        "VALUES (?,?,?,?,?,?,?,?)",
-        (
-            tid,
-            question,
-            agent_version,
-            onto,
-            json.dumps(steps, ensure_ascii=False),
-            json.dumps(gaps or [], ensure_ascii=False),
-            int(elapsed_ms),
-            now(),
-        ),
-    )
-    conn.commit()
+    # trace_id 的格式（TR-<yyyymmdd>-<4位hex大写>）已在 docs/mcp-contract.md 冻结，
+    # 但 4 位 hex 只有 65536 种，一天写 30 条以上就会随机撞上 UNIQUE 冲突
+    # （跑全量测试时实际撞过一次）。格式不能改，撞了就换一个随机串重试。
+    for _ in range(8):
+        tid = "TR-" + datetime.now(CST).strftime("%Y%m%d") + "-" + uuid.uuid4().hex[:4].upper()
+        try:
+            conn.execute(
+                "INSERT INTO trace "
+                "(trace_id,question,agent_version,ontology_version,steps_json,gaps_json,"
+                "elapsed_ms,created_at) "
+                "VALUES (?,?,?,?,?,?,?,?)",
+                (
+                    tid,
+                    question,
+                    agent_version,
+                    onto,
+                    json.dumps(steps, ensure_ascii=False),
+                    json.dumps(gaps or [], ensure_ascii=False),
+                    int(elapsed_ms),
+                    now(),
+                ),
+            )
+            conn.commit()
+            break
+        except sqlite3.IntegrityError:
+            conn.rollback()
+    else:
+        raise RuntimeError("trace_id 连续 8 次撞人（同一天同一四位数），库里 trace 太多")
 
     cited = []
     for s in steps:

@@ -58,11 +58,19 @@ jobs:
       - run: python mcp-server/seed.py --reset
       - name: Walking Skeleton 通电
         run: python skeleton.py
-      - name: 离线评测
+      - name: 离线评测（v0 基线 20 条）
         run: python eval/run_eval.py
+      # v1 是 W3 的交付数据集（30 条）。之前 pipeline 只跑 v0，
+      # 「CI 三绿」并不覆盖这个 PR 的核心改动。这里把 v1 也跑出来：
+      # 只打印六项分数、不做门禁——证据召回受本体锚点覆盖限制（交接单 §6），
+      # 门禁在 tools/acceptance.py --stage w3 里，由 T1 按口径决定什么时候收紧。
+      - name: 离线评测（v1 30 条，含证据召回真值）
+        run: python eval/run_eval.py --dataset eval/dataset/v1.jsonl --out tmp/eval-v1
       - name: 评测报告留档
         uses: actions/upload-artifact@v4
         with:
           name: eval-report
-          path: eval/reports/
+          path: |
+            eval/reports/
+            tmp/eval-v1/
           if-no-files-found: warn
