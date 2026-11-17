@@ -8,7 +8,8 @@
 tmp
 eval/reports
 mcp-server/reports
-data/asset-cards
+# 不要排除 data/asset-cards：容器首次启动要跑 tools/ingest_all.py 重建台账，
+# 目录被排除时这张卡写不回去（上级目录不存在直接抛异常），容器会起不来。
 docs
 *.md
 !deploy/README.md
