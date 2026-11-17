@@ -90,7 +90,11 @@ def seed_weight(conn, seed_ids: set[str]) -> dict[str, float]:
 
 
 def answer(conn, question: str, max_hops: int = 2):
-    """一次问答的确定性实现：实体 -> 归一 -> 多跳 -> 结论。对应 S3 的前四步。"""
+    """一次问答的确定性实现：实体 -> 归一 -> 多跳 -> 结论。对应 S3 的前四步。
+
+    max_hops 必须由调用方按 dataset 的 `hops` 字段传进来：默认 2 会让声明 3 跳的题
+    永远走不到第三跳，而报告上五项分数照样满分，看不出差别。
+    """
     t0 = time.time()
     steps: list[dict] = []
     ents = extract_entities(question)
@@ -114,6 +118,16 @@ def answer(conn, question: str, max_hops: int = 2):
             ],
         }
     )
+
+    # 最长路径的跳数与它跨了几份文档：这两项以前根本没被算过，
+    # 「三跳已验收」的说法没有任何依据。放在这里算，谁调用 answer 都能核对。
+    paths = q.get("paths", [])
+    longest = max(paths, key=lambda p: (p.get("hops", 0), p.get("score", 0.0))) if paths else None
+    path_assets: list[str] = []
+    for pv in (longest or {}).get("provenance", []) or []:
+        asset = pv.get("asset_id") if isinstance(pv, dict) else None
+        if asset and asset not in path_assets:
+            path_assets.append(asset)
 
     # 先定「焦点疾病」：问题里提到的症状所指向的疾病。结论只从这个焦点往上长，
     # 否则会把本体里所有疾病的所有检查项一起倒给患者——那是清单不是决策。
@@ -266,15 +280,25 @@ def answer(conn, question: str, max_hops: int = 2):
         "trace_id": tr["trace_id"],
         "trace_completeness": tr["trace_completeness"],
         "elapsed_ms": int((time.time() - t0) * 1000),
+        "path_hops": longest["hops"] if longest else 0,
+        "path_assets": len(path_assets),
     }
 
 
-def score_one(gold: dict, got: dict, gold_evidence: list[str] | None = None) -> dict:
+def score_one(
+    gold: dict,
+    got: dict,
+    gold_evidence: list[str] | None = None,
+    gold_hops: int | None = None,
+) -> dict:
     """单题打分。evidence 用 None 表示「这题不该进证据召回的分母」。
 
     gold_evidence 必须由调用方显式传进来：它写在 dataset 每行的顶层，
     不在 gold 里。之前这里读 gold.get("gold_evidence") 恒为空集，
     于是 evidence 永远返回 1.0——那是空除以空，什么都没测到。
+
+    gold_hops 同理显式传：dataset 每行声明了 `hops`（0/2/3），不传就退回 2，
+    声明 3 跳的题永远走不到第三跳，而分数看不出来——和上面那个空满分母是同一类错。
     """
     if gold.get("out_of_scope"):
         ok = got["dept"] == ""
@@ -286,6 +310,8 @@ def score_one(gold: dict, got: dict, gold_evidence: list[str] | None = None) -> 
             # 负例没有声明锚点，无从比对；放进分母等于白送 1.0
             "evidence": None,
             "trace": got["trace_completeness"],
+            "path": None,
+            "cross_doc": None,
         }
     dept = 1.0 if gold["dept"] and got["dept"] == gold["dept"] else 0.0
     # 检查项按 Jaccard 计分：多召回同样扣分。宁缺毋滥是 S3 的硬约束，
@@ -303,6 +329,12 @@ def score_one(gold: dict, got: dict, gold_evidence: list[str] | None = None) -> 
     g_ev = set(gold_evidence or [])
     # 没有声明锚点的题不进分母；有声明锚点就必须真比对，输出证据为空时得 0 而不是 1.0
     ev = None if not g_ev else len(g_ev & set(got["evidence"])) / len(g_ev)
+    hops = int(gold_hops or 0)
+    # 声明了 n 跳，就得真走出 n 跳；没声明（<2）或负例的题不进分母
+    path = None if hops < 2 else (1.0 if got.get("path_hops", 0) >= hops else 0.0)
+    # 三跳还要求跨文档：同一份文档里的三段关系不算跨文档推理。
+    # 实测当前本体 10 条三跳题的最长路径全落在同一份文档，所以这一项现在是 0。
+    cross_doc = None if hops < 3 else (1.0 if got.get("path_assets", 0) >= 2 else 0.0)
     return {
         "dept": dept,
         "exams": exams,
@@ -310,6 +342,8 @@ def score_one(gold: dict, got: dict, gold_evidence: list[str] | None = None) -> 
         "conflict": conflict,
         "evidence": ev,
         "trace": got["trace_completeness"],
+        "path": path,
+        "cross_doc": cross_doc,
     }
 
 
@@ -345,14 +379,18 @@ def main() -> int:
             "conflict": [],
             "evidence": [],
             "trace": [],
+            "path": [],
+            "cross_doc": [],
             "ms": [],
         },
     )
     for row in rows:
-        got = answer(conn, row["question"])
-        sc = score_one(row["gold"], got, row.get("gold_evidence"))
+        # dataset 声明的跳数要真的生效：固定 2 跳等于把三跳题悄悄降级成两跳
+        hops = int(row.get("hops") or 2)
+        got = answer(conn, row["question"], max_hops=hops)
+        sc = score_one(row["gold"], got, row.get("gold_evidence"), hops)
         for k, v in sc.items():
-            if v is None:  # 该题不进这一项的分母（负例 / 无声明锚点）
+            if v is None:  # 该题不进这一项的分母（负例 / 无声明锚点 / 未声明跳数）
                 continue
             agg[k].append(v)
         agg["ms"].append(got["elapsed_ms"])
@@ -367,6 +405,11 @@ def main() -> int:
                 "gold_conflicts": row["gold"]["conflicts"],
                 "got_conflicts": got["conflicts"],
                 "evidence_hit": sc["evidence"],
+                "declared_hops": hops,
+                "path_hops": got["path_hops"],
+                "path_assets": got["path_assets"],
+                "path_hit": sc["path"],
+                "cross_doc_hit": sc["cross_doc"],
                 "trace_id": got["trace_id"],
                 "trace_completeness": got["trace_completeness"],
             }
@@ -386,6 +429,13 @@ def main() -> int:
         # 证据召回只对「声明了锚点」的题成立；分母是多少必须一起报，
         # 否则 0.476 和 1.000 看起来是同一件事的两种说法，其实是两个分母。
         "evidence_n": len(agg["evidence"]),
+        # 跳数达成：声明 n 跳的题有没有真的走出 n 跳。分母同上，空分母不算满分。
+        "path_recall": round(m["path"], 3),
+        "path_n": len(agg["path"]),
+        # 三跳是否跨文档。当前本体上全部落在同一份文档，这一项如实报 0，
+        # 不拿「路径里有三跳」冒充「跨文档三跳已验收」。
+        "cross_doc_recall": round(m["cross_doc"], 3),
+        "cross_doc_n": len(agg["cross_doc"]),
         "trace_completeness": round(m["trace"], 3),
         "avg_latency_ms": round(m["ms"], 1),
         "details": details,
@@ -407,23 +457,33 @@ def main() -> int:
         f"- 冲突召回：{report['conflict_recall']:.0%}",
         f"- 证据召回：{report['evidence_recall']:.0%}"
         f"（{report['evidence_n']}/{n} 条声明了锚点，负例与无锚点题不计入分母）",
+        f"- 跳数达成：{report['path_recall']:.0%}"
+        f"（{report['path_n']}/{n} 条声明了 ≥2 跳；按题目声明的 hops 真走）",
+        f"- 三跳跨文档：{report['cross_doc_recall']:.0%}"
+        f"（{report['cross_doc_n']}/{n} 条声明 3 跳；同一份文档内的三段关系不算跨文档）",
         f"- 溯源完整率：{report['trace_completeness']:.0%}",
         f"- 平均时延：{report['avg_latency_ms']} ms",
         "",
-        "| 题号 | 金标准科室 | 输出科室 | 一致 | 证据命中 |",
-        "| --- | --- | --- | --- | --- |",
+        "| 题号 | 金标准科室 | 输出科室 | 一致 | 证据命中 | 跳数(声明/实走) | 跨文档 |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for d in details:
         ok = "是" if d["gold_dept"] == d["got_dept"] else "否"
         hit = "不计入" if d["evidence_hit"] is None else f"{d['evidence_hit']:.0%}"
+        cross = (
+            "—"
+            if d["cross_doc_hit"] is None
+            else ("是" if d["cross_doc_hit"] == 1.0 else f"否({d['path_assets']}份)")
+        )
         lines.append(
             f"| {d['id']} | {d['gold_dept'] or '(应拒答)'} "
-            f"| {d['got_dept'] or '(拒答)'} | {ok} | {hit} |"
+            f"| {d['got_dept'] or '(拒答)'} | {ok} | {hit} "
+            f"| {d['declared_hops']}/{d['path_hops']} | {cross} |"
         )
     md = out_dir / f"eval-{tag}.md"
     md.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    print("\n".join(lines[:9]))
+    print("\n".join(lines[:11]))
     print(f"\n报告：{md}")
     return 0
 
