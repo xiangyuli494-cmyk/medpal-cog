@@ -175,6 +175,14 @@ def grow(conn, docs: list[str] | None = None, version: str = "v0.9") -> dict:
     if stats["docs"]:
         # 快照跟着长：否则 mcp-server/data/ontology_v0.9.jsonl 还是 seed 的 17 条，
         # 库里有 37 条、文件里只有 17 条，评审一眼就看出对不上。
-        store.snapshot(conn, version, f"grow: {stats['docs']} 份样例文档跨文档生长")
+        #
+        # 但只在「还没有发布过版本」时才写 v0.9：库里已经有 v1.0 之类的当前版本时，
+        # 再灌一次库会把版本指针从 v1.0 退回 v0.9、并覆盖旧快照（评审 #36 的 P1）。
+        # 三元组本身是幂等写回的，版本归属交给 onto_commit 管。
+        cur = store.current_version(conn)
+        if cur and cur["version"] != version:
+            stats["snapshot"] = f"skip（当前已是 {cur['version']}，不写回 {version}）"
+        else:
+            store.snapshot(conn, version, f"grow: {stats['docs']} 份样例文档跨文档生长")
         conn.commit()
     return stats
