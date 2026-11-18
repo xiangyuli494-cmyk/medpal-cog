@@ -1,0 +1,13 @@
+{
+  "source": "raw persisted Nexent trace, structural adaptation only; not backend repair",
+  "trace_id": "TR-20261118-B0EB",
+  "changes": [
+    {
+      "step": 4,
+      "field": "op",
+      "old": "get_asset_card",
+      "new": "retrieve",
+      "reason": "viewer operation category; actual tool name retained in raw trace"
+    }
+  ]
+}

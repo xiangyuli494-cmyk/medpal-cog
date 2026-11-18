@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Trace 推理链路查看器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body {
+            background-color: #f4f7fa;
+            padding: 24px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #222;
+        }
+        .upload-area {
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+        .warning-box {
+            background: #fff8e6;
+            border: 1px solid #ffd591;
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: #874d00;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
+        }
+        .summary-card h2 {
+            font-size: 17px;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        .summary-item {
+            margin: 6px 0;
+            font-size: 14.5px;
+        }
+        .unresolved-block {
+            background: #fff2f2;
+            border: 1px solid #ffccc7;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+        .unresolved-block h2 {
+            font-size: 17px;
+            color: #cf1322;
+            margin-bottom:10px;
+        }
+        .unresolved-list {
+            color: #cf1322;
+            font-family: "Consolas", monospace;
+            margin-bottom:12px;
+        }
+        .desc-list {
+            font-size:14px;
+            line-height:1.6;
+            color:#444;
+        }
+
+        /* ===== 步骤卡片样式 ===== */
+        .step-card {
+            background: #ffffff;
+            border-radius:8px;
+            padding:16px;
+            box-shadow:0 1px 4px rgba(0,0,0,0.08);
+            margin-bottom:12px;
+        }
+        .step-title {
+            font-weight:600;
+            font-size:16px;
+            margin-bottom:12px;
+            padding-bottom:8px;
+            border-bottom:1px solid #eaeaea;
+            color:#222;
+        }
+        .step-section {
+            margin-bottom:12px;
+        }
+        .step-label {
+            font-size:14px;
+            color:#555;
+            margin-bottom:6px;
+        }
+        .step-json {
+            background:#f7f9fc;
+            border:1px solid #e5e9f2;
+            border-radius:6px;
+            padding:10px 12px;
+            font-family: Consolas, monospace;
+            font-size:13.5px;
+            white-space:pre-wrap;
+            word-break:break-all;
+        }
+        .step-row {
+            font-size:14px;
+            margin:8px 0;
+        }
+        .step-value {
+            font-family: Consolas, monospace;
+        }
+        .evi-item {
+            color:#222;
+        }
+        .evi-bad {
+            color:#cf1322;
+            text-decoration: underline;
+            font-weight:600;
+        }
+        .evi-empty {
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Trace 推理链路查看器</h1>
+    <div class="upload-area">
+        加载Trace JSON文件：
+        <input type="file" id="fileInput" accept=".json">
+    </div>
+    <p>来源：Nexent 实跑；仅作报告展示的结构适配，原始 trace 另附；合成数据，非临床验证。</p><div id="renderRoot"></div>
+</div>
+
+<script>
+const root = document.getElementById('renderRoot');
+const fileInput = document.getElementById('fileInput');
+
+fileInput.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const txt = await file.text();
+    const data = JSON.parse(txt);
+    render(data);
+}
+
+function escapeHtml(str){
+    if(str === null || str === undefined) return "—";
+    return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;");
+}
+
+function render(data) {
+    root.innerHTML = '';
+    const schema = data.schema || '';
+    let warnHtml = '';
+
+    if (schema === 'walking-skeleton/1') {
+        warnHtml = `
+        <div class="warning-box">
+            ⚠️ 旧方言 walking‑skeleton/1，该格式无 unresolved 字段，不会执行断链红标。
+            需要完整溯源字段请执行：<code>python tools/validate_trace.py xxx.json --migrate</code>迁移为 medpal‑trace/1
+        </div>
+        `
+    }
+    root.innerHTML += warnHtml;
+
+    if (schema === 'medpal-trace/1') {
+        const comp = data.trace_completeness ?? '-';
+        const sources = Array.isArray(data.sources) ? data.sources : [];
+        const gapsArr = Array.isArray(data.gaps) ? data.gaps : [];
+
+        root.innerHTML += `
+        <div class="summary-card">
+            <h2>Trace 概要信息</h2>
+            <div class="summary-item">trace_id: ${escapeHtml(data.trace_id ?? '')}</div>
+            <div class="summary-item">用户问题: ${escapeHtml(data.question ?? '')}</div>
+            <div class="summary-item">agent_version: ${escapeHtml(data.agent_version ?? '')}</div>
+            <div class="summary-item">ontology_version: ${escapeHtml(data.ontology_version ?? '')}</div>
+            <div class="summary-item">溯源完整率 trace_completeness: ${escapeHtml(comp)}</div>
+            <div class="summary-item">sources: ${sources.length>0 ? sources.map(s=>escapeHtml(s)).join('、') : '无'}</div>
+            <div class="summary-item">gaps: ${gapsArr.length>0 ? gapsArr.map(g=>escapeHtml(g)).join('；') : '无'}</div>
+            <div class="summary-item" style="color:#666;font-size:13px;">提示: trace_completeness仅为汇总统计展示，不作为断链判定依据。</div>
+        </div>
+        `;
+
+        const unresolvedArr = Array.isArray(data.unresolved) ? data.unresolved : [];
+        const unresolvedText = unresolvedArr.length ? unresolvedArr.map(e=>escapeHtml(e)).join('; ') : '无';
+        root.innerHTML += `
+        <div class="unresolved-block">
+            <h2>✕ Unresolved 解析失败的证据引用</h2>
+            <div class="unresolved-list">${unresolvedText}</div>
+            <div class="desc-list">
+                说明：<br>
+                1. trace_completeness=1.0 不代表每一步都带证据，拒答场景允许evidence为空数组；<br>
+                2. unresolved非空≠整条推理不可信，仅命中的单条证据文字标红；<br>
+                3. gaps仅为阅读文本，不参与任何断链判断。
+            </div>
+        </div>
+        `
+    } else {
+        root.innerHTML += `
+        <div class="summary-card">
+            <h2>Trace 概要信息</h2>
+            <div class="summary-item">schema: ${escapeHtml(schema)}</div>
+            <div class="summary-item">asset_id: ${escapeHtml(data.asset?.asset_id ?? '-')}</div>
+            <div class="summary-item" style="color:#666;">骨架方言，不支持unresolved/gaps/trace_completeness/sources字段</div>
+        </div>
+        `
+    }
+
+    const steps = Array.isArray(data.steps) ? data.steps : [];
+    const unresolvedSet = new Set(Array.isArray(data.unresolved) ? data.unresolved : []);
+
+    steps.forEach((step) => {
+        let stepNo;
+        if(schema === "medpal-trace/1"){
+            stepNo = escapeHtml(step.i);
+        }else{
+            stepNo = escapeHtml(step.step);
+        }
+        const op = escapeHtml(step.op ?? '');
+        const inVal = escapeHtml(JSON.stringify(step.in ?? [], null, 2));
+        const outVal = escapeHtml(JSON.stringify(step.out ?? [], null, 2));
+        const conf = step.confidence !== undefined ? Number(step.confidence).toFixed(3) : "—";
+        const detailText = escapeHtml(step.detail ?? '');
+
+        let evHtml = '';
+        const evArr = Array.isArray(step.evidence) ? step.evidence : [];
+        if (evArr.length === 0) {
+            evHtml = `<span class="evi-empty">[无引用]</span>`;
+        } else {
+            evHtml = evArr.map(item => {
+                const safeItem = escapeHtml(item);
+                if (unresolvedSet.has(item)) {
+                    return `<span class="evi-bad">${safeItem}</span>`;
+                }
+                return `<span class="evi-item">${safeItem}</span>`;
+            }).join(' &nbsp;|&nbsp; ');
+        }
+
+        root.innerHTML += `
+        <div class="step-card">
+            <div class="step-title">Step ${stepNo}｜${op}</div>
+
+            <div class="step-section">
+                <div class="step-label">输入 in：</div>
+                <pre class="step-json">${inVal}</pre>
+            </div>
+
+            <div class="step-section">
+                <div class="step-label">输出 out：</div>
+                <pre class="step-json">${outVal}</pre>
+            </div>
+
+            ${detailText ? `
+            <div class="step-row">
+                <span class="step-label">detail：</span>
+                <span class="step-value">${detailText}</span>
+            </div>
+            ` : ''}
+
+            <div class="step-row">
+                <span class="step-label">confidence：</span>
+                <span class="step-value">${escapeHtml(conf)}</span>
+            </div>
+
+            <div class="step-row">
+                <span class="step-label">evidence：</span>
+                <span class="step-value">${evHtml}</span>
+            </div>
+        </div>
+        `;
+    })
+}
+</script>
+<script type="application/json" id="embedded-trace">{"trace_id": "TR-20261118-61F5", "question": "\u53cd\u590d\u4e0a\u8179\u9690\u75db3\u4e2a\u6708\uff0c\u591c\u95f4\u52a0\u91cd\uff0c\u8fdb\u98df\u540e\u7f13\u89e3\u3002\u5efa\u8bae\u79d1\u5ba4\u4e0e\u68c0\u67e5\uff1f", "agent_version": "v1.0", "ontology_version": "v0.9", "steps": [{"i": 1, "op": "std_align", "in": ["\u6d88\u5316\u6027\u6e83\u75a1", "\u591c\u95f4\u4e0a\u8179\u75db"], "out": ["K27 (ICD-10, exact, 0.98)", "\u591c\u95f4\u4e0a\u8179\u75db -> unmapped"], "evidence": [], "confidence": 0.98, "detail": "\u6d88\u5316\u6027\u6e83\u75a1\u5f52\u4e00\u4e3a ICD-10 K27\uff1b\u591c\u95f4\u4e0a\u8179\u75db\u672a\u547d\u4e2d alias_map\uff0c\u8fdb\u5165\u5f85\u5bf9\u9f50\u961f\u5217"}, {"i": 2, "op": "retrieve", "in": ["\u591c\u95f4\u4e0a\u8179\u75db \u8fdb\u98df\u540e\u7f13\u89e3 \u6d88\u5316\u6027\u6e83\u75a1 \u68c0\u67e5\u9879\u76ee"], "out": ["kb_not_configured"], "evidence": [], "confidence": 0.0, "detail": "kb_search \u8fd4\u56de kb_not_configured\uff0c\u8bb0\u5f55\u7f3a\u53e3\u540e\u6539\u7528\u672c\u4f53\u4e0e\u8d44\u4ea7\u5361\u53d6\u8bc1\uff0c\u4e0d\u91cd\u590d\u8bf7\u6c42"}, {"i": 3, "op": "kg_query", "in": ["\u6d88\u5316\u6027\u6e83\u75a1"], "out": ["\u6d88\u5316\u6027\u6e83\u75a1 -belongs_to_dept-> \u6d88\u5316\u5185\u79d1", "\u6d88\u5316\u6027\u6e83\u75a1 -requires_exam-> \u5e7d\u95e8\u87ba\u6746\u83cc\u547c\u6c14\u8bd5\u9a8c", "\u6d88\u5316\u6027\u6e83\u75a1 -requires_exam-> \u80c3\u955c", "\u4e0a\u8179\u9690\u75db -diagnosed_by-> \u6d88\u5316\u6027\u6e83\u75a1", "\u5e03\u6d1b\u82ac -contraindicated_for-> \u6d88\u5316\u6027\u6e83\u75a1"], "evidence": ["T-ec3ff384", "T-a691e6a0", "T-40a1a815", "T-83aeffed", "T-9faec7df", "AST-2026-000137#s1.h", "AST-2026-000137#s3.p1.c1", "AST-2026-000137#s3.p1.c2", "AST-2026-000137#s2.p1.c3", "AST-2026-000137#s4.p1.c2"], "confidence": 0.9, "detail": "max_hops=2, limit=30\uff1b\u8fd4\u56de 15 \u6761\u8def\u5f84\uff0cresolved=[K27]\uff0cunresolved=[]"}, {"i": 4, "op": "retrieve", "in": ["\u6d88\u5316\u6027\u6e83\u75a1"], "out": ["AST-2026-000137", "AST-2026-17b719", "AST-2026-e3cb90"], "evidence": ["AST-2026-000137#s2.p1.c2", "AST-2026-000137#s3.p1.c3", "AST-2026-000137#s5.p1.c1", "AST-2026-17b719#p1.t1.r2", "AST-2026-e3cb90#p2.s8.p1"], "confidence": 0.9, "detail": "\u6838\u5bf9\u951a\u70b9\u771f\u5b9e\u5b58\u5728\uff1a\u591c\u95f4\u52a0\u91cd\u8fdb\u98df\u540e\u7f13\u89e3\u3001\u5e7d\u95e8\u87ba\u6746\u83cc\u5fc5\u67e5\u3001\u62a5\u8b66\u75c7\u72b6\u8f6c\u8bca\u3001\u9996\u9009\u68c0\u67e5\u8868\u3001\u5341\u4e8c\u6307\u80a0\u6e83\u75a1\u9910\u540e\u7f13\u89e3"}, {"i": 5, "op": "kg_query", "in": ["\u4e0a\u8179\u9690\u75db", "\u5e7d\u95e8\u87ba\u6746\u83cc\u547c\u6c14\u8bd5\u9a8c", "\u80c3\u955c"], "out": ["\u6d88\u5316\u6027\u6e83\u75a1 -requires_exam-> \u5e7d\u95e8\u87ba\u6746\u83cc\u547c\u6c14\u8bd5\u9a8c", "\u6d88\u5316\u6027\u6e83\u75a1 -requires_exam-> \u80c3\u955c", "\u80c3\u708e -requires_exam-> \u80c3\u955c"], "evidence": ["T-a691e6a0", "T-40a1a815", "T-6ec5bea1", "AST-2026-000137#s3.p1.c1", "AST-2026-000137#s3.p1.c2", "AST-2026-000137#s2.p1.c3"], "confidence": 0.88, "detail": "\u7b2c\u4e8c\u8f6e\u8865\u67e5\uff0cmax_hops=2, limit=20\uff1bresolved=[SYM-EPI, EX-HP-BT, EX-GASTRO]\uff0c\u65e0\u65b0\u589e\u7f3a\u53e3"}], "gaps": ["kb_search \u672a\u914d\u7f6e\uff08kb_not_configured\uff09\uff0c\u6bb5\u843d\u7ea7\u68c0\u7d22\u7f3a\u5931\uff0c\u4ec5\u7528\u672c\u4f53\u4e0e\u8d44\u4ea7\u5361\u53d6\u8bc1", "\u591c\u95f4\u4e0a\u8179\u75db\u672a\u5bf9\u9f50\u5230\u6807\u51c6\u672f\u8bed\uff0c\u8fdb\u5165\u5f85\u5bf9\u9f50\u961f\u5217"], "elapsed_ms": 0, "created_at": "2026-11-18T00:11:27+08:00", "schema": "medpal-trace/1", "trace_completeness": 1.0, "unresolved": [], "sources": ["AST-2026-000137", "AST-2026-17b719", "AST-2026-e3cb90"]}</script><script>render(JSON.parse(document.getElementById('embedded-trace').textContent));</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+{
+  "trace_id": "TR-20261118-B0EB",
+  "question": "长期吃布洛芬止痛，有胃溃疡病史，最近上腹隐痛。请核对用药冲突，建议科室和检查。",
+  "agent_version": "v1.0",
+  "ontology_version": "v0.9",
+  "steps": [
+    {
+      "i": 1,
+      "op": "std_align",
+      "in": [
+        "布洛芬",
+        "胃溃疡",
+        "上腹隐痛"
+      ],
+      "out": [
+        "DRUG-IBU",
+        "K27",
+        "SYM-EPI"
+      ],
+      "evidence": [],
+      "confidence": 0.9,
+      "detail": "布洛芬 exact DRUG-IBU 0.95；胃溃疡 exact ICD-10 K27 0.90；上腹隐痛 exact SYM-EPI 0.90"
+    },
+    {
+      "i": 2,
+      "op": "retrieve",
+      "in": [
+        "上腹隐痛 布洛芬 NSAIDs 胃溃疡 检查"
+      ],
+      "out": [
+        "kb_not_configured"
+      ],
+      "evidence": [],
+      "confidence": 0.0,
+      "detail": "kb_search 返回 kb_not_configured，记录缺口，改用本体与资产卡取证"
+    },
+    {
+      "i": 3,
+      "op": "kg_query",
+      "in": [
+        "布洛芬",
+        "胃溃疡",
+        "上腹隐痛"
+      ],
+      "out": [
+        "DRUG-IBU -contraindicated_for-> K27",
+        "K27 -belongs_to_dept-> DEP-GI",
+        "K27 -requires_exam-> EX-HP-BT",
+        "K27 -requires_exam-> EX-GASTRO",
+        "SYM-EPI -belongs_to_dept-> DEP-GI"
+      ],
+      "evidence": [
+        "T-9faec7df",
+        "AST-2026-000137#s4.p1.c2",
+        "T-ec3ff384",
+        "AST-2026-000137#s1.h",
+        "T-a691e6a0",
+        "AST-2026-000137#s3.p1.c1",
+        "T-40a1a815",
+        "AST-2026-000137#s3.p1.c2",
+        "T-676e9d18",
+        "AST-2026-000137#s2.p1.c2"
+      ],
+      "confidence": 0.9,
+      "detail": "max_hops=2，limit=30；resolved 3 个种子，unresolved 为空"
+    },
+    {
+      "i": 4,
+      "op": "retrieve",
+      "in": [
+        "AST-2026-000137"
+      ],
+      "out": [
+        "消化性溃疡临床路径（2023 版）摘要",
+        "15 anchors"
+      ],
+      "evidence": [
+        "AST-2026-000137#s4.p1.c2",
+        "AST-2026-000137#s3.p1.c1",
+        "AST-2026-000137#s3.p1.c2",
+        "AST-2026-000137#s1.h",
+        "AST-2026-000137#s2.p1.c2"
+      ],
+      "confidence": 0.95,
+      "detail": "核对锚点真实存在：s4.p1.c2 禁用布洛芬等 NSAIDs；s3.p1.c1 幽门螺杆菌呼气试验；s3.p1.c2 胃镜；s1.h 科室归属；s2.p1.c2 上腹隐痛"
+    }
+  ],
+  "gaps": [
+    "kb_search 未配置（kb_not_configured），段落级检索依据缺失，仅用本体与资产卡锚点取证",
+    "用户未提供报警症状（呕血/黑便/体重下降/夜间痛醒）与幽门螺杆菌既往结果"
+  ],
+  "elapsed_ms": 0,
+  "created_at": "2026-11-18T00:12:17+08:00",
+  "schema": "medpal-trace/1",
+  "trace_completeness": 1.0,
+  "unresolved": [],
+  "sources": [
+    "AST-2026-000137"
+  ]
+}

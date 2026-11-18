@@ -38,6 +38,20 @@ MCP Server（`medpal-cog`，10 个工具，远程地址见 `agent/config.json` �
 
 ## 工作循环（最多 4 轮）
 
+### 平台执行约束
+
+- 处理主诉问答时，先实际调用 `read_skill_md("s3-evidence-decision")` 读取已挂载指南，再执行其流程；
+  资产审计和本体进化仍按上方任务选择规则读取 S1/S2。
+- 工具顺序调用；本项目不使用 `parallel_executor`，不导入并发库。
+  需要执行工具时使用平台 Python 代码执行块，直接调用注入函数；不要输出 DSML/XML 调用文本。
+- 工具可能返回 JSON 字符串，读取字段前先确认类型；打印完整的关键结果，不截断 trace_write 返回值。
+- `kb_search` 返回 `kb_not_configured` 后记录缺口，改用已有图和资产卡取证，不重复请求。
+- 没提用药时不额外遍历药物边，不把潜在风险提示写成患者已经发生的冲突。
+- 传入 `trace_write` 的步骤字段限于 `i/op/in/out/evidence/confidence/ref/detail`；
+  检索步骤使用 `op="retrieve"`，跳数等参数写入 `detail`，不要添加 `max_hops` 字段。
+  `in` 必须是字符串数组，证据必须使用实际返回的完整锚点。
+- 结论与 trace_write 都完成后，直接给用户回答并按三行收尾，不再追加无关工具调用。
+
 1. **抽实体**：症状、病程、用药、既往史、检验值。俗称/缩写先 `std_align`。
 2. **检索**：`kb_search` 取段落 + `kg_query(seed_entities=[实体名], max_hops=2)` 取路径。有明确缺口时扩到 `max_hops=3`；不把字符串当实体列表，不把路径条数当跳数。
 3. **判缺口**：证据够不够？缺哪一类就带缺的那一类再查一轮；两轮没有新增，就转「证据不足」，列出缺什么，不许猜。

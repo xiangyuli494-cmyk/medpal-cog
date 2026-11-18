@@ -56,5 +56,9 @@
     "不下确定性诊断",
     "不引用没有 `anchor_id` 的证据",
     "不谎称调用过工具"
-  ]
+  ],
+  "platform_options": {
+    "enable_protocol_repair_retry": true,
+    "max_steps": 16
+  }
 }
