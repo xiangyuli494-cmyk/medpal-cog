@@ -1,0 +1,48 @@
+{
+  "source": "raw persisted Nexent trace, structural adaptation only; not backend repair",
+  "trace_id": "TR-20261118-8CA0",
+  "changes": [
+    {
+      "step": 1,
+      "field": "ref",
+      "old": "std_align",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 2,
+      "field": "ref",
+      "old": "kb_search",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 3,
+      "field": "ref",
+      "old": "kg_query",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 4,
+      "field": "op",
+      "old": "get_asset_card",
+      "new": "retrieve",
+      "reason": "viewer operation category; actual tool name retained in raw trace"
+    },
+    {
+      "step": 4,
+      "field": "ref",
+      "old": "get_asset_card",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 5,
+      "field": "ref",
+      "old": "kg_query",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    }
+  ]
+}

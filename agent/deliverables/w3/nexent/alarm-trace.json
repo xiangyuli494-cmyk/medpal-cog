@@ -1,0 +1,112 @@
+{
+  "trace_id": "TR-20261118-8CA0",
+  "question": "消化性溃疡病史，最近出现黑便和体重下降，应该挂什么科、先做什么检查？",
+  "agent_version": "v1.0",
+  "ontology_version": "v0.9",
+  "steps": [
+    {
+      "i": 1,
+      "op": "std_align",
+      "in": [
+        "消化性溃疡",
+        "黑便",
+        "体重下降"
+      ],
+      "out": [
+        "K27 (ICD-10, exact, 0.98)",
+        "黑便 unmapped",
+        "体重下降 unmapped"
+      ],
+      "evidence": [],
+      "confidence": 0.98,
+      "detail": "消化性溃疡对齐 ICD-10 K27；黑便、体重下降未入 alias_map，进待对齐队列"
+    },
+    {
+      "i": 2,
+      "op": "retrieve",
+      "in": [
+        "消化性溃疡 黑便 体重下降 检查"
+      ],
+      "out": [
+        "kb_not_configured"
+      ],
+      "evidence": [],
+      "confidence": 0.0,
+      "detail": "KB_ENDPOINT 未配置，记录缺口，改用本体与资产卡取证"
+    },
+    {
+      "i": 3,
+      "op": "kg_query",
+      "in": [
+        "消化性溃疡"
+      ],
+      "out": [
+        "消化性溃疡 -belongs_to_dept-> 消化内科",
+        "消化性溃疡 -requires_exam-> 幽门螺杆菌呼气试验",
+        "消化性溃疡 -requires_exam-> 胃镜",
+        "布洛芬 -contraindicated_for-> 消化性溃疡"
+      ],
+      "evidence": [
+        "T-ec3ff384",
+        "AST-2026-000137#s1.h",
+        "T-a691e6a0",
+        "AST-2026-000137#s3.p1.c1",
+        "T-40a1a815",
+        "AST-2026-000137#s3.p1.c2",
+        "T-9faec7df",
+        "AST-2026-000137#s4.p1.c2"
+      ],
+      "confidence": 0.95,
+      "detail": "max_hops=2，resolved=[K27]，返回 15 条路径"
+    },
+    {
+      "i": 4,
+      "op": "retrieve",
+      "in": [
+        "AST-2026-000137"
+      ],
+      "out": [
+        "消化性溃疡临床路径（2023 版）摘要",
+        "15 个锚点"
+      ],
+      "evidence": [
+        "AST-2026-000137#s3.p1.c1",
+        "AST-2026-000137#s3.p1.c2",
+        "AST-2026-000137#s3.p1.c3",
+        "AST-2026-000137#s5.p1.c1",
+        "AST-2026-000137#s4.p1.c2"
+      ],
+      "confidence": 0.95,
+      "detail": "确认锚点真实存在；s5.p1.c1 载明呕血、黑便或体重明显下降者应及时转诊"
+    },
+    {
+      "i": 5,
+      "op": "kg_query",
+      "in": [
+        "黑便",
+        "体重下降",
+        "消化道出血"
+      ],
+      "out": [
+        "unresolved: 黑便、体重下降、消化道出血",
+        "no_path"
+      ],
+      "evidence": [],
+      "confidence": 0.0,
+      "detail": "max_hops=3 扩查无新增，报警症状在本体中无实体，缺口记录"
+    }
+  ],
+  "gaps": [
+    "黑便、体重下降未对齐 ICD-10（alias_map 缺失）",
+    "报警症状在本体中无实体与边",
+    "kb_search 未配置，无段落级检索证据"
+  ],
+  "elapsed_ms": 0,
+  "created_at": "2026-11-18T00:11:58+08:00",
+  "schema": "medpal-trace/1",
+  "trace_completeness": 1.0,
+  "unresolved": [],
+  "sources": [
+    "AST-2026-000137"
+  ]
+}

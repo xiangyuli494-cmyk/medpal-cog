@@ -1,0 +1,48 @@
+{
+  "source": "raw persisted Nexent trace, structural adaptation only; not backend repair",
+  "trace_id": "TR-20261118-61F5",
+  "changes": [
+    {
+      "step": 1,
+      "field": "ref",
+      "old": "",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 2,
+      "field": "ref",
+      "old": "",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 3,
+      "field": "ref",
+      "old": "AST-2026-000137",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 4,
+      "field": "op",
+      "old": "get_asset_card",
+      "new": "retrieve",
+      "reason": "viewer operation category; actual tool name retained in raw trace"
+    },
+    {
+      "step": 4,
+      "field": "ref",
+      "old": "AST-2026-000137",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 5,
+      "field": "ref",
+      "old": "AST-2026-000137",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    }
+  ]
+}

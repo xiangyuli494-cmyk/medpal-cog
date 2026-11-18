@@ -1,0 +1,59 @@
+{
+  "source": "read-only graph audit; not Nexent session evidence",
+  "version": "v0.9",
+  "ready": false,
+  "results": [
+    {
+      "case": {
+        "id": "T1-W3-01",
+        "question": "反复上腹隐痛，应该挂哪个科？",
+        "seeds": [
+          "SYM-EPI"
+        ],
+        "hops": 2,
+        "terminal": "DEP-GI"
+      },
+      "graph_ready": false,
+      "paths": []
+    },
+    {
+      "case": {
+        "id": "T1-W3-02",
+        "question": "上腹隐痛伴消化性溃疡病史，哪些证据支持幽门螺杆菌检查建议？",
+        "seeds": [
+          "SYM-EPI"
+        ],
+        "hops": 2,
+        "terminal": "EX-HP-BT"
+      },
+      "graph_ready": false,
+      "paths": []
+    },
+    {
+      "case": {
+        "id": "T1-W3-03",
+        "question": "消化性溃疡患者长期使用布洛芬，胃镜检查和用药风险分别依据哪些文档？",
+        "seeds": [
+          "DRUG-IBU"
+        ],
+        "hops": 2,
+        "terminal": "EX-GASTRO"
+      },
+      "graph_ready": false,
+      "paths": []
+    },
+    {
+      "case": {
+        "id": "T1-W3-04",
+        "question": "上腹部痛，经症状归一与本体路径，哪些证据支持胃镜检查建议？",
+        "seeds": [
+          "R10.1"
+        ],
+        "hops": 3,
+        "terminal": "EX-GASTRO"
+      },
+      "graph_ready": false,
+      "paths": []
+    }
+  ]
+}

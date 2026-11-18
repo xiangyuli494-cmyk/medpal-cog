@@ -1,0 +1,189 @@
+{
+  "source": "actual MCP streamable-http tool calls; no LLM/Nexent run",
+  "measured_at": "2026-11-17T23:59:25.348127+08:00",
+  "trace_id": "TR-20261117-914A",
+  "calls": [
+    {
+      "tool": "health",
+      "arguments": {},
+      "ok": true,
+      "result": {
+        "server_version": "0.1.0",
+        "triples": 37,
+        "assets": 70,
+        "ontology_version": "v0.9",
+        "ok": true
+      }
+    },
+    {
+      "tool": "std_align",
+      "arguments": {
+        "entity_text": "上腹隐痛"
+      },
+      "ok": true,
+      "result": {
+        "input": "上腹隐痛",
+        "aligned": true,
+        "scheme": "local",
+        "code": "SYM-EPI",
+        "match": "exact",
+        "confidence": 0.9,
+        "ok": true
+      }
+    },
+    {
+      "tool": "kg_query",
+      "arguments": {
+        "seed_entities": [
+          "上腹隐痛"
+        ],
+        "max_hops": 2,
+        "limit": 500
+      },
+      "ok": true,
+      "result": {
+        "ok": true,
+        "version": "v0.9",
+        "resolved": [
+          "SYM-EPI"
+        ],
+        "unresolved": [],
+        "paths": [
+          {
+            "nodes": [
+              "SYM-EPI",
+              "K27",
+              "DEP-GI"
+            ],
+            "hops": 2,
+            "steps": [
+              {
+                "triple_id": "T-83aeffed",
+                "edge": "上腹隐痛 -[diagnosed_by]-> 消化性溃疡",
+                "rel": "diagnosed_by",
+                "head_id": "SYM-EPI",
+                "head_label": "上腹隐痛",
+                "head_type": "Symptom",
+                "tail_id": "K27",
+                "tail_label": "消化性溃疡",
+                "tail_type": "Disease",
+                "provenance": {
+                  "asset_id": "AST-2026-000137",
+                  "anchor_id": "AST-2026-000137#s2.p1.c3"
+                },
+                "confidence": 0.78
+              },
+              {
+                "triple_id": "T-ec3ff384",
+                "edge": "消化性溃疡 -[belongs_to_dept]-> 消化内科",
+                "rel": "belongs_to_dept",
+                "head_id": "K27",
+                "head_label": "消化性溃疡",
+                "head_type": "Disease",
+                "tail_id": "DEP-GI",
+                "tail_label": "消化内科",
+                "tail_type": "Department",
+                "provenance": {
+                  "asset_id": "AST-2026-000137",
+                  "anchor_id": "AST-2026-000137#s1.h"
+                },
+                "confidence": 0.95
+              }
+            ],
+            "provenance": [
+              {
+                "asset_id": "AST-2026-000137",
+                "anchor_id": "AST-2026-000137#s2.p1.c3"
+              },
+              {
+                "asset_id": "AST-2026-000137",
+                "anchor_id": "AST-2026-000137#s1.h"
+              }
+            ],
+            "score": 0.865
+          }
+        ],
+        "reason": null
+      }
+    },
+    {
+      "tool": "trace_write",
+      "arguments": {
+        "question": "上腹隐痛的科室建议有哪些可核验依据？",
+        "steps": [
+          {
+            "i": 1,
+            "op": "std_align",
+            "in": [
+              "上腹隐痛"
+            ],
+            "out": [
+              "SYM-EPI"
+            ],
+            "evidence": []
+          },
+          {
+            "i": 2,
+            "op": "kg_query",
+            "in": [
+              "SYM-EPI"
+            ],
+            "out": [
+              "SYM-EPI",
+              "K27",
+              "DEP-GI"
+            ],
+            "evidence": [
+              "AST-2026-000137#s2.p1.c3",
+              "AST-2026-000137#s1.h"
+            ],
+            "detail": "实际 MCP 查询；两条边来自同一资产，本示例不作为跨文档验收。"
+          },
+          {
+            "i": 3,
+            "op": "conclude",
+            "out": {
+              "dept": "消化内科",
+              "exams": []
+            },
+            "evidence": [
+              "AST-2026-000137#s2.p1.c3",
+              "AST-2026-000137#s1.h"
+            ]
+          }
+        ],
+        "agent_version": "t1-http-v1",
+        "gaps": [
+          "本示例仅演示科室证据，不用于跨文档或 Nexent 验收。"
+        ]
+      },
+      "ok": true,
+      "result": {
+        "ok": true,
+        "trace_id": "TR-20261117-914A",
+        "version": "v0.9",
+        "evidence_count": 2,
+        "trace_completeness": 1.0,
+        "unresolved": []
+      }
+    },
+    {
+      "tool": "skill_export",
+      "arguments": {
+        "trace_id": "TR-20261117-914A",
+        "name": "t1-department-evidence-draft"
+      },
+      "ok": true,
+      "result": {
+        "trace_id": "TR-20261117-914A",
+        "skill_md": "---\nname: t1-department-evidence-draft\ndescription: 由 trace TR-20261117-914A 自动导出，覆盖步骤 3 步\nallowed-tools: [std_align, kg_query]\ntags: [auto-exported, medical]\n---\n\n## 何时用\n问题形态与「上腹隐痛的科室建议有哪些可核验依据？」相近时。\n\n## 步骤\n1. std_align -> ['SYM-EPI']\n2. kg_query -> ['SYM-EPI', 'K27', 'DEP-GI']\n3. conclude -> {'dept': '消化内科', 'exams': []}\n\n## 禁止\n- 引用无 anchor_id 的内容\n- 给出药品剂量",
+        "tools": [
+          "std_align",
+          "kg_query"
+        ],
+        "ok": true
+      }
+    }
+  ],
+  "recording_note": "kg_query.paths 仅保留用于报告的一条真实返回路径；省略数据库和报告的机器绝对路径。"
+}

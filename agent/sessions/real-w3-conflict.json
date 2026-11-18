@@ -1,0 +1,133 @@
+{
+  "id": "REAL-W3-CONFLICT",
+  "title": "T1 v1 conflict 平台实跑",
+  "question": "长期吃布洛芬止痛，有胃溃疡病史，最近上腹隐痛。请核对用药冲突，建议科室和检查。",
+  "source": "Nexent 实跑 · 2026-11-18T00:12:17+08:00 · v2.7.0 · deepseek-chat · agent_id=2 · debug runtime SSE 原始文件留在本机",
+  "model": "deepseek-chat（model_id=1）",
+  "agent_id": 2,
+  "tool_calls": [
+    {
+      "tool": "trace_write",
+      "args": {
+        "question": "长期吃布洛芬止痛，有胃溃疡病史，最近上腹隐痛。请核对用药冲突，建议科室和检查。",
+        "steps": [
+          {
+            "i": 1,
+            "op": "std_align",
+            "in": [
+              "布洛芬",
+              "胃溃疡",
+              "上腹隐痛"
+            ],
+            "out": [
+              "DRUG-IBU",
+              "K27",
+              "SYM-EPI"
+            ],
+            "evidence": [],
+            "confidence": 0.9,
+            "detail": "布洛芬 exact DRUG-IBU 0.95；胃溃疡 exact ICD-10 K27 0.90；上腹隐痛 exact SYM-EPI 0.90"
+          },
+          {
+            "i": 2,
+            "op": "retrieve",
+            "in": [
+              "上腹隐痛 布洛芬 NSAIDs 胃溃疡 检查"
+            ],
+            "out": [
+              "kb_not_configured"
+            ],
+            "evidence": [],
+            "confidence": 0.0,
+            "detail": "kb_search 返回 kb_not_configured，记录缺口，改用本体与资产卡取证"
+          },
+          {
+            "i": 3,
+            "op": "kg_query",
+            "in": [
+              "布洛芬",
+              "胃溃疡",
+              "上腹隐痛"
+            ],
+            "out": [
+              "DRUG-IBU -contraindicated_for-> K27",
+              "K27 -belongs_to_dept-> DEP-GI",
+              "K27 -requires_exam-> EX-HP-BT",
+              "K27 -requires_exam-> EX-GASTRO",
+              "SYM-EPI -belongs_to_dept-> DEP-GI"
+            ],
+            "evidence": [
+              "T-9faec7df",
+              "AST-2026-000137#s4.p1.c2",
+              "T-ec3ff384",
+              "AST-2026-000137#s1.h",
+              "T-a691e6a0",
+              "AST-2026-000137#s3.p1.c1",
+              "T-40a1a815",
+              "AST-2026-000137#s3.p1.c2",
+              "T-676e9d18",
+              "AST-2026-000137#s2.p1.c2"
+            ],
+            "confidence": 0.9,
+            "detail": "max_hops=2，limit=30；resolved 3 个种子，unresolved 为空"
+          },
+          {
+            "i": 4,
+            "op": "get_asset_card",
+            "in": [
+              "AST-2026-000137"
+            ],
+            "out": [
+              "消化性溃疡临床路径（2023 版）摘要",
+              "15 anchors"
+            ],
+            "evidence": [
+              "AST-2026-000137#s4.p1.c2",
+              "AST-2026-000137#s3.p1.c1",
+              "AST-2026-000137#s3.p1.c2",
+              "AST-2026-000137#s1.h",
+              "AST-2026-000137#s2.p1.c2"
+            ],
+            "confidence": 0.95,
+            "detail": "核对锚点真实存在：s4.p1.c2 禁用布洛芬等 NSAIDs；s3.p1.c1 幽门螺杆菌呼气试验；s3.p1.c2 胃镜；s1.h 科室归属；s2.p1.c2 上腹隐痛"
+          }
+        ]
+      },
+      "ok": true,
+      "result": {
+        "trace_id": "TR-20261118-B0EB",
+        "trace_completeness": 1.0,
+        "unresolved": []
+      }
+    }
+  ],
+  "platform_tools": [
+    {
+      "tool": "read_skill_md",
+      "name": "s3-evidence-decision",
+      "execution_code": "skill_md = read_skill_md(\"s3-evidence-decision\")\nprint(skill_md)",
+      "ok": true
+    }
+  ],
+  "skill_execution_note": "实际读取已挂载 S3 指南，并按其流程取证；不把它描述为新增的 MCP 工具",
+  "evidence": [
+    "AST-2026-000137#s1.h",
+    "AST-2026-000137#s2.p1.c2",
+    "AST-2026-000137#s3.p1.c1",
+    "AST-2026-000137#s3.p1.c2",
+    "AST-2026-000137#s4.p1.c2"
+  ],
+  "conflict_line": "冲突：布洛芬（NSAIDs）与消化性溃疡存在禁忌关系",
+  "expected_tail": [
+    "科室：消化内科",
+    "检查项：幽门螺杆菌呼气试验、胃镜",
+    "完整率：1.00"
+  ],
+  "actual_answer": "## 核对结果（S3 跨文档取证决策）\n\n已按 `s3-evidence-decision` 流程执行：实体归一 → 检索 → 缺口判断 → 推理 → 冲突检测 → 落链。\n\n### 1. 用药冲突（明确存在）\n\n**冲突：布洛芬（NSAIDs）与消化性溃疡存在禁忌关系。**\n\n- 知识图谱边 `布洛芬 -[contraindicated_for]-> 消化性溃疡`（T-9faec7df，置信度 0.88），来源锚点 `AST-2026-000137#s4.p1.c2`：「消化性溃疡患者禁用布洛芬等 NSAIDs 药物」。\n- 同一文档 `AST-2026-000137#s4.p1.c1`：「布洛芬可导致胃黏膜损伤」；`AST-2026-000137#s4.p1.c3`：「长期自行服用止痛药者应在医师指导下评估」。\n\n用户长期服用布洛芬、且有胃溃疡病史，属于该禁忌关系直接覆盖的情形，建议尽快由医师评估是否停用或更换止痛方案（具体用药调整由接诊医师决定，此处不给剂量与处方）。\n\n### 2. 建议科室\n\n**建议就诊 消化内科**（置信度 0.95）。\n\n- `消化性溃疡 -[belongs_to_dept]-> 消化内科`（T-ec3ff384），锚点 `AST-2026-000137#s1.h`。\n- `上腹隐痛 -[belongs_to_dept]-> 消化内科`（T-676e9d18），锚点 `AST-2026-000137#s2.p1.c2`。\n\n### 3. 建议检查\n\n- **幽门螺杆菌呼气试验**：`消化性溃疡 -[requires_exam]-> 幽门螺杆菌呼气试验`（T-a691e6a0，0.92），锚点 `AST-2026-000137#s3.p1.c1`；同文档 `#s3.p1.c3` 明确「幽门螺杆菌检测为必查项」。\n- **胃镜**：`消化性溃疡 -[requires_exam]-> 胃镜`（T-40a1a815，0.90），锚点 `AST-2026-000137#s3.p1.c2`；`#s2.p1.c3` 指出「确诊依赖胃镜检查与病理」。\n\n### 4. 报警信号提示\n\n资产卡 `AST-2026-000137#s5.p1.c1` 载明：出现呕血、黑便或体重明显下降者应及时转诊上级医院进一步评估。本次主诉未提及上述情形，但若出现，请立即急诊处理，不要等待门诊。\n\n### 5. 缺口\n\n- `kb_search` 返回 `kb_not_configured`，段落级混合检索未启用，本轮依据为本体路径 + 资产卡锚点（已在资产卡中逐条核对存在）。\n- 未提供报警症状（呕血/黑便/体重下降/夜间痛醒）与既往幽门螺杆菌检测结果，无法进一步分层。\n\n### 6. 决策链\n\n已写入：`TR-20261118-B0EB`（本体版本 v0.9，证据 10 条，报告 `reports/TR-20261118-B0EB.md`）。\n\n冲突：布洛芬（NSAIDs）与消化性溃疡存在禁忌关系\n科室：消化内科\n检查项：幽门螺杆菌呼气试验、胃镜\n完整率：1.00",
+  "trace_id": "TR-20261118-B0EB",
+  "artifacts": {
+    "actions": "../../agent/deliverables/w3/nexent/conflict-actions.json",
+    "raw_trace": "../../agent/deliverables/w3/nexent/conflict-trace-raw.json",
+    "viewer_trace": "../../agent/deliverables/w3/nexent/conflict-trace.json"
+  }
+}
