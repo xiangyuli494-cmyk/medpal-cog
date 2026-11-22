@@ -116,8 +116,12 @@ def test_rollback_revives_removed_triple(fresh_db):
     assert row["status"] == "active"
 
 
-def test_rollback_rejects_missing_snapshot(fresh_db):
-    """目标版本的快照不存在时必须报错，不能静默当成「无事可做」。"""
+def test_rollback_rejects_unregistered_target(fresh_db):
+    """目标版本没在 version 表里登记过时必须报错，不能拿一份来历不明的快照回滚。
+
+    防的错：旧实现只看 `ontology_<target>.jsonl` 存不存在。手工留下的文件、
+    或从别的库拷来的快照都能骗过它，回滚出的「目标版本」在这个库里从未发布过。
+    """
     conn = store.connect()
     _add(conn, "甲药")
     store.snapshot(conn, "v1.0", "基准")
@@ -125,7 +129,20 @@ def test_rollback_rejects_missing_snapshot(fresh_db):
 
     res = server.onto_commit(diff_id="", to="v9.9", version="v1.2")
     assert res["ok"] is False
-    assert res["reason"] == "snapshot_not_found"
+    assert res["reason"] == "version_not_registered", res
+
+
+def test_rollback_rejects_missing_snapshot(fresh_db):
+    """版本表登记过、但快照文件被删了：报 snapshot_not_found，不静默当成无事可做。"""
+    conn = store.connect()
+    _add(conn, "甲药")
+    store.snapshot(conn, "v1.0", "基准")
+    conn.close()
+    (fresh_db[1] / "ontology_v1.0.jsonl").unlink()
+
+    res = server.onto_commit(diff_id="", to="v1.0", version="v1.2")
+    assert res["ok"] is False
+    assert res["reason"] == "snapshot_not_found", res
 
 
 def test_rollback_rejects_empty_target(fresh_db):
@@ -183,3 +200,56 @@ def test_rollback_bumps_version(fresh_db):
     conn.close()
     assert cur["version"] == "v1.2"
     assert versions == ["v1.0", "v1.1", "v1.2"]
+
+
+def test_rollback_restores_revised_confidence_and_provenance(fresh_db):
+    """`revise` 抬过的置信度与换过的出处，回滚到旧版本时必须一并还原。
+
+    防的错（评审 #31 P1-2）：旧实现只按 triple_id 改 status，`revise` 是原地 UPDATE，
+    没有任何留痕。结果回滚后条数对、快照 hash 却和目标版本对不上——名义回滚、数据没回。
+    快照里本来就存了 confidence / asset_id / anchor_id，按目标快照写回即可。
+    """
+    conn = store.connect()
+    tid = store.add_triple(
+        conn,
+        {
+            "head": {"id": "K27", "type": "Disease", "label": "消化性溃疡"},
+            "rel": "treated_by",
+            "tail": {"id": "DRUG-A", "type": "Drug", "label": "甲药"},
+            "confidence": 0.8,
+            "provenance": {"asset_id": "AST-1", "anchor_id": "AST-1#p1"},
+            "standard": {},
+        },
+        version="v1.0",
+    )
+    store.snapshot(conn, "v1.0", "基准")
+    # 模拟 onto_commit 的 revise：原地抬置信度、换更直接的出处
+    conn.execute(
+        "UPDATE triple SET confidence=0.95, asset_id='AST-2', anchor_id='AST-2#p9' "
+        "WHERE triple_id=?",
+        (tid,),
+    )
+    store.snapshot(conn, "v1.1", "revise")
+    conn.close()
+
+    res = server.onto_commit(to="v1.0", version="v1.2")
+    assert res["ok"], res
+    assert res["restored"] == 1, res
+    assert res["revived"] == 0 and res["removed"] == 0, res
+
+    conn = store.connect()
+    row = conn.execute(
+        "SELECT confidence, asset_id, anchor_id FROM triple WHERE triple_id=?", (tid,)
+    ).fetchone()
+    target_hash = conn.execute(
+        "SELECT manifest_hash FROM version WHERE version='v1.0'"
+    ).fetchone()["manifest_hash"]
+    rollback_hash = conn.execute(
+        "SELECT manifest_hash FROM version WHERE version='v1.2'"
+    ).fetchone()["manifest_hash"]
+    conn.close()
+    assert row["confidence"] == pytest.approx(0.8)
+    assert row["asset_id"] == "AST-1"
+    assert row["anchor_id"] == "AST-1#p1"
+    # 回滚后的快照必须与目标版本逐条一致——hash 相同才算真的回去了
+    assert rollback_hash == target_hash

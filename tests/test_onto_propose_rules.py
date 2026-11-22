@@ -194,3 +194,67 @@ def test_synonym_conflict_proposes_deprecate(fresh_db):
     assert dep, [(c["kind"], c["head"]["label"], c["tail"]["label"]) for c in res["candidates"]]
     assert dep[0]["conflict"]["dropped"] == "内窥镜检查"
     assert dep[0]["target_triple_id"], dep[0]
+    # 废弃必须配一条指向保留节点的新边，否则提交后这条知识从图上消失（评审 #31 第 2 条）
+    assert dep[0]["replacement_id"] == "EX-GASTRO", dep[0]
+    new = [c for c in res["candidates"] if c["kind"] == "new" and c["rel"] == "requires_exam"]
+    assert new, [(c["kind"], c["rel"]) for c in res["candidates"]]
+    assert new[0]["tail"]["id"] == "EX-GASTRO", new[0]
+
+
+def test_synonym_conflict_commit_keeps_knowledge_on_replacement_node(fresh_db):
+    """提交后知识要在保留节点上继续存在，而不是只剩一条 removed。
+
+    这条测的是「提案 + 提交」整条链路：只断言候选里有 deprecate 是不够的，
+    真正的失败模式是提交完 `K29 requires_exam` 一条活跃边都不剩。
+    """
+    conn = store.connect()
+    _seed_entities(conn)
+    conn.execute(
+        "INSERT OR IGNORE INTO alias (surface,code,scheme,entity_type,confidence) "
+        "VALUES ('内窥镜检查','EX-GASTRO','local','Exam',0.9)"
+    )
+    old = _add_triple(
+        conn,
+        _disease("K29", "胃炎"),
+        "requires_exam",
+        {"id": "EX-OLD", "type": "Exam", "label": "内窥镜检查"},
+        anchor="AST-T0#p9",
+    )
+    # 已经有对齐边时，候选里只剩同义冲突这一组，断言更干净
+    _add_triple(
+        conn,
+        _disease("K29", "胃炎"),
+        "aligned_to_standard",
+        {"id": "ICD10-K29", "type": "Disease", "label": "ICD-10 K29"},
+        anchor="AST-T0#p1",
+        conf=0.99,
+    )
+    _make_asset(
+        conn,
+        "AST-T1",
+        [
+            {
+                "anchor_id": "AST-T1#p1",
+                "kind": "sentence",
+                "text": "慢性胃炎患者需要做胃镜检查以明确病变范围",
+            }
+        ],
+    )
+    conn.close()
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("MEDPAL_DB", str(fresh_db[0]))
+        res = server.onto_propose(["AST-T1"])
+    commit = server.onto_commit(diff_id=res["diff_id"], version="v1.0")
+
+    assert commit["ok"], commit
+    assert commit["deprecated"] == 1, commit
+    conn = store.connect()
+    row_old = conn.execute("SELECT status FROM triple WHERE triple_id=?", (old,)).fetchone()
+    active = conn.execute(
+        "SELECT tail_id FROM triple WHERE head_id='K29' AND rel='requires_exam' "
+        "AND status='active'"
+    ).fetchall()
+    conn.close()
+    assert row_old["status"] == "removed"
+    assert [r["tail_id"] for r in active] == ["EX-GASTRO"], active

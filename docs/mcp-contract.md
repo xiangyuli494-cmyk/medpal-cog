@@ -407,7 +407,9 @@ onto_propose(asset_ids: list[str], scope: str = "") -> dict
 | --- | --- | --- |
 | `new` | 文档里有、本体会没有该关系（含「别名命中」把表面词归一到 canonical id） | 新增三元组 |
 | `revise` | 本体会已有，但这次证据置信度更高、或出处不同（`was` 里记旧值） | 只提置信度 + 补 provenance，不新增行 |
-| `deprecate` | **同义关系冲突**：同一 head 同一关系下另有互为别名的 tail（`conflict` 里记保留/废弃哪个） | 目标三元组标 `status='removed'` |
+| `deprecate` | **同义关系冲突**：同一 head 同一关系下另有互为别名的 tail（`conflict` 里记保留/废弃哪个） | 目标三元组标 `status='removed'`，**同时写入指向保留节点的新边**（`replacement_id`），知识不因换节点而丢失 |
+
+`deprecate` 候选一定与一条 `new` 候选成对出现（同一次 propose 里，新边指向保留的 canonical 节点）。`onto_commit` 也按 `replacement_id` 兜底写入：即使 diff 被过滤、或只有 deprecate 被批准，也不会留下「只删不补」的图。
 
 另有一条独立规则 **ICD-10 缺对齐**：候选里出现过的疾病节点若没有 `aligned_to_standard` 边，补一条对齐候选（`rule: "icd_missing_alignment"`，置信度 0.99）；疾病节点 id 不是 ICD-10 形态的进 `rejected`，`reason: "icd_unmapped"`。
 
@@ -511,9 +513,9 @@ onto_commit(diff_id: str = "", approve_all: bool = True,
 | `approve_ids` | list[str] | 否 | null | **按 `provenance.anchor_id` 匹配**，不是按候选下标 |
 | `version` | str | 否 | `""` | 留空自动 `_bump()` 上一版 |
 | `note` | str | 否 | `""` | 留空写 `"from <diff_id>"` |
-| `to` | str | 否 | `""` | 回滚目标版本号，如 `v1.0`；快照文件不存在则报 `snapshot_not_found` |
+| `to` | str | 否 | `""` | 回滚目标版本号，如 `v1.0`。以 `version` 表为准：未登记报 `version_not_registered`，登记过但快照文件缺失报 `snapshot_not_found` |
 
-候选按 `kind` 写入：`new` 新增、`revise` 只提置信度并补 provenance（不新增行）、`deprecate` 把目标三元组标 `status='removed'` 并记 `version_removed`。schema 8 类之外的 `rel`（如待落地的 `may_cause`）一律跳过并计入 `skipped_not_in_schema`，不写进库。
+候选按 `kind` 写入：`new` 新增、`revise` 只提置信度并补 provenance（不新增行）、`deprecate` 把目标三元组标 `status='removed'` 并记 `version_removed`，再按 `replacement_id` 写入保留节点的新边。schema 8 类之外的 `rel`（如待落地的 `may_cause`）一律跳过并计入 `skipped_not_in_schema`，不写进库。
 
 **出参**
 
@@ -529,7 +531,7 @@ onto_commit(diff_id: str = "", approve_all: bool = True,
 | `snapshot` | object | 见下 |
 | `previous` | str \| null | 上一版版本号 |
 
-回滚时额外回 `target`（回滚到哪个版本）、`revived`（复活条数）、`removed`（标移除条数），其余字段同上。
+回滚时额外回 `target`（回滚到哪个版本）、`revived`（复活条数）、`restored`（按目标快照恢复 `confidence` / `asset_id` / `anchor_id` 的条数）、`removed`（标移除条数）、`missing`（目标快照里有、但库里已被物理删除、无法只靠快照重建的 triple_id 列表），其余字段同上。回滚后的快照必须与目标版本逐条一致（`manifest_hash` 相同），否则说明只改了状态、没还原数据。
 
 `snapshot`：
 

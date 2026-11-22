@@ -14,12 +14,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "mcp-server"))
+
+
+def _db_path():
+    """与 `server._conn()` / `ingest_all` 同一口径：容器里读 MEDPAL_DB 指到卷上的库。"""
+    return os.environ.get("MEDPAL_DB") or None
 
 
 def _current_rows(conn) -> list:
@@ -31,11 +37,15 @@ def _current_rows(conn) -> list:
 
 
 def publish(version: str = "v1.0", note: str = "") -> dict:
-    """把当前活跃三元组提交成 `version`。已经是当前版本时只重写快照（幂等）。"""
+    """把当前活跃三元组提交成 `version`。已经是当前版本时只重写快照（幂等）。
+
+    已经发布过**别的**当前版本时拒绝把指针退回去：重灌库不能把 v1.1 打回 v1.0
+    （评审 #36 是同一类问题；#31 的容器场景又踩了一次）。要推新内容就显式给新版本号。
+    """
     import server  # noqa: PLC0415  必须在 sys.path 设好之后导入
     import store  # noqa: PLC0415
 
-    conn = store.connect()
+    conn = store.connect(_db_path())
     try:
         cur = store.current_version(conn)
         rows = _current_rows(conn)
@@ -43,7 +53,26 @@ def publish(version: str = "v1.0", note: str = "") -> dict:
             return {"ok": False, "reason": "no_triples", "hint": "库里没有活跃三元组"}
         if cur and cur["version"] == version:
             snap = store.snapshot(conn, version, note or f"{version} 重写快照")
-            return {"ok": True, "version": version, "already": True, "snapshot": snap}
+            return {
+                "ok": True,
+                "version": version,
+                "already": True,
+                "added": 0,
+                "snapshot": snap,
+                "ledger_consistent": store.ledger_consistent(conn),
+            }
+        if cur and cur["version"] != version:
+            same = conn.execute(
+                "SELECT is_current FROM version WHERE version = ?", (version,)
+            ).fetchone()
+            if same and not same["is_current"]:
+                return {
+                    "ok": False,
+                    "reason": "version_not_current",
+                    "hint": f"{version} 已发布过，当前是 {cur['version']}；"
+                    "要发新内容请显式给新版本号，不能把版本指针退回去",
+                    "current": cur["version"],
+                }
 
         payload = [
             {
@@ -69,6 +98,12 @@ def publish(version: str = "v1.0", note: str = "") -> dict:
         diff_id=diff_id, version=version, note=note or "publish active triples"
     )
     res["diff_id"] = diff_id
+    if res.get("ok"):
+        conn = store.connect(_db_path())
+        try:
+            res["ledger_consistent"] = store.ledger_consistent(conn)
+        finally:
+            conn.close()
     return res
 
 
@@ -85,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
 
     import store  # noqa: PLC0415
 
-    conn = store.connect()
+    conn = store.connect(_db_path())
     try:
         cur = store.current_version(conn)
         print(
@@ -95,6 +130,9 @@ def main(argv: list[str] | None = None) -> int:
             "| hash:", cur["manifest_hash"],
         )
         print("快照:", res["snapshot"]["snapshot_path"])
+        if not res.get("ledger_consistent", True):
+            print("台账不一致：version.triple_count ≠ 活跃三元组数", file=sys.stderr)
+            return 1
     finally:
         conn.close()
     return 0
