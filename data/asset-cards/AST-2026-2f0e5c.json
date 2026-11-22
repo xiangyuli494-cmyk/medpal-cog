@@ -5,11 +5,11 @@
   "source": {
     "type": "synthetic",
     "publisher": "",
-    "path": "E:\\deepseek-data\\medpal-cog\\data\\samples\\image\\bingli_14.png"
+    "path": "data/samples/image/bingli_14.png"
   },
   "version": {
     "value": "v1",
-    "captured_at": "2026-11-01T23:53:12+08:00",
+    "captured_at": "2026-11-22T19:03:46+08:00",
     "supersedes": null
   },
   "sensitivity": "synthetic",
@@ -34,5 +34,5 @@
     "status": "ready"
   },
   "ingested_by": "T5",
-  "created_at": "2026-11-01T23:53:12+08:00"
+  "created_at": "2026-11-22T19:03:46+08:00"
 }

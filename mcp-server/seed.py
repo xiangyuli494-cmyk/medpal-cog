@@ -101,7 +101,7 @@ def build_asset(conn) -> list[dict]:
         "source": {
             "type": "public_standard",
             "publisher": "国家卫生健康委",
-            "path": str(SAMPLE_PATH),
+            "path": store.repo_relative(SAMPLE_PATH),
         },
         "version": {"value": "2023", "captured_at": store.now(), "supersedes": None},
         "sensitivity": "public",

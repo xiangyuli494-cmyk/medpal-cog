@@ -25,6 +25,9 @@ import store
 from mcp.server.fastmcp import FastMCP
 
 SERVER_VERSION = "0.1.0"
+# 仓库根：`source.path` 写相对路径时的基准，也是 ingest_asset 找相对入参的基准。
+# server.py 在 mcp-server/ 下，所以是上一层。
+ROOT = Path(__file__).resolve().parent.parent
 mcp = FastMCP(
     "medpal-cog",
     instructions=(
@@ -45,6 +48,23 @@ def _conn():
 def _ok(**kw):
     kw.setdefault("ok", True)
     return kw
+
+
+def _repo_relative(path: Path) -> str:
+    """`source.path` 统一写仓库相对路径，规则与实现见 `store.repo_relative`。"""
+    return store.repo_relative(path)
+
+
+def _resolve_input(path: str) -> Path:
+    """把入参路径解析成实际文件：绝对路径原样用，相对路径按仓库根或当前目录找。"""
+    p = Path(path)
+    if p.is_absolute():
+        return p
+    for base in (ROOT, Path.cwd()):
+        cand = base / p
+        if cand.exists():
+            return cand
+    return p
 
 
 def _err(reason, hint="", **kw):
@@ -69,7 +89,7 @@ def ingest_asset(
     返回 asset_id、anchors（每条都可被决策链引用）、解析出的块数与实体。
     modality 留空时按扩展名自动判别：text / pdf_text / table / image_report。
     """
-    p = Path(path)
+    p = _resolve_input(path)
     if not p.exists():
         return _err("file_not_found", "检查路径是否存在：" + path)
     doc = parsers.parse(p)
@@ -82,7 +102,7 @@ def ingest_asset(
     card = {
         "title": title or doc.title,
         "modality": modality or doc.modality,
-        "source": {"type": source_type, "publisher": "", "path": str(p)},
+        "source": {"type": source_type, "publisher": "", "path": _repo_relative(p)},
         "version": {"value": "v1", "captured_at": store.now(), "supersedes": None},
         "sensitivity": "public" if source_type == "public_standard" else "synthetic",
         "structure": {
@@ -149,6 +169,19 @@ def kg_query(
         conn.close()
 
 
+# schema v0 的 8 类关系（docs/ontology-schema.md §3）。写库前必须在这里，否则拒绝。
+# `may_cause` 已裁定要加为第 9 类，但要等 schema v1 一起落地（§9 第 3 条），现在只出候选不入库。
+SCHEMA_RELS = {
+    "has_symptom",
+    "diagnosed_by",
+    "treated_by",
+    "contraindicated_for",
+    "requires_exam",
+    "belongs_to_dept",
+    "subclass_of",
+    "aligned_to_standard",
+}
+
 # 只允许这三种句式，且头尾必须能被 alias_map 解析成节点——这是「约束输出空间」的落地。
 PATTERNS = [
     (
@@ -177,12 +210,28 @@ ROLE_SUFFIX = re.compile(r"(患者|病人|人群|者|等|药物|药品|治疗|�
 REVERSE_TOLERANT = {"contraindicated_for"}
 
 
+def _alias_of(conn, label: str) -> dict | None:
+    """别名表命中：返回 {code, entity_type, scheme}。这是「别名命中」规则的数据源。"""
+    row = conn.execute(
+        "SELECT code, entity_type, scheme FROM alias WHERE surface = ?", (label,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
 @mcp.tool()
 def onto_propose(asset_ids: list[str], scope: str = "") -> dict:
     """从给定资产抽取候选三元组，产出待审 diff（不直接写库）。
 
     低资源策略：约束输出空间——只允许 3 类句式模板、6 类实体、8 类关系；
     规则校验在前（类型匹配、重复、空头尾），通过的才进待审队列。
+
+    候选按**三类规则**分流，每条都带 `kind`，`onto_commit` 按 kind 决定怎么写：
+
+    - `new`：文档里有、本体会没有的关系（含「别名命中」把表面词归一到 canonical id）；
+    - `revise`：本体会已有，但这次证据的置信度更高 / 出处更直接 → 修正置信度与 provenance；
+    - `deprecate`：**同义关系冲突**——同一 head 同一关系下挂着两个互为别名的 tail，
+      只保留一个，另一条提废弃。另外，疾病节点缺 `aligned_to_standard`（**ICD-10 缺对齐**）
+      会补一条对齐候选，补不上的进 `unresolved`。
     """
     conn = _conn()
     try:
@@ -245,8 +294,10 @@ def onto_propose(asset_ids: list[str], scope: str = "") -> dict:
                 if not hit:
                     rejected.append({"anchor_id": a["anchor_id"], "reason": "no_pattern_match"})
 
-        kept = []
+        kept, seen = [], set()
         for c in cands:
+            h_alias = _alias_of(conn, c["head"]["label"])
+            t_alias = _alias_of(conn, c["tail"]["label"])
             h = store.resolve_entity(conn, c["head"]["label"])
             t = store.resolve_entity(conn, c["tail"]["label"])
             if not h or not t:
@@ -261,27 +312,135 @@ def onto_propose(asset_ids: list[str], scope: str = "") -> dict:
                     }
                 )
                 continue
+            # 别名命中：类型与 canonical id 都取别名表的口径，不沿用句式猜的类型
+            if h_alias:
+                c["head"]["type"] = h_alias["entity_type"]
+                c["head"]["via_alias"] = c["head"]["label"]
+            if t_alias:
+                c["tail"]["type"] = t_alias["entity_type"]
+                c["tail"]["via_alias"] = c["tail"]["label"]
+            c["head"]["id"], c["tail"]["id"] = h, t
+
+            key = (h, c["rel"], t)
+            if key in seen:
+                continue
+            seen.add(key)
+
             # 反向表述也视为同一条知识：「疾病患者禁用某药」与「某药禁用于某疾病」
             reverse = 1 if c["rel"] in REVERSE_TOLERANT else 0
             dup = conn.execute(
-                "SELECT 1 FROM triple WHERE rel=? AND status='active' AND ("
-                "(head_id=? AND tail_id=?) OR (?=1 AND head_id=? AND tail_id=?))",
+                "SELECT triple_id, confidence, anchor_id FROM triple WHERE rel=? AND "
+                "status='active' AND ((head_id=? AND tail_id=?) OR "
+                "(?=1 AND head_id=? AND tail_id=?))",
                 (c["rel"], h, t, reverse, t, h),
             ).fetchone()
             if dup:
+                # 修正规则：同一事实这次拿到的证据更强（置信度高、或出处更直接）→ 提修正
+                better_conf = float(c["confidence"]) > float(dup["confidence"])
+                better_src = dup["anchor_id"] != c["provenance"]["anchor_id"]
+                if better_conf or better_src:
+                    kept.append(
+                        {
+                            **c,
+                            "kind": "revise",
+                            "target_triple_id": dup["triple_id"],
+                            "confidence": max(float(c["confidence"]), float(dup["confidence"])),
+                            "was": {"confidence": dup["confidence"], "anchor_id": dup["anchor_id"]},
+                        }
+                    )
+                else:
+                    rejected.append(
+                        {
+                            "candidate": c["head"]["label"]
+                            + "-"
+                            + c["rel"]
+                            + "->"
+                            + c["tail"]["label"],
+                            "reason": "duplicate",
+                        }
+                    )
+                continue
+
+            # 同义关系冲突：同一 head 同一关系下已有另一个「互为别名」的 tail
+            conflict = None
+            for row in conn.execute(
+                "SELECT triple_id, tail_label, confidence FROM triple "
+                "WHERE head_id=? AND rel=? AND status='active' AND tail_id<>?",
+                (h, c["rel"], t),
+            ).fetchall():
+                same = store.align(conn, row["tail_label"])
+                if not same.get("ok") or same.get("code") != t:
+                    continue
+                conflict = row
+                break
+
+            if conflict is None:
+                kept.append({**c, "kind": "new"})
+            else:
+                # 只提废弃是不够的：旧边被标 removed 后，同一事实如果没有换节点的
+                # `new` 一起提交，这条知识就从图里消失了（评审 #31 第 2 条）。
+                # 两条一起提，`onto_commit` 先废弃旧的、再写入指向保留节点的新的。
+                kept.append(
+                    {
+                        **c,
+                        "kind": "deprecate",
+                        "target_triple_id": conflict["triple_id"],
+                        "conflict": {
+                            "kept": c["tail"]["label"],
+                            "dropped": conflict["tail_label"],
+                            "triple_id": conflict["triple_id"],
+                        },
+                        "confidence": max(float(c["confidence"]), float(conflict["confidence"])),
+                        "replacement_id": c["tail"]["id"],
+                    }
+                )
+                kept.append({**c, "kind": "new", "replaces": conflict["triple_id"]})
+
+        # ICD-10 缺对齐：**候选里出现过的**疾病节点只要没有对齐边，就补一条。
+        # 注意要从 `cands` 里取而不是 `kept`：同一个病在这些文档里反复出现，
+        # 关系本身可能全被判重挡掉（这是正常的），但对齐仍然缺，不能因此漏掉。
+        mentioned = {}
+        for c in cands:
+            for side in ("head", "tail"):
+                node = c[side]
+                if node.get("type") == "Disease" and node.get("id"):
+                    mentioned.setdefault(node["id"], (node, c["provenance"]))
+        aligned = {
+            r["head_id"]
+            for r in conn.execute("SELECT head_id FROM triple WHERE rel='aligned_to_standard'")
+        }
+        for code, (node, prov) in mentioned.items():
+            if code in aligned:
+                continue
+            if not re.fullmatch(r"[A-Z]\d+(?:\.\d+)?", code):
                 rejected.append(
                     {
-                        "candidate": c["head"]["label"]
-                        + "-"
-                        + c["rel"]
-                        + "->"
-                        + c["tail"]["label"],
-                        "reason": "duplicate",
+                        "candidate": node.get("label", ""),
+                        "reason": "icd_unmapped",
+                        "hint": "疾病节点没有 ICD-10 码，先补 alias 再提对齐",
                     }
                 )
                 continue
-            c["head"]["id"], c["tail"]["id"] = h, t
-            kept.append(c)
+            aligned.add(code)
+            kept.append(
+                {
+                    "kind": "new",
+                    "head": {"id": code, "type": "Disease", "label": node["label"]},
+                    "rel": "aligned_to_standard",
+                    "tail": {
+                        "id": "ICD10-" + code,
+                        "type": "Disease",
+                        "label": "ICD-10 " + code,
+                    },
+                    "confidence": 0.99,
+                    "rule": "icd_missing_alignment",
+                    "provenance": prov,
+                }
+            )
+
+        by_kind = {"new": 0, "revise": 0, "deprecate": 0}
+        for c in kept:
+            by_kind[c["kind"]] = by_kind.get(c["kind"], 0) + 1
 
         diff_id = "DF-" + uuid.uuid4().hex[:8]
         conn.execute(
@@ -294,7 +453,11 @@ def onto_propose(asset_ids: list[str], scope: str = "") -> dict:
             scope=scope,
             candidates=kept,
             rejected=rejected,
-            counts={"candidates": len(kept), "rejected": len(rejected)},
+            counts={
+                "candidates": len(kept),
+                "rejected": len(rejected),
+                **{"kind_" + k: v for k, v in by_kind.items()},
+            },
         )
     finally:
         conn.close()
@@ -302,13 +465,29 @@ def onto_propose(asset_ids: list[str], scope: str = "") -> dict:
 
 @mcp.tool()
 def onto_commit(
-    diff_id: str,
+    diff_id: str = "",
     approve_all: bool = True,
     approve_ids: list[str] = None,
     version: str = "",
     note: str = "",
+    to: str = "",
 ) -> dict:
-    """确认待审 diff 并发布新本体版本（生成快照 + manifest hash）。"""
+    """确认待审 diff 并发布新本体版本（version 表 +1、写快照、生成 manifest hash）。
+
+    `to` 非空时改做回滚：不提交 `diff_id`，而是把本体退回到 `to` 指定的已发布版本，
+    并照常发布一个新版本（回滚也是一次发布，版本号前进）。回滚只改数据不改历史：
+    目标版本里有的三元组复活，目标版本之后新增的标记 `status='removed'` 并记下版本号。
+    **回滚不产生待审 diff，`diff_id` 在 `to` 非空时可以不传**——所以它是有默认值的
+    位置参数，不是必填。写成必填会让 `onto_commit(to="v1.0")` 在签名层就抛
+    TypeError，回滚入口等于不存在。
+
+    候选按 `kind` 写入：`new` 新增、`revise` 修正置信度与出处、`deprecate` 标记废弃。
+    schema 之外的 `rel`（如待落地的 `may_cause`）一律跳过并计数，不写进库。
+    """
+    if to:
+        return onto_rollback(target=to, version=version, note=note)
+    if not diff_id:
+        return _err("diff_id_required", "提交要传 onto_propose 给的 diff_id；回滚传 to")
     conn = _conn()
     try:
         row = conn.execute("SELECT * FROM pending_diff WHERE diff_id = ?", (diff_id,)).fetchone()
@@ -320,8 +499,48 @@ def onto_commit(
 
         cur = store.current_version(conn)
         new_ver = version or _bump(cur["version"] if cur else "v0.9")
-        added = 0
+        added, revised, deprecated, skipped = 0, 0, 0, 0
         for c in items:
+            kind = c.get("kind", "new")
+            if kind == "deprecate":
+                tid = c.get("target_triple_id")
+                row = conn.execute(
+                    "SELECT status FROM triple WHERE triple_id = ?", (tid,)
+                ).fetchone()
+                if row and row["status"] == "active":
+                    conn.execute(
+                        "UPDATE triple SET status='removed', version_removed=? WHERE triple_id = ?",
+                        (new_ver, tid),
+                    )
+                    deprecated += 1
+                # 同义冲突的废弃是一条「换节点」的操作：旧边下线，等效的边指向保留节点。
+                # 新边随 deprecate 候选一起写，不依赖 diff 里是否另有一条 kind=new——
+                # 否则候选被过滤掉、或顺序不对，这条知识就只剩删除没有新增。
+                repl = c.get("replacement_id")
+                if repl and c.get("rel") in SCHEMA_RELS and repl != c["tail"]["id"]:
+                    if store.add_triple(conn, c, new_ver):
+                        added += 1
+                continue
+            if c.get("rel") not in SCHEMA_RELS:
+                skipped += 1
+                continue
+            if kind == "revise":
+                tid = c.get("target_triple_id")
+                prov = c.get("provenance", {})
+                if tid:
+                    conn.execute(
+                        "UPDATE triple SET confidence = max(confidence, ?), "
+                        "asset_id = coalesce(?, asset_id), anchor_id = coalesce(?, anchor_id) "
+                        "WHERE triple_id = ?",
+                        (
+                            float(c.get("confidence", 0.8)),
+                            prov.get("asset_id"),
+                            prov.get("anchor_id"),
+                            tid,
+                        ),
+                    )
+                    revised += 1
+                continue
             if store.add_triple(conn, c, new_ver):
                 added += 1
         snap = store.snapshot(conn, new_ver, note or ("from " + diff_id))
@@ -331,6 +550,9 @@ def onto_commit(
             diff_id=diff_id,
             version=new_ver,
             added=added,
+            revised=revised,
+            deprecated=deprecated,
+            skipped_not_in_schema=skipped,
             snapshot=snap,
             previous=cur["version"] if cur else None,
         )
@@ -344,6 +566,118 @@ def _bump(v: str) -> str:
         return "v1.0"
     major, minor = int(m.group(1)), int(m.group(2))
     return "v%d.%d" % (major, minor + 1)
+
+
+def onto_rollback(target: str = "", version: str = "", note: str = "") -> dict:
+    """把本体回滚到某个已发布的版本，并发布一个新版本记录这次回滚。
+
+    由 `onto_commit(to=...)` 调用，不是独立的 MCP 工具——契约固定 10 个工具。
+
+    只回滚数据、不改历史：目标版本的所有活跃三元组重新生效，目标版本之后新增的
+    被标记 `status='removed'`（保留版本号，可追）。新版本号默认在当前版本上递增
+    （回滚也是一次发布），`note` 写清为什么回。
+
+    同时按目标快照恢复 `confidence` / `asset_id` / `anchor_id`——`revise` 是原地
+    UPDATE，只翻 `status` 会让「条数对、数据没回」。目标版本里已从库里物理消失的
+    三元组没法只靠快照重建（快照只有 id 与置信度），会计入 `missing` 明说。
+    """
+    conn = _conn()
+    try:
+        if not target:
+            return _err("target_required", "要写回滚到哪个版本，比如 v0.9")
+        # 合法性以 version 表为准：快照文件可能是手工留下的、或是别的库拷过来的，
+        # 「文件存在」不等于「这个版本在这个库里发布过」。
+        registered = conn.execute(
+            "SELECT 1 FROM version WHERE version = ?", (target,)
+        ).fetchone()
+        if not registered:
+            return _err(
+                "version_not_registered",
+                "目标版本没有在 version 表里登记过，不能回滚",
+                target=target,
+            )
+        path = store.DATA_DIR / ("ontology_" + target + ".jsonl")
+        if not path.exists():
+            return _err(
+                "snapshot_not_found", "目标版本的快照文件不存在", target=target, path=str(path)
+            )
+
+        wanted = {}
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            d = json.loads(line)
+            wanted[d["triple_id"]] = d
+
+        cur = store.current_version(conn)
+        new_ver = version or _bump(cur["version"] if cur else "v0.9")
+
+        # 1) 目标版本里有、当前已被移除的 -> 复活（版本号沿用目标版本的，不伪造新增）
+        revived = 0
+        for tid in wanted:
+            row = conn.execute("SELECT status FROM triple WHERE triple_id = ?", (tid,)).fetchone()
+            if row and row["status"] != "active":
+                conn.execute(
+                    "UPDATE triple SET status='active', version_removed=NULL WHERE triple_id = ?",
+                    (tid,),
+                )
+                revived += 1
+
+        # 2) 还在库里的三元组 -> 按目标快照把置信度与出处写回去。
+        # `revise` 是原地 UPDATE（server.py 的 onto_commit），只改 status 的回滚会让
+        # 「名义回滚、数据没回」：条数对上了，confidence 还是被抬过的值，快照与目标版本对不上。
+        # 快照里存了 confidence / asset_id / anchor_id，还原所需的数据本来就齐全。
+        restored = 0
+        missing = []
+        for tid, d in wanted.items():
+            row = conn.execute(
+                "SELECT confidence, asset_id, anchor_id FROM triple WHERE triple_id = ?", (tid,)
+            ).fetchone()
+            if not row:
+                # 快照里没有 head/tail 标签与类型，重建不出完整三元组；报出来，不猜。
+                missing.append(tid)
+                continue
+            target_at = (
+                float(d["confidence"]),
+                d.get("asset_id"),
+                d.get("anchor_id"),
+            )
+            if (
+                abs(float(row["confidence"]) - target_at[0]) > 1e-6
+                or row["asset_id"] != target_at[1]
+                or row["anchor_id"] != target_at[2]
+            ):
+                conn.execute(
+                    "UPDATE triple SET confidence = ?, asset_id = ?, anchor_id = ? "
+                    "WHERE triple_id = ?",
+                    (*target_at, tid),
+                )
+                restored += 1
+
+        # 3) 当前活跃、但目标版本里没有的 -> 标记移除（保留记录与版本号）
+        removed = 0
+        for row in conn.execute("SELECT triple_id FROM triple WHERE status='active'").fetchall():
+            if row["triple_id"] not in wanted:
+                conn.execute(
+                    "UPDATE triple SET status='removed', version_removed=? WHERE triple_id = ?",
+                    (new_ver, row["triple_id"]),
+                )
+                removed += 1
+
+        snap = store.snapshot(conn, new_ver, note or ("rollback to " + target))
+        conn.commit()
+        return _ok(
+            version=new_ver,
+            target=target,
+            revived=revived,
+            restored=restored,
+            removed=removed,
+            missing=missing,
+            snapshot=snap,
+            previous=cur["version"] if cur else None,
+        )
+    finally:
+        conn.close()
 
 
 @mcp.tool()

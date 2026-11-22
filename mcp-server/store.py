@@ -16,6 +16,9 @@ CST = timezone(timedelta(hours=8))
 DATA_DIR = Path(__file__).resolve().parent / "data"
 DB_PATH = DATA_DIR / "medpal.db"
 REPORT_DIR = Path(__file__).resolve().parent / "reports"
+# 仓库根。资产卡的 `source.path` 是仓库相对路径，读文件时按这个根解析，
+# 这样同一张卡在仓库根、mcp-server/、容器 /app 下得到的资产号一致。
+ROOT = Path(__file__).resolve().parents[1]
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS asset (
@@ -89,6 +92,20 @@ def now() -> str:
     return datetime.now(CST).isoformat(timespec="seconds")
 
 
+def repo_relative(path) -> str:
+    """资产卡 `source.path` 的写法：仓库内写相对路径（`data/samples/...`）。
+
+    卡里的路径是给人核对出处用的，不是给程序读文件用的。写成 `D:\\...` 或
+    `/home/xxx/...`，换台机器 clone 下来锚点就全断链；容器里 `/app/data/...`
+    和本机路径又是两套写法。仓库外的文件（运行期上传）保留绝对路径——没有相对根。
+    """
+    p = Path(path)
+    try:
+        return p.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(p)
+
+
 def connect(db_path=None):
     path = Path(db_path) if db_path else DB_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,9 +153,14 @@ def stable_asset_id(card) -> str:
     哈希前把 CRLF 折成 LF：仓库里 `.gitattributes` 声明 `* text=auto eol=lf`，
     Windows 检出后磁盘上是 CRLF，直接哈希原始字节会让同一份文件在 Windows 和 Linux
     上得到两个资产号——台账每换一台机器就整批改名。
+
+    `source.path` 现在写的是仓库相对路径（`data/samples/...`），解析时以仓库根为基准，
+    不依赖进程当前目录；仓库外的文件仍按原样解析。
     """
     src = str((card.get("source") or {}).get("path") or "")
     p = Path(src)
+    if not p.is_absolute():
+        p = ROOT / p
     raw = p.read_bytes().replace(b"\r\n", b"\n") if p.is_file() else (
         str(card.get("title", "")) + "|" + src
     ).encode()
@@ -422,6 +444,20 @@ def snapshot(conn, version, note=""):
 def current_version(conn):
     row = conn.execute("SELECT * FROM version WHERE is_current = 1").fetchone()
     return dict(row) if row else None
+
+
+def active_count(conn) -> int:
+    return int(conn.execute("SELECT COUNT(*) c FROM triple WHERE status='active'").fetchone()["c"])
+
+
+def ledger_consistent(conn) -> bool:
+    """不变量：当前版本登记的 triple_count 必须等于活跃三元组数。
+
+    评审 #31 P1-1 的根因就是这个数对不上：`ingest_all` 把长出来的边写进活跃集，
+    却没推进 version 表，health 报 37、实际 44。任何「长本体」的流程跑完都要过这一关。
+    """
+    cur = current_version(conn)
+    return bool(cur) and int(cur["triple_count"]) == active_count(conn)
 
 
 def diff_versions(conn, old, new):
