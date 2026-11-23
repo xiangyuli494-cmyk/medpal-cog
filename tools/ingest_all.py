@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -6,7 +7,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "data" / "samples"
 CARDS = ROOT / "data" / "asset-cards"
-DB = ROOT / "mcp-server" / "data" / "medpal.db"
+# 与 server/store 的口径对齐：容器里 MEDPAL_DB 指到卷上的库，这里也得跟着走，
+# 否则「灌进 A 库、服务读 B 库」，asset 数永远是 0。
+DB = Path(os.environ.get("MEDPAL_DB") or ROOT / "mcp-server" / "data" / "medpal.db")
 sys.path.insert(0, str((ROOT / "mcp-server").resolve()))
 import server  # noqa: E402
 
@@ -39,6 +42,11 @@ def _strip_ts(card: dict) -> dict:
 
 def main() -> int:
     samples = sorted(p for p in SAMPLES.rglob("*") if p.is_file())
+    # 0 份样本不算「成功」：以前这里照样返回 0，于是 entrypoint 的 `|| exit 1` 永远不触发，
+    # 容器带着空台账起服务、healthcheck 还说健康（评审 #36 第 3 条）。
+    if not samples:
+        print(f"样本 0 份（{SAMPLES} 是空的），不做空账，返回 1")
+        return 1
 
     # 先记住旧卡的 {asset_id: card}：重跑时内容没变就沿用旧时间戳，否则每跑一次台账就脏一次
     old_cards = {}
@@ -67,6 +75,11 @@ def main() -> int:
     con.row_factory = sqlite3.Row
     rows = con.execute("select * from asset order by created_at desc").fetchall()
     con.close()
+
+    # 全部解析失败也要喊出来：0 行时若继续往下走会把旧卡删光，等于把台账清空还报成功。
+    if not rows:
+        print(f"入库 0 行（{len(samples)} 份样本全部解析失败），保留原台账，返回 1")
+        return 1
 
     for old in CARDS.glob("*.json"):
         old.unlink()

@@ -9,8 +9,8 @@ M-1、M-2 可在有 Docker 的机器上一键跑；M-3 需要人在 Nexent 控�
     python tools/w2_manual_evidence.py --skip-m3          # 只采 M-1/M-2
 
 产出：
-    docs/handoff/evidence/W2-manual-<YYYYMMDD-HHMM>.md
-    docs/handoff/evidence/W2-manual-<YYYYMMDD-HHMM>.json
+    tmp/evidence/W2-manual-<YYYYMMDD-HHMM>.md
+    tmp/evidence/W2-manual-<YYYYMMDD-HHMM>.json
 退出码：三项全 PASS 为 0，否则 1（M-3 跳过按 FAIL 记）。
 """
 from __future__ import annotations
@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -25,7 +26,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "docs" / "handoff" / "evidence"
+OUT_DIR = ROOT / "tmp" / "evidence"
 FENCE = chr(96) * 3
 
 INIT_PAYLOAD = (
@@ -73,8 +74,23 @@ def check_m1(expect):
     }
 
 
+def _initialized(text):
+    for record in [text, *[line[5:].strip() for line in text.splitlines()
+                           if line.startswith("data:")]]:
+        try:
+            result = json.loads(record)
+        except (ValueError, TypeError):
+            continue
+        if isinstance(result, dict):
+            payload = result.get("result")
+            info = payload.get("serverInfo") if isinstance(payload, dict) else None
+            if isinstance(info, dict) and info.get("name") == "medpal-cog":
+                return True
+    return False
+
+
 def check_m2(mcp_url):
-    """优先在容器里 curl（模拟 Nexent 运行时视角），失败再退回宿主机 curl。"""
+    """只以容器请求成功判 PASS；宿主机可达不能替代容器证据。"""
     body = INIT_PAYLOAD
     container_cmd = [
         "docker", "run", "--rm",
@@ -87,7 +103,8 @@ def check_m2(mcp_url):
     ]
     code, out = run(container_cmd, timeout=180)
     mode = "container"
-    if code != 0 or "medpal-cog" not in out:
+    host_diagnostic = ""
+    if code != 0 or not _initialized(out):
         host_cmd = [
             "curl", "-s", "--max-time", "15",
             "-X", "POST", mcp_url,
@@ -96,9 +113,8 @@ def check_m2(mcp_url):
             "-d", body,
         ]
         code2, out2 = run(host_cmd)
-        if "medpal-cog" in out2:
-            code, out, mode = code2, out2, "host"
-    ok = "medpal-cog" in out
+        host_diagnostic = "exit=%s\n%s" % (code2, out2[:2000])
+    ok = code == 0 and _initialized(out)
     return {
         "id": "M-2",
         "ok": ok,
@@ -106,23 +122,31 @@ def check_m2(mcp_url):
         "detail": "%s curl %s → serverInfo.name=%s"
         % (mode, mcp_url, "medpal-cog" if ok else "未命中"),
         "raw": out.strip()[:2000],
+        "host_diagnostic": host_diagnostic,
     }
 
 
-def check_m3(console_url, transcript):
-    code, out = run(["curl", "-s", "-o", "", "-w", "%{http_code}", "--max-time", "8", console_url])
+def check_m3(console_url, transcript, reviewed=False):
+    code, out = run([
+        "curl", "-s", "-o", os.devnull, "-w", "%{http_code}", "--max-time", "8", console_url
+    ])
     http = out.strip().splitlines()[-1] if out.strip() else ""
     text = ""
     if transcript and transcript.exists():
         text = transcript.read_text(encoding="utf-8", errors="replace")
-    missing = [k for k in FIXED_LINES if k not in text]
-    ok = http in {"200", "307", "302"} and not missing
+    tail = text.strip().splitlines()[-3:]
+    valid = len(tail) == 3 and all(line.startswith(k) for line, k in zip(tail, FIXED_LINES))
+    if valid:
+        dept, exams, completeness = [line[len(k):].strip() for line, k in zip(tail, FIXED_LINES)]
+        valid = (len(dept) >= 2 and bool(exams)
+                 and bool(re.fullmatch(r"(?:0\.\d{2}|1\.00)", completeness)))
+    ok = code == 0 and http in {"200", "307", "302"} and valid and reviewed
     return {
         "id": "M-3",
         "ok": ok,
         "title": "控制台工具可见 + 三行格式",
-        "detail": "控制台 %s → HTTP %s；回答三行缺失：%s"
-        % (console_url, http, "、".join(missing) if missing else "无"),
+        "detail": "控制台 %s → HTTP %s；三行有效=%s；人工核对十工具和原始会话=%s"
+        % (console_url, http, valid, reviewed),
         "raw": text.strip()[:3000],
     }
 
@@ -158,6 +182,8 @@ def main(argv=None):
     ap.add_argument("--mcp-url", default="http://host.docker.internal:8090/mcp")
     ap.add_argument("--console-url", default="http://localhost:3000")
     ap.add_argument("--m3-transcript", type=Path, default=None)
+    ap.add_argument("--m3-reviewed", action="store_true",
+                    help="人工已核对控制台十工具和本次真实回答；仅有示例文本不得设置")
     ap.add_argument("--skip-m3", action="store_true", help="只采 M-1/M-2（M-3 记为未跑）")
     ap.add_argument("--out-dir", type=Path, default=OUT_DIR)
     args = ap.parse_args(argv)
@@ -177,7 +203,7 @@ def main(argv=None):
             }
         )
     else:
-        results.append(check_m3(args.console_url, args.m3_transcript))
+        results.append(check_m3(args.console_url, args.m3_transcript, args.m3_reviewed))
 
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M")
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -192,7 +218,7 @@ def main(argv=None):
 
     for r in results:
         print("[%s] %s %s — %s" % ("PASS" if r["ok"] else "FAIL", r["id"], r["title"], r["detail"]))
-    print("证据已写入 %s / %s" % (md.relative_to(ROOT).as_posix(), js.name))
+    print("证据已写入 %s / %s" % (md, js.name))
     return 0 if all(r["ok"] for r in results) else 1
 
 

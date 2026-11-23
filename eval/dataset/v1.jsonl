@@ -22,3 +22,9 @@
 {"id":"Q022","question":"胃溃疡病史，最近关节痛长期吃非甾体消炎药，要注意什么","gold":{"dept":"消化内科","exams":["幽门螺杆菌呼气试验"],"conflicts":["布洛芬"]},"gold_evidence":["AST-2026-000137#s4.p1.c2","AST-2026-000137#s3.p1.c1"],"hops":3,"difficulty":"medium","added_in":"v1"}
 {"id":"Q023","question":"烧心三个月，最近又开始上腹隐痛，要查什么","gold":{"dept":"消化内科","exams":["胃镜"],"conflicts":[]},"gold_evidence":["AST-2026-000137#s2.p1.c2","AST-2026-000137#s2.p1.c3"],"hops":3,"difficulty":"hard","added_in":"v1"}
 {"id":"Q024","question":"孩子身上起红疹很痒，该挂哪个科","gold":{"dept":"","exams":[],"conflicts":[],"out_of_scope":true},"gold_evidence":[],"hops":0,"difficulty":"negative","added_in":"v1"}
+{"id":"Q025","question":"消化性溃疡病史，这次查血常规报告写贫血，还需要做胃镜吗","gold":{"dept":"消化内科","exams":["胃镜"],"conflicts":[]},"gold_evidence":["AST-2026-c87d1e#t1.r4","AST-2026-000137#s5.p1.c1"],"hops":3,"difficulty":"hard","added_in":"v2"}
+{"id":"Q026","question":"胃炎患者烧心反酸，躺下后反流更明显，需要做什么检查","gold":{"dept":"消化内科","exams":["幽门螺杆菌呼气试验","胃镜"],"conflicts":[]},"gold_evidence":["AST-2026-000137#s3.p1.c3","AST-2026-5c2a0d#s3.p1.c1"],"hops":3,"difficulty":"medium","added_in":"v2"}
+{"id":"Q027","question":"上腹隐痛三个月，最近体检说贫血，该挂哪个科","gold":{"dept":"消化内科","exams":["胃镜"],"conflicts":[]},"gold_evidence":["AST-2026-c87d1e#t1.r4","AST-2026-000137#s3.p1.c2"],"hops":3,"difficulty":"hard","added_in":"v2"}
+{"id":"Q028","question":"体检发现甲状腺结节，需要看消化内科吗","gold":{"dept":"","exams":[],"conflicts":[],"out_of_scope":true},"gold_evidence":[],"hops":0,"difficulty":"negative","added_in":"v2"}
+{"id":"Q029","question":"长期吃止痛药，上腹隐痛，这次报告说贫血，先做哪项检查","gold":{"dept":"消化内科","exams":["胃镜"],"conflicts":["布洛芬"]},"gold_evidence":["AST-2026-000137#s4.p1.c2","AST-2026-c87d1e#t1.r4"],"hops":3,"difficulty":"hard","added_in":"v2"}
+{"id":"Q030","question":"消化性溃疡确诊了，最近体重下降，需要做哪些检查","gold":{"dept":"消化内科","exams":["胃镜"],"conflicts":[]},"gold_evidence":["AST-2026-000137#s5.p1.c1","AST-2026-000137#s3.p1.c2"],"hops":2,"difficulty":"hard","added_in":"v2"}

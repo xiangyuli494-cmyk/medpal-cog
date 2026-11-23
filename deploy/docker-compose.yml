@@ -1,5 +1,5 @@
 # 与 Nexent 联调用的最小编排
-# 用法：docker compose -f deploy/docker-compose.yml up --build -d
+# 用法（在仓库根执行）：docker compose -f deploy/docker-compose.yml up --build -d
 services:
   medpal-mcp:
     build:
@@ -14,14 +14,22 @@ services:
       MCP_HOST: 0.0.0.0
       MCP_PORT: "8090"
       MEDPAL_DB: /app/mcp-server/data/medpal.db
+      # auto：只在卷是空的（首次建库）那一轮灌样本。已有卷重启不重灌，
+      # 否则运行期上传的资产会被抹掉（评审 #36 P1）。要主动重灌设 rebuild。
+      MEDPAL_INGEST: auto
+    # 注意：卷会遮住镜像里 baked 的 mcp-server/data，所以每个新卷都会重跑一次
+    # seed + ingest_all（约 5-15s）；已有卷则跳过入库，保留库里的资产与版本。
+    # 想强制覆盖台账：把 MEDPAL_INGEST 设为 rebuild（会重建，慎用）。
     volumes:
       - medpal-data:/app/mcp-server/data
     restart: unless-stopped
+    # 与 Dockerfile 里的 HEALTHCHECK 同口径：initialize 回 serverInfo.name=medpal-cog，
+    # 且 health 工具报 assets>0——空台账不许判健康。
     healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); sys.exit(0 if s.connect_ex(('127.0.0.1',8090))==0 else 1)"]
+      test: ["CMD", "python", "/app/healthcheck.py"]
       interval: 15s
-      timeout: 3s
-      start_period: 20s
+      timeout: 6s
+      start_period: 120s
       retries: 5
     # 若 Nexent 与本服务在同一 docker 网络，取消下面两段注释（网络名以 nexent/docker-compose.yml 为准）
     # networks:
