@@ -121,7 +121,11 @@
       },
       "ok": true,
       "result": {
+        "ok": true,
         "trace_id": "TR-20261118-61F5",
+        "version": "v0.9",
+        "report_path": "C:\\Users\\Lenovo\\.codex\\worktrees\\medpal-t1-review\\medpal-cog\\mcp-server\\reports\\TR-20261118-61F5.md",
+        "evidence_count": 16,
         "trace_completeness": 1.0,
         "unresolved": []
       }
@@ -160,5 +164,86 @@
     "actions": "../../agent/deliverables/w3/nexent/normal-actions.json",
     "raw_trace": "../../agent/deliverables/w3/nexent/normal-trace-raw.json",
     "viewer_trace": "../../agent/deliverables/w3/nexent/normal-trace.json"
-  }
+  },
+  "record_kind": "summary; complete execution code and outputs are in artifacts.actions",
+  "conversation_id": null,
+  "conversation_id_status": "not returned by POST /agent/run with is_debug=true; no persisted chat id asserted",
+  "debug_run_workspace_id": "693dfb0c0b97461b9a59be8e8f3f7880",
+  "mcp_execution_index": [
+    {
+      "tool": "health",
+      "code_event_index": 2,
+      "code_line": 3,
+      "result_event_index": 3,
+      "call_source": "health()"
+    },
+    {
+      "tool": "std_align",
+      "code_event_index": 2,
+      "code_line": 6,
+      "result_event_index": 3,
+      "call_source": "std_align(entity_text=\"夜间上腹痛\")"
+    },
+    {
+      "tool": "std_align",
+      "code_event_index": 2,
+      "code_line": 9,
+      "result_event_index": 3,
+      "call_source": "std_align(entity_text=\"消化性溃疡\")"
+    },
+    {
+      "tool": "kb_search",
+      "code_event_index": 2,
+      "code_line": 12,
+      "result_event_index": 3,
+      "call_source": "kb_search(query=\"夜间上腹痛 进食后缓解 消化性溃疡 检查项目\", top_k=5)"
+    },
+    {
+      "tool": "kg_query",
+      "code_event_index": 4,
+      "code_line": 3,
+      "result_event_index": 5,
+      "call_source": "kg_query(seed_entities=[\"消化性溃疡\"], max_hops=2, limit=30)"
+    },
+    {
+      "tool": "get_asset_card",
+      "code_event_index": 4,
+      "code_line": 6,
+      "result_event_index": 5,
+      "call_source": "get_asset_card(entity=\"消化性溃疡\", limit=10)"
+    },
+    {
+      "tool": "kg_query",
+      "code_event_index": 6,
+      "code_line": 4,
+      "result_event_index": 7,
+      "call_source": "kg_query(seed_entities=[\"上腹隐痛\", \"幽门螺杆菌呼气试验\", \"胃镜\"], max_hops=2, limit=20)"
+    },
+    {
+      "tool": "get_asset_card",
+      "code_event_index": 6,
+      "code_line": 11,
+      "result_event_index": 7,
+      "call_source": "get_asset_card(asset_id=\"AST-2026-17b719\")"
+    },
+    {
+      "tool": "get_asset_card",
+      "code_event_index": 6,
+      "code_line": 15,
+      "result_event_index": 7,
+      "call_source": "get_asset_card(asset_id=\"AST-2026-e3cb90\")"
+    },
+    {
+      "tool": "trace_write",
+      "code_event_index": 8,
+      "code_line": 60,
+      "result_event_index": 9,
+      "call_source": "trace_write(\n    question=\"反复上腹隐痛3个月，夜间加重，进食后缓解。建议科室与检查？\",\n    steps=steps,\n    agent_version=\"v1.0\",\n    gaps=[\"kb_search 未配置（kb_not_configured），段落级检索缺失，仅用本体与资产卡取证\",\n          \"夜间上腹痛未对齐到标准术语，进入待对齐队列\"]\n)"
+    }
+  ],
+  "execution_log_indexing": "zero-based array indices in artifacts.actions; code_line is one-based within parse.content",
+  "trace_write_result_event_index": 9,
+  "tool_calls_note": "compact summary keeps trace_write; mcp_execution_index covers all actual MCP invocations in actions",
+  "actions_canonical_sha256": "b4df3abbb9b227d08e8bd241c859f875177e40a271c1c812bc0399063397036d",
+  "actions_hash_encoding": "UTF-8 of parsed JSON, sort_keys=true, ensure_ascii=false, separators comma/colon; independent of Git CRLF conversion"
 }

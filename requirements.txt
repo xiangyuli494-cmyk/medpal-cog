@@ -6,3 +6,4 @@ starlette>=0.37
 # 可选：PDF 解析（不装则 PdfParser 自动降级，仅文本/表格可用）
 pymupdf>=1.24 ; python_version < "3.13"
 openpyxl>=3.1
+jsonschema>=4.23,<5

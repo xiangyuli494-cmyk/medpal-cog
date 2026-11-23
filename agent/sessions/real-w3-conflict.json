@@ -95,7 +95,11 @@
       },
       "ok": true,
       "result": {
+        "ok": true,
         "trace_id": "TR-20261118-B0EB",
+        "version": "v0.9",
+        "report_path": "C:\\Users\\Lenovo\\.codex\\worktrees\\medpal-t1-review\\medpal-cog\\mcp-server\\reports\\TR-20261118-B0EB.md",
+        "evidence_count": 10,
         "trace_completeness": 1.0,
         "unresolved": []
       }
@@ -129,5 +133,72 @@
     "actions": "../../agent/deliverables/w3/nexent/conflict-actions.json",
     "raw_trace": "../../agent/deliverables/w3/nexent/conflict-trace-raw.json",
     "viewer_trace": "../../agent/deliverables/w3/nexent/conflict-trace.json"
-  }
+  },
+  "record_kind": "summary; complete execution code and outputs are in artifacts.actions",
+  "conversation_id": null,
+  "conversation_id_status": "not returned by POST /agent/run with is_debug=true; no persisted chat id asserted",
+  "debug_run_workspace_id": "d216f692d858414ab2860ba8a3df7a90",
+  "mcp_execution_index": [
+    {
+      "tool": "health",
+      "code_event_index": 2,
+      "code_line": 1,
+      "result_event_index": 3,
+      "call_source": "health()"
+    },
+    {
+      "tool": "std_align",
+      "code_event_index": 2,
+      "code_line": 4,
+      "result_event_index": 3,
+      "call_source": "std_align(entity_text=\"布洛芬\")"
+    },
+    {
+      "tool": "std_align",
+      "code_event_index": 2,
+      "code_line": 6,
+      "result_event_index": 3,
+      "call_source": "std_align(entity_text=\"胃溃疡\")"
+    },
+    {
+      "tool": "std_align",
+      "code_event_index": 2,
+      "code_line": 8,
+      "result_event_index": 3,
+      "call_source": "std_align(entity_text=\"上腹隐痛\")"
+    },
+    {
+      "tool": "kb_search",
+      "code_event_index": 2,
+      "code_line": 11,
+      "result_event_index": 3,
+      "call_source": "kb_search(query=\"上腹隐痛 布洛芬 NSAIDs 胃溃疡 检查\", top_k=5)"
+    },
+    {
+      "tool": "kg_query",
+      "code_event_index": 4,
+      "code_line": 1,
+      "result_event_index": 5,
+      "call_source": "kg_query(seed_entities=[\"布洛芬\", \"胃溃疡\", \"上腹隐痛\"], max_hops=2, limit=30)"
+    },
+    {
+      "tool": "get_asset_card",
+      "code_event_index": 6,
+      "code_line": 1,
+      "result_event_index": 7,
+      "call_source": "get_asset_card(asset_id=\"AST-2026-000137\")"
+    },
+    {
+      "tool": "trace_write",
+      "code_event_index": 8,
+      "code_line": 1,
+      "result_event_index": 9,
+      "call_source": "trace_write(\n    question=\"长期吃布洛芬止痛，有胃溃疡病史，最近上腹隐痛。请核对用药冲突，建议科室和检查。\",\n    steps=[\n        {\"i\": 1, \"op\": \"std_align\", \"in\": [\"布洛芬\", \"胃溃疡\", \"上腹隐痛\"],\n         \"out\": [\"DRUG-IBU\", \"K27\", \"SYM-EPI\"],\n         \"evidence\": [], \"confidence\": 0.9,\n         \"detail\": \"布洛芬 exact DRUG-IBU 0.95；胃溃疡 exact ICD-10 K27 0.90；上腹隐痛 exact SYM-EPI 0.90\"},\n        {\"i\": 2, \"op\": \"retrieve\", \"in\": [\"上腹隐痛 布洛芬 NSAIDs 胃溃疡 检查\"],\n         \"out\": [\"kb_not_configured\"],\n         \"evidence\": [], \"confidence\": 0.0,\n         \"detail\": \"kb_search 返回 kb_not_configured，记录缺口，改用本体与资产卡取证\"},\n        {\"i\": 3, \"op\": \"kg_query\", \"in\": [\"布洛芬\", \"胃溃疡\", \"上腹隐痛\"],\n         \"out\": [\"DRUG-IBU -contraindicated_for-> K27\",\n                 \"K27 -belongs_to_dept-> DEP-GI\",\n                 \"K27 -requires_exam-> EX-HP-BT\",\n                 \"K27 -requires_exam-> EX-GASTRO\",\n                 \"SYM-EPI -belongs_to_dept-> DEP-GI\"],\n         \"evidence\": [\"T-9faec7df\", \"AST-2026-000137#s4.p1.c2\",\n                      \"T-ec3ff384\", \"AST-2026-000137#s1.h\",\n                      \"T-a691e6a0\", \"AST-2026-000137#s3.p1.c1\",\n                      \"T-40a1a815\", \"AST-2026-000137#s3.p1.c2\",\n                      \"T-676e9d18\", \"AST-2026-000137#s2.p1.c2\"],\n         \"confidence\": 0.9,\n         \"detail\": \"max_hops=2，limit=30；resolved 3 个种子，unresolved 为空\"},\n        {\"i\": 4, \"op\": \"get_asset_card\", \"in\": [\"AST-2026-000137\"],\n         \"out\": [\"消化性溃疡临床路径（2023 版）摘要\", \"15 anchors\"],\n         \"evidence\": [\"AST-2026-000137#s4.p1.c2\", \"AST-2026-000137#s3.p1.c1\",\n                      \"AST-2026-000137#s3.p1.c2\", \"AST-2026-000137#s1.h\",\n                      \"AST-2026-000137#s2.p1.c2\"],\n         \"confidence\": 0.95,\n         \"detail\": \"核对锚点真实存在：s4.p1.c2 禁用布洛芬等 NSAIDs；s3.p1.c1 幽门螺杆菌呼气试验；s3.p1.c2 胃镜；s1.h 科室归属；s2.p1.c2 上腹隐痛\"}\n    ],\n    agent_version=\"v1.0\",\n    gaps=[\"kb_search 未配置（kb_not_configured），段落级检索依据缺失，仅用本体与资产卡锚点取证\",\n          \"用户未提供报警症状（呕血/黑便/体重下降/夜间痛醒）与幽门螺杆菌既往结果\"]\n)"
+    }
+  ],
+  "execution_log_indexing": "zero-based array indices in artifacts.actions; code_line is one-based within parse.content",
+  "trace_write_result_event_index": 9,
+  "tool_calls_note": "compact summary keeps trace_write; mcp_execution_index covers all actual MCP invocations in actions",
+  "actions_canonical_sha256": "feffda61f2255587dde8bbf07f7cf767a5670fd8c65093880b9bc39d14b3e7b1",
+  "actions_hash_encoding": "UTF-8 of parsed JSON, sort_keys=true, ensure_ascii=false, separators comma/colon; independent of Git CRLF conversion"
 }

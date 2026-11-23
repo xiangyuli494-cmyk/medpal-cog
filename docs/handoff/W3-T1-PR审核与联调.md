@@ -1,79 +1,52 @@
-# W3-T1 PR 审核与联调
+# T1 审核与联调执行单（11/23 更新）
 
-> 负责人：T1 / @xiangyuli494-cmyk；日期：2026-11-16。
-> 主分支基线 `94a5e76`；本记录覆盖审核、v1 配置准备与运行取证，不替代冲刺计划。
+> 当前远端 main：`f5aed6b`。本地 `codex/t1-w4-t1-delivery` 已同步该 main；远端 #37 仍是旧提交，未推送修订。
+> 本页区分已执行、待审核与待演示，完整周报见 [W3 周报](W3-周报-2026-11-22.md)。
 
-## 1 已完成的审核
+## 已执行与可核对的证据
 
-| PR / 精确 head | 已复核 | 结论与评论 |
+- 11/17 已验证 Hypervisor=True、14 个相关容器运行、Nexent HTTP 200、容器内 MCP initialize 成功；不需再重启。
+- 三个 Skill 已上传挂载，agent_id=2 工具白名单恰为十个，v1 提示词已应用。
+- 11/18 模型连通后完成常态、报警、冲突三次实际问答。会话摘要位于 `agent/sessions/real-w3-*.json`。
+- 完整的已发布执行证据为 `agent/deliverables/w3/nexent/*-actions.json`，包含 parse 代码和 execution_logs 返回；
+  session 中的 `mcp_execution_index` 以零起始数组索引定位每次调用代码和返回，代码行号从一开始。
+- `tool_calls` 是精简摘要，只保留 trace_write；完整 MCP 调用以执行索引为准。三份会话分别索引 10、9、8 次 MCP 调用。
+- 三次以 `POST /agent/run`、`is_debug=true` 运行，平台事件未返回持久化 conversation_id。
+  此字段明确为 null，并保留 debug_run_workspace_id、trace_id 和执行日志 SHA-256；不把运行目录标识冒充对话 ID。
+
+原始 trace 来自 `store.get_trace`。展示 trace 增加 schema、trace_completeness、unresolved、sources，
+其来源与取值已逐项记录在 `*-conversion.json:added_fields`。
+完整率与 unresolved 对照实际 trace_write 返回值；sources 使用导出时的 evidence 与数据库三元组来源反推。
+原始 op/ref 的结构适配在 changes 中记录，不改原始数据库，也不虚构 conclude 步。
+最终回答在 session.actual_answer 和 actions.final_answer；原始五步/四步 trace 没有 conclude 的限制继续保留。
+完整率 1.00 不说明检索或术语对齐没有业务缺口，也不说明建议已经获得临床验证。
+
+## 队友 PR 复核（11/23）
+
+| PR/head | 结果 | 尚需处理 |
 | --- | --- | --- |
-| #31 / `bab6ca4` | 提案、提交、回滚相关 16 条测试通过；独立临时库复现两处缺陷 | [请求修改](https://github.com/xiangyuli494-cmyk/medpal-cog/pull/31#pullrequestreview-5922370530) |
-| #35 / `21f52c9` | ruff 通过；81 passed / 4 skipped；前 24 条逐字节不变；30/20 题表面分数全 1.000 | [请求修改](https://github.com/xiangyuli494-cmyk/medpal-cog/pull/35#pullrequestreview-5922399444) |
-| #36 / `f4a6cdd` | 远端 Docker 构建与探活 CI success；本机 ruff 通过；复现启动重灌破坏持久化 | [请求修改](https://github.com/xiangyuli494-cmyk/medpal-cog/pull/36#pullrequestreview-5922412906) |
+| #31 / `777ccd2` | 两处原 P1 复现通过；128 passed，ruff 通过；T3 已批准 | W3 带评测验收 PASS 22 / FAIL 3 / MANUAL 3，失败 A-07/B-05/B-08；未合并 |
+| #38 / `22d676c` | 锚点清单、估算假设已修正；T2 已批准当前提交 | 我方旧修改请求待更新，周验收失败仍如实保留 |
+| #39 / `a0350f2` | W4 封版文档草稿 | 安装命令漏开发依赖；扫描要求为空会匹配文档自身；问题已向用户汇报，未评论 |
 
-- #31：同义冲突提交后旧检查边被删而规范边未补，活跃检查边为零；
-  回滚 v1.1→v1.0 后仍保留 v1.1 的置信度和证据来源。
-- #35：`score_one(row["gold"], got)` 未传入顶层 `gold_evidence`，
-  空证据返回也得 1.0。显式传入新题金标准后，Q025/Q026/Q027/Q029/Q030
-  的命中率分别为 0、0、0.5、0.5、0.5。
-  Q030 的两条锚点属于同一资产；默认两跳调用没有验证 `hops=3` 标签。
-- #36：已有库发布为 v1.0、加入运行时上传资产后，执行入口中的 ingest 命令，
-  当前版本变为 v0.9、上传资产消失。需限制首次初始化并验证重启持久化。
-  它还包含 #35 的评测文件，不能绕过 #35 的修改请求直接合并。
+前轮 #35/#36 的证据评分和持久化缺陷已经修正并合入 main，不能继续写成「尚未修复/未合并」。
 
-三个 PR 均有实际缺陷，本轮未批准或合并。修复后按新 head 重新验；
-不能只沿用旧提交的 CI。#32 是 T1 自己的 PR，仍需要 T2/T3 有效批准。
+## T1 待执行
 
-## 2 T1 配置与证据
+1. 修 #32 的九项正式审核意见，在独立分支留本地补丁与验证结果。
+2. 对照 #37 审核意见完成证据说明和文档更新。当前 session/转换清单已在本地补充，尚未提交或推送。
+3. 本地分支已同步 main，复测结果写入 W4 执行单；保留旧原始取证文件与其当时基线，不用新版本覆盖旧会话版本。
+4. 在审核后的隔离演示库复验跨文档两跳至少三题、三跳至少一题；每步核对连续路径、真实锚点与相邻资产不同。
+5. 完成同题 v0.9→v1.0→v1.1 两次差分、对应回答变化和三段录屏；本轮回滚单测不充作平台进化演示。
+6. PPT、五分钟脚本和十问手册在 `docs/答辩/` 准备草稿；两次真人演练、连续三次现场演示和最终 tag 均需实际完成后记录。
 
-`agent/config.json` 升为 v1，最多三跳；提示词新增 S1/S2/S3 选择与执行证据、
-发布前确认、相邻步跨资产检查，以及证据不足时的退回规则。
-配置与提示词不改变 10 个工具名和三行输出契约，也不代表平台已运行。
+## 验证口径
 
-宿主机 streamable-http 实测：精确列出 10 个工具；`health` 返回 ok=true、
-37 条三元组、70 资产、v0.9；`tests/test_http_client.py` 返回 HTTP TRANSPORT OK。
-[HTTP 证据](evidence/W3-T1-host-http-2026-11-16.json) 只证明宿主机传输可用。
+11/18 T1 原分支本机为 94 passed；队友机器为 90 passed / 4 skipped，取决于 PDF 依赖。
+前者是当时本机实测，后者是队友环境实测，不把任一口径冒充当前全平台统一值。
+本轮修改后测试结果另行记录，不沿用历史计数。
 
-[图路径检查](evidence/W3-T1-path-audit-2026-11-16.json)：37 条活跃边上，
-相邻边来自不同资产的两跳路径有 2 个方向，三跳为 0。
-两跳例为 I10→肾功能←N20，只说明共享检查项，不能推断疾病之间的临床关系。
-本周“两跳 ≥3 题、三跳 ≥1 题”的业务验收仍未完成。
-
-## 3 环境恢复后执行
-
-11/16 的 Hypervisor/Docker 故障已在用户重启后恢复。11/17 实测 HypervisorPresent=True，
-14 容器运行，:3000 HTTP 200，容器内 MCP initialize 成功。三个 Skill 已上传并挂载，
-v1 提示词已应用到 agent_id=2 草稿，工具白名单为 10 个。
-真实常态调用返回 model_authentication_error，模型连通检查为 false；下一步先修复模型凭据。
-[原始复核摘要](evidence/W3-T1-platform-recovery-2026-11-17.json) 保留失败状态，不作为成功 Skill 会话。
-
-1. 保存工作并重启后验证 `HypervisorPresent`，启动 Docker Desktop 与既有 Nexent。
-2. 验 M-1：`docker ps --format "{{.Names}} {{.Status}}"`，≥13 个目标容器运行。
-3. 验 M-2：从 Nexent 运行容器请求 MCP initialize，核对 JSON-RPC result 中
-   `serverInfo.name=medpal-cog`；宿主机成功不能抵消容器失败。
-4. 验 M-3：控制台工具恰为 10 个；保存工具列表截图及真实回答原文，校验三行顺序与值。
-5. 按 `agent/README.md` 更新主智能体提示词并挂载三个 Skill。
-   对常态、报警、冲突各执行一次；至少一份会话有真实 Skill 事件且其结果进入最终回答。
-6. 在 #31 缺陷修复、版本化验收后，执行 v0.9→v1.0 同题前后对比。
-   需用户确认的发布通过确认流程执行，不把脚本回放写成实跑。
-7. 与 T2/T3 补齐业务多跳样本，逐步验资产锚点，再做 v1.0→v1.1 演示。
-
-真实会话保存到 `agent/sessions/real-w3-*.json`，包含原始平台记录位置、时间、
-模型、conversation_id、Skill 事件、工具参数/结果、trace_id 与三行回答。
-进化对比同时保存前后版本及新三元组 ID。没有这些原始证据就保留“未验收”。
-
-## 4 验证与责任
-
-```bash
-python -m ruff check .
-python -m pytest tests
-python tools/check_evaluator.py
-python tools/acceptance.py --stage w3 --with-eval
-```
-
-本分支 ruff 与契约通过、pytest 85 passed；W3 验收 PASS 22 / FAIL 3 / MANUAL 3，
-失败为 A-07、A-09、A-14。验收会重建数据，只在独立审核目录执行。当前周仍有未完成项，
-非零退出不得改成通过；评测证据缺陷修好后重新报告指标。
-
-T2 修 #31 的本体/回滚问题并补到 ≥50；T3 修 #35/#36 的评测与持久化；
-T1 复审、合并符合条件的 PR，完成平台联调和真实会话取证。
+11/18 原分支 `acceptance --stage w3 --no-seed` 为结构检查 PASS 13 / FAIL 3 / MANUAL 3，未带评测。
+11/19 当前 main 同代码基线带评测检查 PASS 21 / FAIL 4 / MANUAL 3。
+11/23 #31 隔离副本带评测检查 PASS 22 / FAIL 3 / MANUAL 3。
+各次命令、分支与日期不可混用；运行会重建数据库的命令只在隔离副本执行。

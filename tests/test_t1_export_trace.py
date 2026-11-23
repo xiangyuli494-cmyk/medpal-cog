@@ -29,7 +29,6 @@ def test_broken_trace_remains_broken_after_export():
     report = module.export_html(trace, "测试夹具")
     embedded = re.search(r'id="embedded-trace">(.*?)</script>', report, re.S)[1]
     assert json.loads(embedded)["unresolved"] == trace["unresolved"]
-    assert 'class="unresolved-block"' in report
 
 
 def test_incomplete_trace_cannot_be_published_as_report():

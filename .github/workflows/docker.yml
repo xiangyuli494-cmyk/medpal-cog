@@ -1,0 +1,101 @@
+name: docker
+
+# 为什么要有这个 job：本机（Windows）没有 Docker daemon，W3-T3-2 的
+# 「docker build 实机构建 + compose 起 8090 + healthcheck 通过」如果只能靠队长那台机器，
+# 出了错没人能立刻看见。让 CI 每次构建 + 起容器 + 探活，构建失败在 PR 上就红，
+# 队长那台机器只做「最终落地」，不做出错现场。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-run:
+    name: docker (build + healthcheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker 版本
+        run: docker version && docker compose version
+
+      - name: 构建镜像（deploy/Dockerfile，上下文=仓库根）
+        run: docker build -f deploy/Dockerfile -t medpal-cog/mcp:0.1.0 .
+
+      - name: compose 起容器（8090），复用上面构建的镜像
+        run: docker compose -f deploy/docker-compose.yml up -d --no-build
+
+      - name: 等 healthcheck 变 healthy（最多 5 分钟）
+        run: |
+          for i in $(seq 1 60); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' medpal-mcp 2>/dev/null || echo missing)
+            echo "[$i/60] health=$status"
+            if [ "$status" = "healthy" ]; then exit 0; fi
+            if [ "$status" = "missing" ] && [ "$i" -gt 3 ]; then
+              echo "容器没起来"; docker logs medpal-mcp || true; exit 1
+            fi
+            sleep 5
+          done
+          echo "5 分钟内没到 healthy"; docker logs medpal-mcp || true; exit 1
+
+      - name: 从宿主打 /mcp，要求回 serverInfo.name=medpal-cog（§10.5 M-2 同口径）
+        run: |
+          payload='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}'
+          for i in 1 2 3; do
+            resp=$(curl -s -X POST http://127.0.0.1:8090/mcp \
+              -H "content-type: application/json" \
+              -H "accept: application/json, text/event-stream" \
+              -d "$payload" || true)
+            echo "第 $i 次响应：${resp:0:200}"
+            if echo "$resp" | grep -q 'medpal-cog'; then
+              echo "OK: serverInfo.name=medpal-cog"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "三次都没拿到 serverInfo.name=medpal-cog"; exit 1
+
+      - name: 台账不许空（容器内 asset ≥ 61）
+        run: |
+          n=$(docker exec medpal-mcp python -c "import sqlite3;print(sqlite3.connect('/app/mcp-server/data/medpal.db').execute('select count(*) from asset').fetchone()[0])")
+          echo "容器内 asset=$n"
+          if [ "$n" -lt 61 ]; then echo "空台账或少卡：$n < 61"; exit 1; fi
+
+      # 评审 #36 [P1]：已有持久化库在每次容器启动时被重灌 → 丢运行期上传、版本退回 v0.9。
+      # 这里造一条运行期资产 + 一个 v1.0 版本，重启容器后再核对三件事都没变。
+      - name: 两次启动持久化验证
+        run: |
+          docker cp deploy/persist_probe.py medpal-mcp:/app/persist_probe.py
+          docker exec medpal-mcp python /app/persist_probe.py --write
+          docker restart medpal-mcp
+          for i in $(seq 1 40); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' medpal-mcp 2>/dev/null || echo missing)
+            echo "[restart $i/40] health=$status"
+            if [ "$status" = "healthy" ]; then break; fi
+            sleep 5
+          done
+          docker exec medpal-mcp python /app/persist_probe.py --verify
+
+      - name: 容器状态与日志（无论成败都落盘）
+        if: always()
+        run: |
+          mkdir -p docker-logs
+          docker compose -f deploy/docker-compose.yml ps > docker-logs/ps.txt 2>&1 || true
+          docker logs medpal-mcp > docker-logs/container.log 2>&1 || true
+          docker images medpal-cog/mcp:0.1.0 > docker-logs/image.txt 2>&1 || true
+          cat docker-logs/ps.txt
+
+      - name: 上传 build/运行日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: docker-logs/
+          if-no-files-found: warn

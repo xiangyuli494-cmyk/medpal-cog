@@ -23,4 +23,13 @@
 本体跨文档路径仍未满足，两次进化差分和三段录屏尚未完成，等待审核后本体输入。
 完整率只代表引用可解析，不代表临床正确性。
 
-本地验证：ruff 通过；pytest 94 passed；展示适配 trace 的 schema 校验通过。
+历史验证（11/18 本机，已装 PDF 依赖）：ruff 通过；pytest 94 passed。
+队友环境为 90 passed / 4 skipped，分别注明环境，不把收集数作为通过数。
+展示适配 trace 的 schema 校验通过。
+
+11/23 本地审核修订：session 是摘要，`mcp_execution_index` 可按事件索引定位
+`*-actions.json` 中每次 MCP 调用的代码和真实返回；trace_write 返回单独定位并比对。
+debug API 没返回 conversation_id，已明确记 null 并保留运行目录标识，未编造对话 ID。
+转换清单新增 `added_fields`，逐项交代 schema/完整率/unresolved/sources 的来源。
+原始 trace 没有 conclude 步，最终回答保留在 session.actual_answer 与 actions.final_answer。
+独立报告各自带数据，也保留上传其他 JSON 的查看器功能；页面外观尚待人工核对。
