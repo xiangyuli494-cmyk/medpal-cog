@@ -25,6 +25,9 @@
 | 为什么这么排、为什么不回旧仓 | [adr/ADR-002-对齐旧仓与分支保护.md](adr/ADR-002-对齐旧仓与分支保护.md) |
 | 主智能体怎么接进 Nexent | [../agent/README.md](../agent/README.md)（提示词、工具白名单、3 份会话样例、故障表） |
 | 每周闸门收在哪、结论是什么 | [handoff/W2-周报-2026-11-15.md](handoff/W2-周报-2026-11-15.md)（W2；W1 见 `W1-周报-2026-11-08.md`） |
+| 封版前逐项核对 R1–R5 与材料清单 | [release-checklist-v1.0.md](release-checklist-v1.0.md)（W4 T3-2） |
+| 演示视频怎么录、分镜与开拍预检 | [w4-video-storyboard.md](w4-video-storyboard.md)（W4 T3-1） |
+| 封版前文档定稿要扫哪些过期数字 | [w4-doc-finalization-notes.md](w4-doc-finalization-notes.md)（W4 T3-2） |
 
 ## 目录约定
 
