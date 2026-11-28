@@ -39,7 +39,10 @@ python tools/selfcheck.py
 # 2) 10 个工具名与契约一致（A-03）
 python tools/acceptance.py --stage final --with-eval
 
-# 3) 密钥 / 真实患者数据红线
+# 3) 密钥 / 真实患者数据红线。
+#    正则会命中命令自身的 secret/password 字样与字段名等正常候选，不能按「输出为空」判通过：
+#    逐条复核候选，允许保留的写明依据，确认没有未处理的真实密钥/患者数据/手机号泄露后才算过；
+#    不删扫描、也不忽略全部命中。
 git grep -nE "api[_-]?key|secret|password|1[3-9][0-9]{9}" -- .
 
 # 4) 文档里引用的脚本路径存在性

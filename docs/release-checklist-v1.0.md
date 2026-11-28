@@ -7,8 +7,8 @@
 ## 0 封版命令序列（干净环境跑一遍，留日志）
 
 ```bash
-# 0) 干净 clone + 新 venv，装依赖
-python -m pip install -r requirements.txt
+# 0) 干净 clone + 新 venv，装依赖（运行依赖 + 开发依赖；selfcheck/pytest/ruff 在后者）
+python -m pip install -r requirements.txt -r requirements-dev.txt
 
 # 1) 建库 + 灌样本
 python mcp-server/seed.py --reset
@@ -27,7 +27,10 @@ python tools/acceptance.py --stage final --with-eval
 python eval/run_eval.py --dataset eval/dataset/v1.jsonl --out eval/reports/final-v1
 python eval/run_eval.py --dataset eval/dataset/v0.jsonl --out eval/reports/final-v0
 
-# 6) 红线扫描：无密钥、无真实患者数据
+# 6) 红线扫描：无密钥、无真实患者数据。
+#    说明：下面的正则会命中命令自身里的 secret/password 字样，以及字段名等正常候选；
+#    不能以「输出为空」为通过标准。逐条复核每个候选：允许保留的写明依据（字段名/示例串/文档命令），
+#    确认没有未处理的真实密钥、患者数据或手机号泄露后才算通过；不要删扫描，也不要忽略全部命中。
 git grep -nE "api[_-]?key|secret|password|1[3-9][0-9]{9}" -- .
 ```
 
@@ -52,7 +55,7 @@ git grep -nE "api[_-]?key|secret|password|1[3-9][0-9]{9}" -- .
 
 ## 3 红线（任一不过即不封版）
 
-- [ ] 仓库内无密钥、无真实患者数据、无真实手机号/身份证/医疗单据原图（第 0 节第 6 条扫描为空）。
+- [ ] 仓库内无密钥、无真实患者数据、无真实手机号/身份证/医疗单据原图（第 0 节第 6 条扫描结果逐条复核：字段名/示例串/文档命令等允许项写明依据，未处理的真实泄露清零；不以扫描输出为空作为通过标准）。
 - [ ] README / 交接单 / 方案里的每个数字都有复现命令；空分母、只报最好一题的指标不写。
 - [ ] 新增文档已进 `docs/README.md` 文档地图（§10.7 反例：文档没进地图不算完成）。
 - [ ] `tools/acceptance.py --stage final --with-eval` 除 MANUAL 项外无 FAIL；已知缺口（A-07、B-05/B-08）在交接单如实写明，未靠改阈值/挑金标准凑绿。
