@@ -1,0 +1,79 @@
+{
+  "source": "raw persisted Nexent trace, structural adaptation only; not backend repair",
+  "trace_id": "TR-20261118-8CA0",
+  "changes": [
+    {
+      "step": 1,
+      "field": "ref",
+      "old": "std_align",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 2,
+      "field": "ref",
+      "old": "kb_search",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 3,
+      "field": "ref",
+      "old": "kg_query",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 4,
+      "field": "op",
+      "old": "get_asset_card",
+      "new": "retrieve",
+      "reason": "viewer operation category; actual tool name retained in raw trace"
+    },
+    {
+      "step": 4,
+      "field": "ref",
+      "old": "get_asset_card",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    },
+    {
+      "step": 5,
+      "field": "ref",
+      "old": "kg_query",
+      "new": null,
+      "reason": "omit optional ref; derive from op"
+    }
+  ],
+  "added_fields": {
+    "schema": {
+      "value": "medpal-trace/1",
+      "source": "viewer schema label; added locally, not returned by platform"
+    },
+    "trace_completeness": {
+      "value": 1.0,
+      "source": "alarm-actions.json execution_logs[11] trace_write return; independently recounted against SQLite on 11/18"
+    },
+    "unresolved": {
+      "value": [],
+      "source": "alarm-actions.json execution_logs[11] trace_write return"
+    },
+    "sources": {
+      "value": [
+        "AST-2026-000137"
+      ],
+      "source": "local derive_sources(raw_trace, SQLite connection) on 11/18; AST evidence prefix, or triple.asset_id lookup for T references"
+    }
+  },
+  "preserved_fields": [
+    "trace_id",
+    "question",
+    "agent_version",
+    "ontology_version",
+    "gaps",
+    "elapsed_ms",
+    "created_at"
+  ],
+  "source_note": "raw persisted trace is store.get_trace output; added display fields do not repair the backend trace",
+  "conclusion_note": "no synthetic conclude step added; original trace has none; final answer is in actions and session.actual_answer"
+}

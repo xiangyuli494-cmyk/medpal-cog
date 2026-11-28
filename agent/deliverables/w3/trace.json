@@ -1,0 +1,59 @@
+{
+  "trace_id": "TR-20261117-914A",
+  "question": "上腹隐痛的科室建议有哪些可核验依据？",
+  "agent_version": "t1-http-v1",
+  "ontology_version": "v0.9",
+  "steps": [
+    {
+      "i": 1,
+      "op": "std_align",
+      "in": [
+        "上腹隐痛"
+      ],
+      "out": [
+        "SYM-EPI"
+      ],
+      "evidence": []
+    },
+    {
+      "i": 2,
+      "op": "kg_query",
+      "in": [
+        "SYM-EPI"
+      ],
+      "out": [
+        "SYM-EPI",
+        "K27",
+        "DEP-GI"
+      ],
+      "evidence": [
+        "AST-2026-000137#s2.p1.c3",
+        "AST-2026-000137#s1.h"
+      ],
+      "detail": "实际 MCP 查询；两条边来自同一资产，本示例不作为跨文档验收。"
+    },
+    {
+      "i": 3,
+      "op": "conclude",
+      "out": {
+        "dept": "消化内科",
+        "exams": []
+      },
+      "evidence": [
+        "AST-2026-000137#s2.p1.c3",
+        "AST-2026-000137#s1.h"
+      ]
+    }
+  ],
+  "gaps": [
+    "本示例仅演示科室证据，不用于跨文档或 Nexent 验收。"
+  ],
+  "elapsed_ms": 0,
+  "created_at": "2026-11-17T23:59:25+08:00",
+  "schema": "medpal-trace/1",
+  "trace_completeness": 1.0,
+  "unresolved": [],
+  "sources": [
+    "AST-2026-000137"
+  ]
+}

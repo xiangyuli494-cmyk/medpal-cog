@@ -1,0 +1,278 @@
+{
+  "date": "2026-11-23",
+  "timezone": "Asia/Shanghai",
+  "main": "f5aed6bf7b9c47399f99bc303538bebd46511e8b",
+  "scope": "read-only GitHub inspection and isolated source probes; local weekly report update",
+  "remote_writes": false,
+  "prs": [
+    {
+      "number": 31,
+      "head": "777ccd25f990fb1c40c7c60eaf03fd731d2b21e9",
+      "url": "https://github.com/xiangyuli494-cmyk/medpal-cog/pull/31",
+      "checks": [
+        {
+          "name": "pipeline (skeleton + eval)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "test (pytest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker (build + healthcheck)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "lint (ruff)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "reviews": [
+        {
+          "user": "zincumyu",
+          "state": "COMMENTED",
+          "commit": "bab6ca4325f02ac403bc20318de1ff0d97f704c3"
+        },
+        {
+          "user": "xiangyuli494-cmyk",
+          "state": "CHANGES_REQUESTED",
+          "commit": "bab6ca4325f02ac403bc20318de1ff0d97f704c3"
+        },
+        {
+          "user": "xiangyuli494-cmyk",
+          "state": "COMMENTED",
+          "commit": "bab6ca4325f02ac403bc20318de1ff0d97f704c3"
+        },
+        {
+          "user": "xiangyuli494-cmyk",
+          "state": "COMMENTED",
+          "commit": "bab6ca4325f02ac403bc20318de1ff0d97f704c3"
+        },
+        {
+          "user": "Dewqian",
+          "state": "COMMENTED",
+          "commit": "777ccd25f990fb1c40c7c60eaf03fd731d2b21e9"
+        },
+        {
+          "user": "Dewqian",
+          "state": "COMMENTED",
+          "commit": "777ccd25f990fb1c40c7c60eaf03fd731d2b21e9"
+        },
+        {
+          "user": "Dewqian",
+          "state": "APPROVED",
+          "commit": "777ccd25f990fb1c40c7c60eaf03fd731d2b21e9"
+        }
+      ]
+    },
+    {
+      "number": 32,
+      "head": "74e886d89df3de5b4545b13c3b47bdd1d083de9a",
+      "url": "https://github.com/xiangyuli494-cmyk/medpal-cog/pull/32",
+      "checks": [
+        {
+          "name": "pipeline (skeleton + eval)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "lint (ruff)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "test (pytest)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "reviews": [
+        {
+          "user": "zincumyu",
+          "state": "COMMENTED",
+          "commit": "74e886d89df3de5b4545b13c3b47bdd1d083de9a"
+        },
+        {
+          "user": "zincumyu",
+          "state": "CHANGES_REQUESTED",
+          "commit": "74e886d89df3de5b4545b13c3b47bdd1d083de9a"
+        }
+      ]
+    },
+    {
+      "number": 37,
+      "head": "12ef114723118f5cbc237f71da4b9ead14fd3c81",
+      "url": "https://github.com/xiangyuli494-cmyk/medpal-cog/pull/37",
+      "checks": [
+        {
+          "name": "pipeline (skeleton + eval)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "test (pytest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "lint (ruff)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker (build + healthcheck)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "reviews": [
+        {
+          "user": "zincumyu",
+          "state": "COMMENTED",
+          "commit": "f0988b2d78a0cc9df8543ec5c05fb3ea8a99c049"
+        },
+        {
+          "user": "zincumyu",
+          "state": "CHANGES_REQUESTED",
+          "commit": "12ef114723118f5cbc237f71da4b9ead14fd3c81"
+        }
+      ]
+    },
+    {
+      "number": 38,
+      "head": "22d676cb71769f77f50a4786c827171fea14a03f",
+      "url": "https://github.com/xiangyuli494-cmyk/medpal-cog/pull/38",
+      "checks": [
+        {
+          "name": "pipeline (skeleton + eval)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "lint (ruff)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "test (pytest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker (build + healthcheck)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "reviews": [
+        {
+          "user": "xiangyuli494-cmyk",
+          "state": "CHANGES_REQUESTED",
+          "commit": "4ab5edce4889f14dcf03ee5d4614942accbfdf81"
+        },
+        {
+          "user": "zincumyu",
+          "state": "COMMENTED",
+          "commit": "4ab5edce4889f14dcf03ee5d4614942accbfdf81"
+        },
+        {
+          "user": "Dewqian",
+          "state": "COMMENTED",
+          "commit": "cc2edeea17173b26354ccd4ca7088dc44987b5af"
+        },
+        {
+          "user": "Dewqian",
+          "state": "COMMENTED",
+          "commit": "cc2edeea17173b26354ccd4ca7088dc44987b5af"
+        },
+        {
+          "user": "zincumyu",
+          "state": "DISMISSED",
+          "commit": "cc2edeea17173b26354ccd4ca7088dc44987b5af"
+        },
+        {
+          "user": "zincumyu",
+          "state": "APPROVED",
+          "commit": "22d676cb71769f77f50a4786c827171fea14a03f"
+        }
+      ]
+    },
+    {
+      "number": 39,
+      "head": "a0350f2daaa745ed647a9acb6451c7c08b415d35",
+      "url": "https://github.com/xiangyuli494-cmyk/medpal-cog/pull/39",
+      "checks": [
+        {
+          "name": "pipeline (skeleton + eval)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "test (pytest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docker (build + healthcheck)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "lint (ruff)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "reviews": []
+    }
+  ],
+  "fresh_validation": {
+    "pr31": {
+      "head": "777ccd25f990fb1c40c7c60eaf03fd731d2b21e9",
+      "pytest": "128 passed in 6.05s",
+      "ruff": "passed",
+      "reproductions": {
+        "synonym_replacement": "canonical requires_exam edge remains active after commit",
+        "rollback": "confidence=0.8,asset_id=AST-OLD,anchor_id=AST-OLD#p1 restored"
+      },
+      "acceptance": {
+        "command": "python tools/acceptance.py --stage w3 --with-eval",
+        "pass": 22,
+        "fail": 3,
+        "manual": 3,
+        "failed_ids": [
+          "A-07",
+          "B-05",
+          "B-08"
+        ],
+        "triples": 44,
+        "version": "v1.0",
+        "evidence_recall": 0.476,
+        "baseline_evidence_recall": 0.462
+      }
+    }
+  },
+  "pr39_findings": [
+    {
+      "priority": "P2",
+      "file": "docs/release-checklist-v1.0.md",
+      "finding": "Clean venv sequence installs requirements.txt only, but next commands require pytest from requirements-dev.txt."
+    },
+    {
+      "priority": "P2",
+      "file": "docs/release-checklist-v1.0.md",
+      "finding": "Empty-output scan condition is unsatisfiable: grep matches the documented api-key/secret/password regex itself; documentation matches require review, not automatic rejection."
+    }
+  ],
+  "not_rerun": [
+    "Nexent sessions",
+    "current main acceptance",
+    "W3 four business questions on pr31 graph",
+    "HTML visual QA"
+  ],
+  "historical_checks_note": "11/18 T1 and11/19main validation in weekly report are dated historical results, not current re-runs."
+}
